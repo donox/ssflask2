@@ -1,0 +1,7 @@
+/venv/
+/application/static/gallery/
+/application/templates/css/mystyles.css
+/other files/Task List.ods
+
+# Project exclude paths
+/node_modules/

@@ -1,0 +1,22 @@
+Blueprints need to be registered in __init__.py for Application
+
+ADDING TABLES:
+To add a table to the database:  NOTE: db name is 'dummy' - will want to change.
+    Add import of table classes to env.py (around line 10)
+
+Run:
+    alembic revision --autogenerate -m "Added xxxx table"
+    alembic upgrade head
+
+    To Downgrade:
+    alembic downgrade -1
+        (or more detail: https://stackoverflow.com/questions/48242324/undo-last-alembic-migration)
+
+To run Build watch sass:
+    Look in package.json:
+      "scripts": {
+        "css-build": "node-sass --omit-source-map-url application/sass/mystyles.scss application/static/css/mystyles.css",
+        "css-watch": "npm run css-build -- --watch",
+        "start": "npm run css-watch"
+      },
+
