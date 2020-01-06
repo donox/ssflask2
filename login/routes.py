@@ -1,10 +1,5 @@
-import os
-from flask import Blueprint, render_template, redirect, url_for, render_template_string
-from flask_assets import Environment, Bundle
-from flask_login import current_user
-from flask import current_app as app
-from .models import User
-from flask_login import login_required, logout_user
+from flask import Blueprint, render_template_string
+from flask_login import login_required
 from flask_user import roles_required
 
 # Blueprint Configuration

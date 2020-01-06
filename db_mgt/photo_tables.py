@@ -1,20 +1,19 @@
 from sqlalchemy import Column, ForeignKey, Integer, String, Date, DateTime, Boolean, func, UnicodeText
-from application import Base
+from application import db
 
 
-class Photo(Base):
+class Photo(db.Model):
     __tablename__ = 'photo'
-    _instances_ = {}
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    old_id = Column(Integer, nullable=False)
-    image_slug = Column(String(), nullable=False)    # Name used in urls
-    gallery_id = Column(Integer, ForeignKey('photo_gallery.id'), nullable=True)
-    old_gallery_id = Column(Integer)
-    file_name = Column(String())
-    caption = Column(String(512))
-    alt_text = Column(String(256))          # Use if picture does not exist
-    image_date = Column(DateTime)
-    meta_data = Column(UnicodeText)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    old_id = db.Column(db.Integer, nullable=False)
+    image_slug = db.Column(db.String(), nullable=False)    # Name used in urls
+    gallery_id = db.Column(db.Integer, ForeignKey('photo_gallery.id'), nullable=True)
+    old_gallery_id = db.Column(db.Integer)
+    file_name = db.Column(db.String())
+    caption = db.Column(db.String(512))
+    alt_text = db.Column(db.String(256))          # Use if picture does not exist
+    image_date = db.Column(DateTime)
+    meta_data = db.Column(UnicodeText)
 
     def add_to_db(self, session, commit=False):
         session.add(self)
@@ -35,13 +34,12 @@ class Photo(Base):
         return '<Flask PhotoGallery {}>'.format(self.__tablename__)
 
 
-class PhotoMeta(Base):
+class PhotoMeta(db.Model):
     __tablename__ = 'photo_meta'
-    _instances_ = {}
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    gallery_id = Column(ForeignKey('photo_gallery.id'), nullable=False)
-    meta_key = Column(String(128), nullable=False)
-    meta_value = Column(String(), nullable=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    gallery_id = db.Column(ForeignKey('photo_gallery.id'), nullable=False)
+    meta_key = db.Column(db.String(128), nullable=False)
+    meta_value = db.Column(db.String(), nullable=True)
 
     def add_to_db(self, session, commit=False):
         session.add(self)
@@ -53,14 +51,13 @@ class PhotoMeta(Base):
         return '<Flask PhotoGalleryMeta {}>'.format(self.__tablename__)
 
 
-class PhotoGallery(Base):
+class PhotoGallery(db.Model):
     __tablename__ = 'photo_gallery'
-    _instances_ = {}
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    old_id = Column(Integer)
-    name = Column(String(), nullable=False)         # Name of gallery
-    slug_name = Column(String(), nullable=False)    # Name used in urls
-    path_name = Column(String(), nullable=False)    # File location (ends with '/'), append to top-level location
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    old_id = db.Column(db.Integer)
+    name = db.Column(db.String(), nullable=False)         # Name of gallery
+    slug_name = db.Column(db.String(), nullable=False)    # Name used in urls
+    path_name = db.Column(db.String(), nullable=False)    # File location (ends with '/'), append to top-level location
 
     def add_to_db(self, session, commit=False):
         session.add(self)
@@ -72,13 +69,12 @@ class PhotoGallery(Base):
         return '<Flask PhotoGallery {}>'.format(self.__tablename__)
 
 
-class PhotoGalleryMeta(Base):
+class PhotoGalleryMeta(db.Model):
     __tablename__ = 'photo_gallery_meta'
-    _instances_ = {}
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    gallery_id = Column(ForeignKey('photo_gallery.id'), nullable=False)
-    meta_key = Column(String(128), nullable=False)
-    meta_value = Column(String(), nullable=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    gallery_id = db.Column(ForeignKey('photo_gallery.id'), nullable=False)
+    meta_key = db.Column(db.String(128), nullable=False)
+    meta_value = db.Column(db.String(), nullable=True)
 
     def add_to_db(self, session, commit=False):
         session.add(self)

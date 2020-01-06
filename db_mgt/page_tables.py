@@ -4,27 +4,26 @@ from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy import create_engine
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.pool import NullPool
-from application import Base
+from application import db
 import datetime as dt
 
 
-class Page(Base):
+class Page(db.Model):
     __tablename__ = 'page'
-    _instances_ = {}
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    page_title = Column(String(), nullable=False)
-    page_name = Column(String(), nullable=False, unique=True)
-    page_active = Column(Boolean(), default=True)
-    page_author = Column(String(128), nullable=True)
-    page_date = Column(Date, default='2000-01-01')
-    page_content = Column(String(), nullable=True)
-    page_status = Column(String(32), nullable=False)
-    page_parent = Column(Integer, ForeignKey('page.id'), nullable=True)
-    page_guid = Column(String(), nullable=False)
-    page_cached = Column(Boolean(), default=False)
-    page_do_not_cache = Column(Boolean(), default=False)
-    page_cached_date = Column(Date(), default='2000-01-01')
-    page_cached_content = Column(String(), nullable=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    page_title = db.Column(db.String(), nullable=False)
+    page_name = db.Column(db.String(), nullable=False, unique=True)
+    page_active = db.Column(db.Boolean(), default=True)
+    page_author = db.Column(db.String(128), nullable=True)
+    page_date = db.Column(db.Date, default='2000-01-01')
+    page_content = db.Column(db.String(), nullable=True)
+    page_status = db.Column(db.String(32), nullable=False)
+    page_parent = db.Column(db.Integer, db.ForeignKey('page.id'), nullable=True)
+    page_guid = db.Column(db.String(), nullable=False)
+    page_cached = db.Column(db.Boolean(), default=False)
+    page_do_not_cache = db.Column(db.Boolean(), default=False)
+    page_cached_date = db.Column(db.Date(), default='2000-01-01')
+    page_cached_content = db.Column(db.String(), nullable=True)
 
     def add_to_db(self, session, commit=False):
         session.add(self)
@@ -60,13 +59,12 @@ class Page(Base):
         return '<Flask Page {}>'.format(self.__tablename__)
 
 
-class PageMeta(Base):
+class PageMeta(db.Model):
     __tablename__ = 'page_meta'
-    _instances_ = {}
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    page_id = Column(ForeignKey('page.id'), nullable=False)
-    meta_key = Column(String(128), nullable=False)
-    meta_value = Column(String(), nullable=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    page_id = db.Column(db.ForeignKey('page.id'), nullable=False)
+    meta_key = db.Column(db.String(128), nullable=False)
+    meta_value = db.Column(db.String(), nullable=True)
 
     def add_to_db(self, session, commit=False):
         session.add(self)

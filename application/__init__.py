@@ -1,9 +1,8 @@
-import datetime
-from flask import Flask, request, render_template_string
+from flask import Flask
 from flask_babelex import Babel
 from flask_sqlalchemy import SQLAlchemy
 
-from flask_user import current_user, login_required, roles_required, UserManager, UserMixin
+from flask_user import UserManager
 
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -27,7 +26,7 @@ def create_app():
 
     # Initialize Flask-BabelEx
     babel = Babel(app)
-    from login.models import User, Role
+    from db_mgt.models import User, Role
 
     # Initialize Flask-SQLAlchemy
     db.init_app(app)
