@@ -22,7 +22,10 @@ class Page(db.Model):
     def add_to_db(self, session, commit=False):
         session.add(self)
         if commit:
-            session.commit()
+            try:
+                session.commit()
+            except Exception as e:
+                foo = 3
         return self
 
     def fetch_content(self, session):

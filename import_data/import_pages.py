@@ -10,6 +10,11 @@ load_dotenv(dotenv_path=env_path)
 import db_mgt.setup as su
 
 
+def remove_max1bytes(x):
+    """Delete chars that don't fit in one byte to avoid problems with MySQL."""
+    return ''.join(c for c in x if ord(c) < 0x100)
+
+
 class ImportPageData(object):
     def __init__(self, session, datafile):
         self.session = session
@@ -30,9 +35,9 @@ class ImportPageData(object):
             try:
                 page_id, author, date, status, title, name, parent, content = line
                 new_rec = Page()
-                new_rec.page_content = content
+                new_rec.page_content = remove_max1bytes(content)
                 new_rec.page_author = author
-                new_rec.page_title = title
+                new_rec.page_title = remove_max1bytes(title)
                 if name in page_names:          # Append '-d' as many times as needed till name is unique
                     while name in page_names:
                         name = name + '_d'
@@ -50,13 +55,13 @@ class ImportPageData(object):
                 raise e
 
     def write_update_parents(self):
-        with open ('/home/don/devel/update_parent_new.csv', 'w') as fl:
+        with open('/home/don/devel/update_parent_new.csv', 'w') as fl:
             writer = csv.writer(fl)
             for new_page_id, val in self.page_ids_new.items():
                 old_page_id, parent = val
                 writer.writerow([new_page_id, old_page_id, parent])
             fl.close()
-        with open ('/home/don/devel/update_parent_old.csv', 'w') as fl:
+        with open('/home/don/devel/update_parent_old.csv', 'w') as fl:
             writer = csv.writer(fl)
             for old_page_id, val in self.page_ids_old.items():
                 new_page_id, parent = val
