@@ -1,9 +1,3 @@
-from sqlalchemy import Column, ForeignKey, Integer, String, Date, Boolean, func
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship, sessionmaker
-from sqlalchemy import create_engine
-from sqlalchemy.exc import OperationalError
-from sqlalchemy.pool import NullPool
 from application import db
 import datetime as dt
 
@@ -15,14 +9,14 @@ class Page(db.Model):
     page_name = db.Column(db.String(), nullable=False, unique=True)
     page_active = db.Column(db.Boolean(), default=True)
     page_author = db.Column(db.String(128), nullable=True)
-    page_date = db.Column(db.Date, default='2000-01-01')
+    page_date = db.Column(db.DateTime, default='2000-01-01')
     page_content = db.Column(db.String(), nullable=True)
     page_status = db.Column(db.String(32), nullable=False)
     page_parent = db.Column(db.Integer, db.ForeignKey('page.id'), nullable=True)
     page_guid = db.Column(db.String(), nullable=False)
     page_cached = db.Column(db.Boolean(), default=False)
     page_do_not_cache = db.Column(db.Boolean(), default=False)
-    page_cached_date = db.Column(db.Date(), default='2000-01-01')
+    page_cached_date = db.Column(db.DateTime, default='2000-01-01')
     page_cached_content = db.Column(db.String(), nullable=True)
 
     def add_to_db(self, session, commit=False):
@@ -64,7 +58,7 @@ class PageMeta(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     page_id = db.Column(db.ForeignKey('page.id'), nullable=False)
     meta_key = db.Column(db.String(128), nullable=False)
-    meta_value = db.Column(db.String(), nullable=True)
+    meta_value = db.Column(db.String, nullable=True)
 
     def add_to_db(self, session, commit=False):
         session.add(self)
