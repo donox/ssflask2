@@ -26,7 +26,7 @@ def has_no_empty_params(rule):
     return len(defaults) >= len(arguments)
 
 
-@app.route("/site-map")
+@admin_bp.route('/site-map')
 def site_map():
     links = []
     for rule in app.url_map.iter_rules():

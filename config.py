@@ -37,6 +37,12 @@ class Config:
     USER_EMAIL_SENDER_NAME = USER_APP_NAME
     USER_EMAIL_SENDER_EMAIL = "noreply@example.com"
 
+    # Flask-User endpoint settings - overrides values in user_manager_settings.
+    # Additional endpoints are not shown here.
+    USER_AFTER_FORGOT_PASSWORD_ENDPOINT = ''    #:
+    USER_AFTER_LOGIN_ENDPOINT = 'main.sst_main'  #:
+    USER_AFTER_LOGOUT_ENDPOINT = ''     #:
+
     # Admin
     FLASK_ADMIN_SWATCH = 'cerulean'
 
