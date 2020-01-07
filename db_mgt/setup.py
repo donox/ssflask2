@@ -8,7 +8,6 @@ from config import Config
 from application import Base
 
 
-
 # Database login used to work with user 'root'.  Now 'root' requires sudo access (post rebuild of system).
 # See stackoverflow.com/questions/37239970/connect-to-mysql-server-without-sudo
 def get_engine():

@@ -43,6 +43,13 @@ class Config:
     USER_AFTER_LOGIN_ENDPOINT = 'main.sst_main'  #:
     USER_AFTER_LOGOUT_ENDPOINT = ''     #:
 
+    # File System Stored files
+    USER_DIRECTORY_BASE = '/home/don/devel/ssflask2/application/static/file_content/'
+    USER_DOWNLOADABLE_FILES = USER_DIRECTORY_BASE + 'downloads/'
+    USER_AUTO_GENERATED_PAGES = USER_DIRECTORY_BASE + 'gen-pages/'
+    USER_PLOTS = USER_DIRECTORY_BASE + 'plots/'
+    USER_UPLOADS = USER_DIRECTORY_BASE + '/'
+
     # Admin
     FLASK_ADMIN_SWATCH = 'cerulean'
 

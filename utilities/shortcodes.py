@@ -19,7 +19,7 @@ class Shortcode(object):
         self.specific_processors = {'maxbutton': self._process_maxbutton,
                                     'singlepic': self._process_singlepic,
                                     'ngg_images': self._process_ngg_images,
-                                    'includeme': None,
+                                    'includeme': self._process_include_me,
                                     'caption': None,  # see 'steve-and-david'  not sure where it comes from
                                     'src_lists_membership': None,
                                     'src_lists_admin': None
@@ -264,6 +264,29 @@ class Shortcode(object):
         except Exception as e:
             print(e.args)
             foo = 3
+
+    def _process_include_me(self):
+        """Process 'includeme' shortcode.
+            Example: [includeme file="wp-content/gen-pages/resident_stories.html"]
+        """
+        try:
+            file = self.content_dict['file'].lower()
+        except KeyError as e:
+            print("Maxbutton Key Error in dict: {}".format(self.content_dict))
+            raise e
+        self.content_dict['result'] = 'Error processing shortcode includeme for file: {}'.format(file)
+        file_parts = file.split('/')
+        if file_parts[0] == 'wp-content':
+            file_parts = file_parts[1:]
+        if file_parts == [] or file_parts[0] not in ['downloads', 'gen-pages', 'plots', 'uploads']:
+            raise ShortcodeParameterError('Included file not in expected directory: {}'.format(file))
+        file = Config.USER_DIRECTORY_BASE + '/'.join(file_parts)
+
+        with open(file, 'r') as fl:
+            res = fl.read()
+            fl.close()
+        if res:
+            self.content_dict['result'] = '<div>' + res + '</div>'
 
 
 if __name__ == '__main__':
