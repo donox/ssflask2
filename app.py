@@ -1,5 +1,5 @@
 # run.py
-from application import create_app
+from ssfl import create_app
 from pathlib import Path
 from dotenv import load_dotenv
 

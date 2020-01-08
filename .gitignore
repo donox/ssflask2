@@ -1,8 +1,8 @@
 /venv/
-/application/static/gallery/
-/application/templates/css/mystyles.css
+/ssfl/static/gallery/
+/ssfl/templates/css/mystyles.css
 /other files/Task List.ods
 
 # Project exclude paths
 /node_modules/
-/application/static/file_content/
+/ssfl/static/file_content/

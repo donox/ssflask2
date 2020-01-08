@@ -1,5 +1,5 @@
 from flask_user import UserMixin
-from application import db
+from ssfl import db
 
 
 class User(db.Model, UserMixin):

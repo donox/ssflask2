@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+
+{% extends 'base/layout.html' %}
+
+{% block content %}
+    {% for item1 in snips %}        {# Each item corresponds to all stories horizontally across the page  #}
+        <section class="is-mobile">
+            <div class="container columns">
+                {% for item2 in item1 %}     {# Each item corresponds to all stories vertically in a cell #}
+                    <div class="column {{ item2.story['width-class'] }}">
+                        <div class="title is-4">{{ item2.story['title'] | safe }}</div>
+                        <figure>
+                            <img class="is-link"
+                                 {% set file = item2.story['photo_url'] %}
+                                 src="{{ url_for('main.static', filename=file) }}"
+                                 width="{{ item2.story['photo_shape'][0] }}"
+                                 height="{{ item2.story['photo_shape'][1] }}"
+                                 align="{{ item2.story['photo_align'] }}">
+                            <figcaption>{{ item2.story['photo_caption'] }}</figcaption>
+                        </figure>
+                        <div class="message-body">{{ item2.story['snip'] | safe }}</div>
+                        <button class="button is-link">{{ item2.story['read_more'] | safe }}</button>
+                    </div>
+                {% endfor %}
+            </div>
+        </section>
+    {% endfor %}
+{% endblock %}

@@ -256,7 +256,7 @@ class Shortcode(object):
     @staticmethod
     def run_jinja_template(template, context):
         try:
-            env = Environment(loader=PackageLoader('application', 'templates'),
+            env = Environment(loader=PackageLoader('ssfl', 'templates'),
                               autoescape=(['html']))
             template = env.get_template(template)
             results = template.render(context)

@@ -503,7 +503,7 @@ class _MailMixin(object):
         try:
             return Connection(app.extensions['mail'])
         except KeyError:
-            raise RuntimeError("The curent application was not configured with Flask-Mail")
+            raise RuntimeError("The curent ssfl was not configured with Flask-Mail")
 
 
 class _Mail(_MailMixin):
@@ -552,12 +552,12 @@ class Mail(_MailMixin):
         )
 
     def init_app(self, app):
-        """Initializes your mail settings from the application settings.
+        """Initializes your mail settings from the ssfl settings.
 
         You can use this if you want to set up your Mail instance
         at configuration time.
 
-        :param app: Flask application instance
+        :param app: Flask ssfl instance
         """
         state = self.init_mail(app.config, app.debug, app.testing)
 

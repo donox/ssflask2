@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+
+{% extends 'base/layout.html' %}
+
+{% block content %}
+    <section class="container">
+        <div class="columns">
+
+                        <div class="">
+                            <div class="title">{{ story['title'] | safe }}</div>
+                            <div class="message-body">{{ story['body'] | safe }}</div>
+                        </div>
+        </div>
+    </section>
+{% endblock %}

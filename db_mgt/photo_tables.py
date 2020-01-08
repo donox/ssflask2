@@ -1,5 +1,5 @@
 from sqlalchemy import UnicodeText
-from application import db
+from ssfl import db
 
 
 class Photo(db.Model):

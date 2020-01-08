@@ -1,4 +1,4 @@
-from application import db
+from ssfl import db
 import datetime as dt
 
 

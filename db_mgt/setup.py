@@ -5,7 +5,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.pool import NullPool
 from config import Config
-from application import Base
+from ssfl import Base
 
 
 # Database login used to work with user 'root'.  Now 'root' requires sudo access (post rebuild of system).

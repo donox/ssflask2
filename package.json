@@ -2,7 +2,7 @@
   "name": "src_css",
   "version": "1.0.0",
   "description": "Package for files for Sunnyside Resident Website",
-  "main": "application/sass/mystyles.scss",
+  "main": "ssfl/sass/mystyles.scss",
   "dependencies": {
     "amdefine": ">=0.1.0",
     "backbone": "^1.4.0",
@@ -31,11 +31,11 @@
     "webpack-cli": "^3.3.10"
   },
   "scripts": {
-    "css-build": "node-sass --omit-source-map-url application/sass/mystyles.scss application/static/css/mystyles.css",
+    "css-build": "node-sass --omit-source-map-url ssfl/sass/mystyles.scss ssfl/static/css/mystyles.css",
     "css-watch": "npm run css-build -- --watch",
     "start": "npm run css-watch",
     "build-remove-for-production": "webpack -p --config webpack.config.js",
-    "dev-build": "webpack -d --config application/static/webpack.config.js"
+    "dev-build": "webpack -d --config ssfl/static/webpack.config.js"
   },
   "repository": {
     "type": "git",
