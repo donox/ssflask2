@@ -11,7 +11,7 @@
                         <div class="title is-4">{{ item2.story['title'] | safe }}</div>
                         <figure>
                             <img class="is-link"
-                                 {% set file = item2.story['photo_url'] %}
+                                    {% set file = item2.story['photo_url'] %}
                                  src="{{ url_for('main.static', filename=file) }}"
                                  width="{{ item2.story['photo_shape'][0] }}"
                                  height="{{ item2.story['photo_shape'][1] }}"
@@ -19,7 +19,11 @@
                             <figcaption>{{ item2.story['photo_caption'] }}</figcaption>
                         </figure>
                         <div class="message-body">{{ item2.story['snip'] | safe }}</div>
-                        <button class="button is-link">{{ item2.story['read_more'] | safe }}</button>
+                        {% with button_type=item2.story['button_type'], target=item2.story['target'],
+                                text_content=item2.story['text_content'],
+                                extra_styling=item2.story['extra_styling'] %}
+                            {% include 'base/button.html' %}
+                        {% endwith %}
                     </div>
                 {% endfor %}
             </div>

@@ -3,6 +3,7 @@ from utilities.html_mgt import PageBody
 from utilities.shortcodes import Shortcode
 from lxml.html import html5parser as hp
 import lxml
+from flask import render_template
 
 
 class Story(object):
@@ -65,10 +66,11 @@ class Story(object):
         return txt
 
     def _create_read_more(self):
-        """Create button to go in a button transferring to this page"""
-        html = '<a class="navbar-item" href="/main/page/{}">Read More</a>'.format(self.pb.page_in_db.id)
-        self.read_more = html
-        self.story['read_more'] = html
+        """Create parameters for a button to go in a button transferring to this page"""
+        self.add_to_context('button_type','is-link')
+        self.add_to_context('extra_styling', 'margin:4px; color:red')
+        self.add_to_context('target', '/main/page/{}'.format(self.pb.page_in_db.id))
+        self.add_to_context('text_content', 'Read More')
 
     def get_read_more(self):
         return self.read_more

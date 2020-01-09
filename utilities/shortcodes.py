@@ -99,9 +99,10 @@ class Shortcode(object):
             page_id = target_page.id
         else:
             return None  # TODO:  Is this really an error?  Displays as text content of shortcode
-        styling = "is-link"
+        button_type = "is-link"
         target = 'http://' + Config.SERVER_NAME + "/main/page/" + str(page_id)
-        context = {'styling': styling,
+        context = {'button_type': button_type,
+                   'extra_styling': 'margin:3px;',
                    'target': target,
                    'text_content': text_content}
         res = Shortcode.run_jinja_template('base/button.html', context=context).replace('\n','')

@@ -1,2 +1,5 @@
-<a class="button {{ styling }}"
-        href="{{ target }}">{{ text_content }}</a>
+<a class="button {{ button_type }}"
+        {% if extra_styling %}
+                style="{{ extra_styling }}"
+        {% endif %}
+   href="{{ target }}">{{ text_content }}</a>
