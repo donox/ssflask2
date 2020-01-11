@@ -1,13 +1,7 @@
 import csv
 from ssfl.main.story import Story
-
-# These are needed when running standalone
-from pathlib import Path
-from dotenv import load_dotenv
-env_path = '/home/don/devel/ssflask/.env'
-load_dotenv(dotenv_path=env_path)
-import db_mgt.setup as su
 from db_mgt.photo_tables import Photo
+from config import Config
 
 
 class BuildFrontPage(object):
@@ -15,7 +9,7 @@ class BuildFrontPage(object):
         self.session = db_session
         self.descriptor = None
         self.context = dict()
-        with open('/home/don/devel/nightly-scripts/flask_files/front_page_layout.csv', 'r') as fl:
+        with open(Config.USER_DEFINITION_FILES + 'front_page_layout.csv', 'r') as fl:
             layout = csv.reader(fl)
             self._set_descriptor(layout)
 

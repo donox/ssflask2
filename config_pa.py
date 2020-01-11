@@ -8,7 +8,7 @@ class Config:
     DEBUG = os.environ.get('DEBUG')
     SECRET_KEY = os.environ.get('SECRET_KEY')
     SESSION_COOKIE_NAME = os.environ.get('SESSION_COOKIE_NAME')
-    SERVER_NAME = 'localhost:5000'
+    SERVER_NAME = 'doxley.pythonanywhere.com'
     SESSION_TYPE = 'sqlalchemy'
     SESSION_PERMANENT = False
 
@@ -44,7 +44,7 @@ class Config:
     USER_AFTER_LOGOUT_ENDPOINT = ''     #:
 
     # File System Stored files
-    USER_DIRECTORY_BASE = '/home/don/devel/ssflask_content_files/'
+    USER_DIRECTORY_BASE = '/home/doxley/ssflask2/work/'
     USER_DOWNLOADABLE_FILES = USER_DIRECTORY_BASE + 'downloads/'
     USER_AUTO_GENERATED_PAGES = USER_DIRECTORY_BASE + 'gen_pages/'
     USER_PLOTS = USER_DIRECTORY_BASE + 'plots/'
