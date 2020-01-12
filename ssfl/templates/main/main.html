@@ -11,8 +11,7 @@
                         <div class="title is-4">{{ item2.story['title'] | safe }}</div>
                         <figure>
                             <img class="is-link"
-                                    {% set file = item2.story['photo_url'] %}
-                                 src="{{ url_for('main.static', filename=file) }}"
+src="getimage/{{ item2.story['photo_url'] }}?w={{ item2.story['photo_shape'][0]}}&h={{ item2.story['photo_shape'][1]}}"
                                  width="{{ item2.story['photo_shape'][0] }}"
                                  height="{{ item2.story['photo_shape'][1] }}"
                                  align="{{ item2.story['photo_align'] }}">

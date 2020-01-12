@@ -52,6 +52,11 @@ class Config:
     USER_DEFINITION_FILES = USER_DIRECTORY_BASE + 'definition_files/'
 
     USER_DIRECTORY_STATIC = '/home/doxley/ssflask2/ssfl/static/'
+    USER_DIRECTORY_IMAGES = '/home/doxley/ssflask2/work/gallery/'
+
+    TEMP_COUNT = 50
+    TEMP_CURRENT = 1
+    TEMP_FILE_LOC = '/home/doxley/temp/photo'
 
     # Admin
     FLASK_ADMIN_SWATCH = 'cerulean'

@@ -10,7 +10,7 @@ from utilities.sst_exceptions import SiteObjectNotFoundError, SiteIdentifierErro
 
 XHTML_NAMESPACE = 'http://www.w3.org/1999/xhtml'
 XHTML = "{%s}" % XHTML_NAMESPACE
-NSMAP = {None : XHTML_NAMESPACE}
+NSMAP = {None: XHTML_NAMESPACE}
 
 
 class PageBody(object):

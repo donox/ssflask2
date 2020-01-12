@@ -25,6 +25,8 @@ def create_app():
     app = Flask(__name__, instance_relative_config=False)
     app.config.from_object('config.Config')
 
+
+
     # Initialize Flask-BabelEx
     babel = Babel(app)
     from db_mgt.models import User, Role

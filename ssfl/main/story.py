@@ -4,6 +4,7 @@ from utilities.shortcodes import Shortcode
 from lxml.html import html5parser as hp
 import lxml
 from flask import render_template
+from config import Config
 
 
 class Story(object):

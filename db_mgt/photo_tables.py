@@ -1,5 +1,7 @@
 from sqlalchemy import UnicodeText
 from ssfl import db
+from config import Config
+from PIL import Image
 
 
 class Photo(db.Model):
@@ -27,8 +29,35 @@ class Photo(db.Model):
         gallery_id = photo.old_gallery_id
         gallery = session.query(PhotoGallery).filter(PhotoGallery.old_id == gallery_id).first()
         # A url suitable for appending to the url_root of a request
-        url = 'gallery/' + gallery.path_name  + photo.file_name
+        url = gallery.path_name + photo.file_name
         return url
+
+    def get_resized_photo(self, session, width=None, height=None):
+        """Get  resized copy of self photo into temporary file.
+
+        Temporary files are maintained on a rotating basis and reused.  This seems to
+        avoid problems managing the closing and deleting of temporary files.
+        """
+        file = Config.USER_DIRECTORY_IMAGES + Photo.get_photo_url(session, self.old_id)
+        image = Image.open(file)
+        print(f'Image Size {image.size}')
+        image.thumbnail((width, height))
+        fl = Config.TEMP_FILE_LOC + str(Config.TEMP_CURRENT) + '.jpg'
+        tmp = int(Config.TEMP_CURRENT) + 1
+        if tmp > int(Config.TEMP_COUNT):
+            tmp = 1
+        Config.TEMP_CURRENT = tmp
+        image.save(fl)
+        return fl
+
+    @staticmethod
+    def get_photo_from_path(session, path):
+        photo_path = path.split('/')[-1]
+        try:
+            photo = session.query(Photo).filter(Photo.file_name == photo_path).first()
+            return photo
+        except:
+            return None
 
     def __repr__(self):
         return '<Flask PhotoGallery {}>'.format(self.__tablename__)

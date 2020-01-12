@@ -1,10 +1,14 @@
-from flask import Flask, Blueprint, render_template, url_for, request
+from flask import Flask, Blueprint, render_template, url_for, request, send_file, render_template_string
 from flask_login import login_required
 from flask import current_app as app
 from db_mgt.setup import get_engine, create_session, close_session
 from .forms.edit_db_content_form import DBContentEditForm
 from wtforms.validators import ValidationError
 from .edit_local_file import edit_database_file
+from config import Config
+import os
+from db_mgt.photo_tables import Photo
+from tempfile import NamedTemporaryFile
 
 
 # Set up a Blueprint
@@ -12,6 +16,18 @@ admin_bp = Blueprint('admin_bp', __name__,
                      template_folder='templates',
                      static_folder='static')
 
+
+@admin_bp.route('/getimage/<path:image_path>', methods=['GET'])
+def get_image(image_path):
+    path = Config.USER_DIRECTORY_IMAGES + image_path
+    args = request.args
+    width = int(args['w'])
+    height = int(args['h'])
+    db_session = create_session(get_engine())
+    photo = Photo.get_photo_from_path(db_session, path)
+    fl = photo.get_resized_photo(db_session,  width=width, height=height)
+    close_session(db_session)
+    return send_file(fl, mimetype='image/jpeg')
 
 @admin_bp.route('/admin/test', methods=['GET'])
 def admin():

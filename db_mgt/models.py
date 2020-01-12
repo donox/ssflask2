@@ -1,5 +1,6 @@
 from flask_user import UserMixin
 from ssfl import db
+import datetime
 
 
 class User(db.Model, UserMixin):
@@ -11,8 +12,8 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(40), unique=True, nullable=False)
     password = db.Column(db.String(200), primary_key=False, unique=False, nullable=False)
     website = db.Column(db.String(60), index=False, unique=False, nullable=True)
-    created_on = db.Column(db.DateTime, index=False, unique=False, nullable=True)
-    last_login = db.Column(db.DateTime, index=False, unique=False, nullable=True)
+    created_on = db.Column(db.DateTime, index=False, unique=False, nullable=True, default=datetime.datetime.utcnow)
+    last_login = db.Column(db.DateTime, index=False, unique=False, nullable=True, default=datetime.datetime.utcnow)
     active = db.Column(db.Boolean, default=False)
     email_confirmed_at = db.Column(db.DateTime, index=False, unique=False, nullable=True, default='2000-01-01')
     roles = db.relationship('Role', secondary='user_roles', backref=db.backref('user', lazy='dynamic'))
