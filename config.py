@@ -44,18 +44,18 @@ class Config:
     USER_AFTER_LOGOUT_ENDPOINT = ''     #:
 
     # File System Stored files
-    USER_DIRECTORY_BASE = '/home/don/devel/ssflask_content_files/'
+    USER_DIRECTORY_BASE = os.environ.get('USER_DIRECTORY_BASE')
     USER_DOWNLOADABLE_FILES = USER_DIRECTORY_BASE + 'downloads/'
     USER_AUTO_GENERATED_PAGES = USER_DIRECTORY_BASE + 'gen_pages/'
     USER_PLOTS = USER_DIRECTORY_BASE + 'plots/'
     USER_UPLOADS = USER_DIRECTORY_BASE + 'uploads/'
     USER_DEFINITION_FILES = USER_DIRECTORY_BASE + 'definition_files/'
 
-    USER_DIRECTORY_STATIC = '/home/don/devel/ssflask_content_files/'
-    USER_DIRECTORY_IMAGES = '/home/don/devel/ssflask2/ssfl/static/gallery/'
+    USER_DIRECTORY_STATIC = os.environ.get('USER_DIRECTORY_STATIC')
+    USER_DIRECTORY_IMAGES = os.environ.get('USER_DIRECTORY_IMAGES')
     TEMP_COUNT = 50
     TEMP_CURRENT = 1
-    TEMP_FILE_LOC = '/home/don/devel/temp/photo'
+    TEMP_FILE_LOC = os.environ.get('TEMP_FILE_LOC')
 
     # Admin
     FLASK_ADMIN_SWATCH = 'cerulean'

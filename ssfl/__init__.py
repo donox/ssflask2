@@ -16,8 +16,7 @@ if not local_server:
     from pathlib import Path
     from dotenv import load_dotenv
 
-    env_path = Path('.') / '.env'
-    env_path = '/home/don/devel/ssflask/.env'
+    env_path = '/home/doxley/ssflask2/.env_PA'
     load_dotenv(dotenv_path=env_path)
 
 # Monkey-patch flask_mail to fix problem in configuration variable - line 548 - DEBUG being converted to int
