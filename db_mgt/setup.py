@@ -18,7 +18,7 @@ def get_engine():
         user = Config.SQLALCHEMY_USERNAME
         password = Config.SQLALCHEMY_PASSWORD
         login_string = Config.SQLALCHEMY_DATABASE_URI
-        engine = create_engine(login_string, echo=False, poolclass=NullPool, pool_recycle=280)
+        engine = create_engine(login_string, echo=False, poolclass=NullPool, pool_recycle=280, pool_pre_ping=True)
         engine.connect()
         print("sqlAlchemy engine connected successfully on: {}".format(login_string))
         return engine

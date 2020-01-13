@@ -1,4 +1,4 @@
-from wtforms import Form, StringField, PasswordField, validators, SubmitField, IntegerField
+from wtforms import Form, StringField, PasswordField, validators, SubmitField, IntegerField, BooleanField
 from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, Length, Optional
 import os
 from utilities.sst_exceptions import DataEditingSystemError
@@ -12,6 +12,7 @@ class DBContentEditForm(FlaskForm):
     page_name = StringField('Page Name', validators=[Optional()])
     directory = StringField('Directory', validators=[DataRequired()], default=os.path.abspath(os.getcwd()))
     file_name = StringField('Save File Name', validators=[DataRequired()])
+    direction = BooleanField('Transfer to file', default=True)
 
     submit = SubmitField('Save to File')
 

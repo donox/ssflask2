@@ -8,7 +8,7 @@ from .edit_local_file import edit_database_file
 from config import Config
 import os
 from db_mgt.photo_tables import Photo
-from tempfile import NamedTemporaryFile
+
 
 
 # Set up a Blueprint
@@ -57,7 +57,7 @@ def site_map():
 
 
 @admin_bp.route('/admin/edit', methods=['GET', 'POST'])
-# @login_required
+@login_required
 def sst_admin_edit():
     """Transfer content to-from DB for local editing."""
     if request.method == 'GET':

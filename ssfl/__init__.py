@@ -5,6 +5,20 @@ from flask_assets import Environment, Bundle
 from flask_user import UserManager
 
 from sqlalchemy.ext.declarative import declarative_base
+import platform
+
+if platform.node() == 'Descartes':
+    local_server = True
+else:
+    local_server = False
+
+if not local_server:
+    from pathlib import Path
+    from dotenv import load_dotenv
+
+    env_path = Path('.') / '.env'
+    env_path = '/home/don/devel/ssflask/.env'
+    load_dotenv(dotenv_path=env_path)
 
 # Monkey-patch flask_mail to fix problem in configuration variable - line 548 - DEBUG being converted to int
 import flask_mail as fm
@@ -24,8 +38,6 @@ def create_app():
     # Create Flask app load app.config
     app = Flask(__name__, instance_relative_config=False)
     app.config.from_object('config.Config')
-
-
 
     # Initialize Flask-BabelEx
     babel = Babel(app)
@@ -56,3 +68,7 @@ def create_app():
     assets.register('css_bundle', css_bundle)
 
     return app
+
+
+if not local_server:
+    app = create_app()

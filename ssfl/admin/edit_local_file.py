@@ -4,10 +4,14 @@ from wtforms import ValidationError
 
 
 def edit_database_file(session, form):
-    """Edit file that is stored in database."""
+    """Edit file that is stored in database.
+
+        This applies to the case where there is both a database entry and valid filename."""
     page_id = form.page_id.data
     direct = form.directory.data
     file = form.file_name.data
+    direction = form.direction.data
+    submit = form.submit.data
 
     try:
         if page_id:
@@ -18,14 +22,22 @@ def edit_database_file(session, form):
             if page is None:
                 form.errors['Page Not Found'] = ['There was no page with that name.']
                 return False
-        if page.page_content != '' and page.page_content is not None:
-            with open(direct + '/' + file, 'w') as fl:
-                fl.write(page.page_content)
-                fl.close()
-                return True
+        if direction:
+            if page.page_content != '' and page.page_content is not None:
+                with open(direct + '/' + file, 'w') as fl:
+                    fl.write(page.page_content)
+                    fl.close()
+                    return True
+            else:
+                form.errors['Page Empty'] = ['Database page had no content']
+                return False
         else:
-            form.errors['Page Empty'] = ['Database page had no content']
-            return False
+            with open(direct + '/' + file, 'r') as fl:
+                page.page_content = fl.read()
+                # TODO: set no import to prevent replacing page on db import
+                fl.close()
+                session.commit()
+                return True
     except Exception as e:
         # TODO: handle error/log, and return useful message to user
         form.errors['Exception'] = ['Exception occurred processing page']

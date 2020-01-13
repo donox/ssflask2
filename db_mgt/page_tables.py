@@ -18,6 +18,7 @@ class Page(db.Model):
     page_do_not_cache = db.Column(db.Boolean(), default=False)
     page_cached_date = db.Column(db.DateTime, default='2000-01-01')
     page_cached_content = db.Column(db.String(), nullable=True)
+    page_do_not_import = db.Column(db.Boolean(), default=False)
 
     def add_to_db(self, session, commit=False):
         session.add(self)

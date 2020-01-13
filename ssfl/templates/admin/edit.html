@@ -45,6 +45,16 @@
                         </ul>
                     {% endif %}
                 </div>
+                <div class="checkbox">
+                    {{ form.direction.label }}
+                    {{ form.direction(placeholder='Transfer from DB to File') }}
+                    {% if form.direction.errors %}
+                        <ul class="errors">
+                            {% for error in form.direction.errors %}
+                                <li>{{ error }}</li>{% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
                 <div class="button">
                     <input id="submit" type="submit" value="Submit">
                 </div>
