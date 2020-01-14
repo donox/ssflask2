@@ -1,5 +1,5 @@
 import re
-from utilities.process_urls import find_page_from_url
+from utilities.process_urls import find_page_from_url, find_download_from_url
 from config import Config
 from db_mgt.photo_tables import Photo, PhotoGallery
 from jinja2 import Environment, PackageLoader, select_autoescape
@@ -97,10 +97,12 @@ class Shortcode(object):
         target_page = find_page_from_url(self.session, url_content)
         if target_page:
             page_id = target_page.id
+            target = 'http://' + Config.SERVER_NAME + "/main/page/" + str(page_id)
         else:
-            return None  # TODO:  Is this really an error?  Displays as text content of shortcode
+            target = find_download_from_url(url_content)
+            if not target:
+                return None  # TODO:  Is this really an error?  Displays as text content of shortcode
         button_type = "is-link"
-        target = 'http://' + Config.SERVER_NAME + "/main/page/" + str(page_id)
         context = {'button_type': button_type,
                    'extra_styling': 'margin:3px;',
                    'target': target,

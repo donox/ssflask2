@@ -6,7 +6,7 @@ from .forms.edit_db_content_form import DBContentEditForm
 from wtforms.validators import ValidationError
 from .edit_local_file import edit_database_file
 from config import Config
-import os
+import os, sys
 from db_mgt.photo_tables import Photo
 
 
@@ -15,6 +15,14 @@ from db_mgt.photo_tables import Photo
 admin_bp = Blueprint('admin_bp', __name__,
                      template_folder='templates',
                      static_folder='static')
+
+
+@admin_bp.route('/downloads/<string:file_path>', methods=['GET'])
+def get_download(file_path):
+    path = Config.USER_DIRECTORY_BASE + file_path
+    if os.path.exists(path):
+        with open(path, 'r') as fl:
+            return send_file(fl, mimetype='application/octet')
 
 
 @admin_bp.route('/getimage/<path:image_path>', methods=['GET'])

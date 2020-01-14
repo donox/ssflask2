@@ -3,6 +3,7 @@ from flask_babelex import Babel
 from flask_sqlalchemy import SQLAlchemy
 from flask_assets import Environment, Bundle
 from flask_user import UserManager
+from flask_migrate import Migrate
 
 from sqlalchemy.ext.declarative import declarative_base
 import platform
@@ -47,6 +48,7 @@ def create_app():
 
     # Initialize Flask-SQLAlchemy
     db.init_app(app)
+    migrate = Migrate(app, db)
 
     # Set up User Manager and (implicitly) Login Manager
     user_manager = UserManager(app, db, User, RoleClass=Role)

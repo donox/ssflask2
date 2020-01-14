@@ -1,4 +1,4 @@
-import os
+import os, string
 class DevConfig:
     pass
 
@@ -8,7 +8,7 @@ class Config:
     DEBUG = os.environ.get('DEBUG')
     SECRET_KEY = os.environ.get('SECRET_KEY')
     SESSION_COOKIE_NAME = os.environ.get('SESSION_COOKIE_NAME')
-    SERVER_NAME = 'localhost:5000'
+    SERVER_NAME = os.environ.get('SERVER_NAME')
     SESSION_TYPE = 'sqlalchemy'
     SESSION_PERMANENT = False
 
@@ -76,3 +76,9 @@ class ProdConfig:
     DEBUG = False
     TESTING = False
     SQLALCHEMY_ECHO = False
+
+class TestConfig(Config):
+    TESTING = True
+    WTF_CSRF_ENABLED = False
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:' + '/home/don/devel/temp/testing.db'
+    HASH_ROUNDS = 1

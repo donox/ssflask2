@@ -42,7 +42,7 @@ class Photo(db.Model):
         image = Image.open(file)
         print(f'Image Size {image.size}')
         image.thumbnail((width, height))
-        fl = Config.TEMP_FILE_LOC + str(Config.TEMP_CURRENT) + '.jpg'
+        fl = Config.TEMP_FILE_LOC + 'photo' + str(Config.TEMP_CURRENT) + '.jpg'
         tmp = int(Config.TEMP_CURRENT) + 1
         if tmp > int(Config.TEMP_COUNT):
             tmp = 1

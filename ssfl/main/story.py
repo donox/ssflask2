@@ -60,7 +60,7 @@ class Story(object):
                 if remain_len < len(el.text):
                     txt += el.text[0:remain_len]
                 else:
-                    txt += el.text
+                    txt += el.text + ' '
                 remain_len -= len(txt)
                 if remain_len <= 0:
                     return txt
