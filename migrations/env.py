@@ -21,6 +21,7 @@ logger = logging.getLogger('alembic.env')
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
+from db_mgt import models, photo_tables, page_tables, event_tables
 from flask import current_app
 config.set_main_option(
     'sqlalchemy.url', current_app.config.get(
