@@ -15,7 +15,6 @@ class Event(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     event_name = db.Column(db.String(length=128), nullable=False)
     event_description = db.Column(db.String(length=8192))
-    event_location = db.Column(db.Integer, db.ForeignKey('event_meta.id'), nullable=True)
     event_cost = db.Column(db.String(128), nullable=True)
     event_sign_up = db.Column(db.String(128), nullable=True)
     event_EC_pickup = db.Column(db.String(128), nullable=True)

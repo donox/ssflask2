@@ -25,12 +25,12 @@ class Calendar(object):
             self.cal_data['width-class'] = width_sizes[width]
 
     def create_daily_plugin(self, stuff, xx):
-        start = dt.datetime.strptime('2010/01/10 9:00:00 AM', '%Y/%m/%d %H:%M:%S %p')
-        end = dt.datetime.strptime('2010/01/10 5:00:00 PM', '%Y/%m/%d %H:%M:%S %p')
+        start = dt.datetime.now()
+        end = dt.datetime.now() + dt.timedelta(hours=96)
         audience = ['IL', 'AL']
         categories = ['resident clubs', 'event', 'wellness']
         events = EventsInPeriod(self.session, start, end, audience, categories)
-        events = events.all_events
+        events = events.all_events[0:6]
         res = []
         for event in events:
             evt_dict = {}

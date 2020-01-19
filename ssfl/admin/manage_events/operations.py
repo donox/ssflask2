@@ -86,13 +86,15 @@ class CalendarEvent(object):
         else:
             self.categories = res
         if self.venue:
-            venue_id = self.venue.id
+            venue_id = self.venue
         else:
             venue_id = None
-        db_event = Event(event_name=self.name, event_description=self.description, event_location=venue_id,
+        db_event = Event(event_name=self.name, event_description=self.description,
                          event_cost=self.cost, event_sign_up=self.sign_up, event_EC_pickup=self.ec_depart,
                          event_HL_pick_up=self.hl_depart)
         db_event.add_to_db(db_session, commit=True)
+        if self.venue:
+            db_event.event_to_meta.append(self.venue)
         for item in audiences:
             db_event.event_to_meta.append(item)
             item.events.append(db_event)
