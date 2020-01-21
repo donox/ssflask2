@@ -2,18 +2,18 @@ from db_mgt.event_tables import Event, EventTime, EventMeta
 from utilities.sst_exceptions import DataEditingSystemError
 from wtforms import ValidationError
 from .retrieval_support import EventsInPeriod, Evt
+from .operations import CsvToDb
 
 
 def manage_calendar(session, form):
     """Process calendar form as requested."""
-    audiences = ['AL', 'IL', 'HC']
-    categories = ['Wellness', 'Event', 'Religion', 'Resident Clubs']
+    audiences = form.audiences.data
+    categories = form.categories.data
     work_function = form.work_function
     cal_start = form.start_datetime
     cal_end = form.end_datetime
     direct = form.directory.data
     file = form.file_name.data
-    direction = form.direction.data
     submit = form.submit.data
     try:
         if work_function.data == 'pc':
@@ -45,6 +45,11 @@ def manage_calendar(session, form):
                     s = f'{event.id} :       : {p_cost} : {p_ec_pickup} : {p_hl_pickup}\n'
                     fl.write(s)
             fl.close()
+        elif work_function.data == 'uc':
+            build_calendar = CsvToDb(direct + '/' + file)
+            build_calendar.add_events()
+            for evt in build_calendar.get_event_list():
+                evt.add_to_db(session)
     except Exception as e:
         # TODO: handle error/log, and return useful message to user
         form.errors['Exception'] = ['Exception occurred processing page']

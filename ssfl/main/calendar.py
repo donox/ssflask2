@@ -39,7 +39,6 @@ class Calendar(object):
             evt_dict['venue'] = event.event_location
             evt_dict['all_day'] = event.all_day
             evt_dict['ec_pickup'] = event.ec_pickup
-            evt_dict['event_occurs'] = event.event_occurs
             evt_dict['event_cost'] = event.event_cost
             evt_dict['event_end'] = event.event_end
             evt_dict['event_start'] = event.event_start

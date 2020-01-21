@@ -73,10 +73,14 @@ class EventsInPeriod(object):
     # sql += 'and event.id=1237 '
     sql += 'order by start;'
 
-    def __init__(self, db_session, start_time: dt.datetime, end_time: dt.datetime, audiences: list, categories: list):
+    def __init__(self, db_session, start_time, end_time, audiences: list, categories: list):
         self.session = db_session
-        self.start = start_time.data.strftime('%Y-%m-%d %H:%M:%S')
-        self.end = end_time.data.strftime('%Y-%m-%d %H:%M:%S')
+        if type(start_time) == dt.datetime:
+            self.start = start_time.strftime('%Y-%m-%d %H:%M:%S')
+            self.end = end_time.strftime('%Y-%m-%d %H:%M:%S')
+        else:
+            self.start = start_time.data.strftime('%Y-%m-%d %H:%M:%S')
+            self.end = end_time.data.strftime('%Y-%m-%d %H:%M:%S')
         self.audiences = ", ".join([quotify(x.upper()) for x in audiences])
         self.categories = ", ".join([quotify(x.lower()) for x in categories])
         full_sql = EventsInPeriod.sql.format(self.start, self.end, self.audiences, self.categories)

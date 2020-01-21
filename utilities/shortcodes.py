@@ -94,14 +94,18 @@ class Shortcode(object):
         except KeyError as e:
             print("Maxbutton Key Error in dict: {}".format(self.content_dict))
             raise e
-        target_page = find_page_from_url(self.session, url_content)
-        if target_page:
-            page_id = target_page.id
-            target = 'http://' + Config.SERVER_NAME + "/main/page/" + str(page_id)
-        else:
-            target = find_download_from_url(url_content)
-            if not target:
-                return None  # TODO:  Is this really an error?  Displays as text content of shortcode
+        try:
+            target_page = find_page_from_url(self.session, url_content)
+            if target_page:
+                page_id = target_page.id
+                target = 'http://' + Config.SERVER_NAME + "/main/page/" + str(page_id)
+            else:
+                target = find_download_from_url(url_content)
+                if not target:
+                    return None  # TODO:  Is this really an error?  Displays as text content of shortcode
+        except Exception as e:      # some urls seem to be bad
+            print(f'Error in Maxbutton URL: {url_content}')
+            return None
         button_type = "is-link"
         context = {'button_type': button_type,
                    'extra_styling': 'margin:3px;',

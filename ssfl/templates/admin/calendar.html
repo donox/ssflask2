@@ -15,8 +15,28 @@
                         </ul>
                     {% endif %}
                 </div>
+                <div class="input" style="margin-top: 25px;margin-bottom: 15px">
+                    {{ form.audiences.label }}
+                    {{ form.audiences }}
+                    {% if form.audiences.errors %}
+                        <ul class="errors">
+                            {% for error in form.audiences.errors %}
+                                <li>{{ error }}</li>{% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+                <div class="input" style="margin-top: 25px;margin-bottom: 25px">
+                    {{ form.categories.label }}
+                    {{ form.categories }}
+                    {% if form.categories.errors %}
+                        <ul class="errors">
+                            {% for error in form.categories.errors %}
+                                <li>{{ error }}</li>{% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
 
-                <div class="input">
+                <div class="input" style="margin-top: 10px;margin-bottom: 10px">
                     {{ form.start_datetime.label }}
                     {{ form.start_datetime(placeholder='Page name - not title (e.g., foo-bar-xx)') }}
                     {% if form.start_datetime.errors %}
@@ -26,7 +46,7 @@
                         </ul>
                     {% endif %}
                 </div>
-                <div class="input">
+                <div class="input" style="margin-top: 10px;margin-bottom: 10px">
                     {{ form.end_datetime.label }}
                     {{ form.end_datetime() }}
                     {% if form.end_datetime.errors %}
@@ -36,7 +56,7 @@
                         </ul>
                     {% endif %}
                 </div>
-                <div class="file">
+                <div class="file" style="margin-top: 10px;margin-bottom: 10px">
                     {{ form.directory.label }}
                     {{ form.directory(placeholder=form.default_directory) }}
                     {% if form.directory.errors %}
@@ -46,22 +66,12 @@
                         </ul>
                     {% endif %}
                 </div>
-                <div class="file">
+                <div class="file" style="margin-top: 10px;margin-bottom: 10px">
                     {{ form.file_name.label }}
                     {{ form.file_name(placeholder='Path name to store data') }}
                     {% if form.file_name.errors %}
                         <ul class="errors">
                             {% for error in form.file_name.errors %}
-                                <li>{{ error }}</li>{% endfor %}
-                        </ul>
-                    {% endif %}
-                </div>
-                <div class="checkbox">
-                    {{ form.direction.label }}
-                    {{ form.direction(placeholder='Transfer from DB to File') }}
-                    {% if form.direction.errors %}
-                        <ul class="errors">
-                            {% for error in form.direction.errors %}
                                 <li>{{ error }}</li>{% endfor %}
                         </ul>
                     {% endif %}

@@ -30,6 +30,7 @@ CAL_DATES_BEGIN = 12
 
 class CalendarEvent(object):
     """A CalendarEvent object is a temporary layer between outside info and the DB."""
+    zero_time = dt.time(hour=0, minute=0, second=0)
     def __init__(self):
         self.name = ''
         self.description = ''
@@ -57,7 +58,10 @@ class CalendarEvent(object):
 
     def add_to_db(self, db_session):
         """Add event(s) to database represented by this event, if not already there."""
-        if not self._check_if_there(db_session, check_location=True, check_time=True):
+        if self.name.find('eopard') > -1:
+            foo = 3
+        already_there = self._check_if_there(db_session, check_location=True, check_time=True)
+        if 'location' not in already_there.keys():
             # Get Venue if it exists or add it, if not.
             if self.venue:
                 res = db_session.query(EventMeta).filter(EventMeta.meta_key == 'location').\
@@ -72,23 +76,30 @@ class CalendarEvent(object):
                     self.venue.add_to_db(db_session, commit=True)
             else:
                 self.venue = None
-            audience_list = [x.upper() for x in self.audience]
-            res = db_session.query(EventMeta).\
-                filter(EventMeta.meta_key == 'audience').filter(EventMeta.meta_value.in_(audience_list)).all()
-            if not res:
-                raise ValueError("Can't find audience")
-            else:
-                audiences = res
-            res = db_session.query(EventMeta). \
-                filter(EventMeta.meta_key == 'category').filter(EventMeta.meta_value.in_(self.categories)).all()
-            if not res:
-                raise ValueError("Can't find category")
-            else:
-                self.categories = res
-            if self.venue:
-                venue_id = self.venue
-            else:
-                venue_id = None
+        else:
+            self.venue = already_there['location']
+
+        audience_list = [x.upper() for x in self.audience]  # Make sure of capitalization
+        res = db_session.query(EventMeta).\
+            filter(EventMeta.meta_key == 'audience').filter(EventMeta.meta_value.in_(audience_list)).all()
+        if not res:
+            raise ValueError("Can't find audience")
+        else:
+            audiences = res
+
+        res = db_session.query(EventMeta). \
+            filter(EventMeta.meta_key == 'category').filter(EventMeta.meta_value.in_(self.categories)).all()
+        if not res:
+            raise ValueError("Can't find category")
+        else:
+            self.categories = res
+
+        if self.venue:
+            venue_id = self.venue
+        else:
+            venue_id = None
+
+        if 'event' not in already_there.keys():
             db_event = Event(event_name=self.name, event_description=self.description,
                              event_cost=self.cost, event_sign_up=self.sign_up, event_EC_pickup=self.ec_depart,
                              event_HL_pick_up=self.hl_depart)
@@ -101,22 +112,35 @@ class CalendarEvent(object):
             for item in self.categories:
                 db_event.event_to_meta.append(item)
                 item.events.append(db_event)
-            for time in self.occurs:
-                if self.all_day > '0':
-                    ad = True
-                else:
-                    ad = False
-                if time[0]:
-                    st = dt.datetime.combine(time[2], time[0])
-                else:
-                    st = time[2]
-                if time[1]:
-                    end = dt.datetime.combine(time[2], time[1])
-                else:
-                    end = time[2]
-                new_time = EventTime(all_day_event=ad, start=st, end=end, event_id=db_event.id)
+            db_event_id = db_event.id
+        else:
+            db_event_id = already_there['event']
+
+
+        for time in self.occurs:
+            if self.all_day > '0':
+                ad = True
+            else:
+                ad = False
+            if time[0]:
+                tm = time[0]
+            else:
+                tm = CalendarEvent.zero_time
+            st = dt.datetime.combine(time[2], tm)       # Ensure there is a time component to match DB retrieval
+            if time[1]:
+                tm = time[1]
+            else:
+                tm = CalendarEvent.zero_time
+            end = dt.datetime.combine(time[2], tm)
+            found_it = False
+            if 'time' in already_there.keys():
+                for id, all_day, a_st, a_end in already_there['time']:
+                    if st == a_st and end == a_end:
+                        found_it = True
+            if not found_it:
+                new_time = EventTime(all_day_event=ad, start=st, end=end, event_id=db_event_id)
                 new_time.add_to_db(db_session)
-            db_session.commit()
+        db_session.commit()
 
     def _check_if_there(self, db_session, check_time=False, check_location=False):
         #TODO: Handle All Day Event
@@ -140,38 +164,48 @@ class CalendarEvent(object):
         sql_meta += 'and em.meta_key = \'location\' '
         sql_meta += 'and em.meta_value = \'{}\';'
 
-        sql_time = 'select id from event_time '
+        sql_time = 'select id, all_day_event, start, end from event_time '
         sql_time += 'where event_id = {} '
         sql_time2 = 'and start = \'{}\' and end = \'{}\'; '
-        sql_time3 = 'and all_day_event={};'
 
+        elements_found = {}
         name = self.name.replace("'", "''")                 # MySQL escape single quote chars
         full_sql = sql.format(name, self.cost, self.sign_up, self.ec_depart, self.hl_depart)
         res = db_session.execute(full_sql).first()
         if not res:
-            return False
+            return elements_found
         e_id = res[0]
+        elements_found['event'] = e_id
         if check_location:
             if self.venue != '':
                 meta_sql = sql_meta.format(self.venue)
                 res = db_session.execute(meta_sql).first()
-                if not res:
-                    return False
+                if res:
+                    elements_found['location'] = res.first()
         if check_time:
             # TODO: Handle ALL DAY event
+            first_time = True
             for ev_start, ev_end, ev_date in self.occurs:
                 time_sql_base = sql_time.format(e_id)
                 st = CalendarEvent.combine_date_time_to_str(ev_start, ev_date)
                 nd = CalendarEvent.combine_date_time_to_str(ev_end, ev_date)
                 time_sql = time_sql_base + sql_time2.format(st, nd)
                 res = db_session.execute(time_sql).first()
-                if not res:
-                    return False
-        return True
+                if res:
+                    if first_time:
+                        elements_found['time'] = [res]
+                        first_time = False
+                    else:
+                        elements_found['time'].append(res)
+        return elements_found
 
     @staticmethod
-    def combine_date_time_to_str(time: dt.time, date:dt.date):
-        return dt.datetime.combine(date, time).strftime('%Y-%m-%d %H:%M:%S')
+    def combine_date_time_to_str(time: dt.time, date: dt.date):
+        if time:
+            return dt.datetime.combine(date, time).strftime('%Y-%m-%d %H:%M:%S')
+        else:
+            return dt.datetime.strftime(date, '%Y-%m-%d') + ' 00:00:00'
+
 
 class CsvToDb(object):
     def __init__(self, csv_file):
@@ -205,7 +239,7 @@ class CsvToDb(object):
         raise ValueError('No valid format found to parse {}'.format(text))
 
     def add_events(self):
-        """Add events in csv file to DB."""
+        """Create list of all events in CSV file."""
         event_list = []
         for row in self.read_file():
             new_event = CalendarEvent()
