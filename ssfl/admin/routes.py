@@ -3,8 +3,10 @@ from flask_login import login_required
 from flask import current_app as app
 from db_mgt.setup import get_engine, create_session, close_session
 from .forms.edit_db_content_form import DBContentEditForm
+from .forms.manage_calendar_form import DBManageCalendarForm
 from wtforms.validators import ValidationError
 from .edit_local_file import edit_database_file
+from .manage_events.manage_calendar import manage_calendar
 from config import Config
 import os, sys
 from db_mgt.photo_tables import Photo
@@ -83,6 +85,28 @@ def sst_admin_edit():
             if res:
                 return render_template('admin/edit.html', **context)   # redirect to success url
         return render_template('admin/edit.html', **context)
+    else:
+        raise ValueError('Invalid method type: {}'.format(request.method))
+
+@admin_bp.route('/admin/calendar', methods=['GET', 'POST'])
+@login_required
+def sst_admin_calendar():
+    """Transfer content to-from DB for local editing."""
+    if request.method == 'GET':
+        context = dict()
+        context['form'] = DBManageCalendarForm()
+        return render_template('admin/calendar.html', **context)
+    elif request.method == 'POST':
+        form = DBManageCalendarForm()
+        context = dict()
+        context['form'] = form
+        if form.validate_on_submit():
+            db_session = create_session(get_engine())
+            res = manage_calendar(db_session, form)
+            close_session(db_session)
+            if res:
+                return render_template('admin/calendar.html', **context)   # redirect to success url
+        return render_template('admin/calendar.html', **context)
     else:
         raise ValueError('Invalid method type: {}'.format(request.method))
 

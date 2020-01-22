@@ -2,6 +2,9 @@ import csv
 from ssfl.main.story import Story
 from db_mgt.photo_tables import Photo
 from config import Config
+from .views.calendar_view import RandomCalendarAPI, get_random_events
+from flask import render_template
+from .calendar import Calendar
 
 
 class BuildFrontPage(object):
@@ -40,7 +43,9 @@ class BuildFrontPage(object):
                         new_cell['width'] = width
                 elif cmd == 'story':
                     # TODO: allow for multiple stories in same cell
+                    # Select row and column in row - this is the dictionary for a specific cell
                     photo = self.descriptor[int(row[1])][int(row[2])]
+                    photo['cell_type'] = 'story'
                     photo['story'] = row[3]
                     pic = None
                     pic_shape = None
@@ -59,6 +64,20 @@ class BuildFrontPage(object):
                     if len(row) > 7:
                         pic_caption = row[7]
                     photo['photo_caption'] = pic_caption
+                elif cmd == 'calendar':
+                    calendar = self.descriptor[int(row[1])][int(row[2])]
+                    calendar['cell_type'] = 'calendar'
+                    count = 10
+                    events = get_random_events(self.session, count)
+                    context = {'events': []}
+                    for event in events:
+                        this_event = {}
+                        this_event['title'] = event.event_name
+                        # this_event['venue'] = event.event_location        # this is foreign key
+                        this_event['description'] = event.event_description
+                        context['events'].append(this_event)
+                    calendar['events'] = context
+                    # res = render_template('main/calendar_plugin.html', **context)
                 else:
                     raise ValueError('Unrecognized Command: {}'.format(cmd))
             raise ValueError('Fell off end of loop')
@@ -78,13 +97,19 @@ class BuildFrontPage(object):
             content = self.descriptor[row]
             for col, width in enumerate(content['shape']):
                 # TODO: deal with multiple stories in same cell
-                page_name = content[col+1]['story']
-                story = self.create_story(page_name, width)
-                story.add_to_context('photo_url', content[col+1]['photo_url'])
-                story.add_to_context('photo_shape', content[col + 1]['photo_shape'])
-                story.add_to_context('photo_align', content[col + 1]['photo_align'])
-                story.add_to_context('photo_caption', content[col + 1]['photo_caption'])
-                row_snip.append(story)
+                if content[col+1]['cell_type'] == 'story':
+                    page_name = content[col+1]['story']
+                    story = self.create_story(page_name, width)
+                    story.add_to_context('photo_url', content[col+1]['photo_url'])
+                    story.add_to_context('photo_shape', content[col + 1]['photo_shape'])
+                    story.add_to_context('photo_align', content[col + 1]['photo_align'])
+                    story.add_to_context('photo_caption', content[col + 1]['photo_caption'])
+                    item_dict = {'cell_type': 'story', 'story': story, 'width':width}
+                    row_snip.append(item_dict)
+                elif content[col+1]['cell_type'] == 'calendar':
+                    calendar = self.create_calendar('stuff', width)
+                    item_dict = {'cell_type': 'calendar', 'calendar': calendar, 'width': width}
+                    row_snip.append(item_dict)
             all_snips.append(row_snip)
 
         self.context['snips'] = all_snips
@@ -95,4 +120,9 @@ class BuildFrontPage(object):
         story.create_story_from_db(page_name=page_name)
         story.create_snippet()
         return story
+
+    def create_calendar(self, details, width):
+        calendar = Calendar(self.session, width)
+        calendar.create_daily_plugin(details, 'xx')
+        return calendar
 

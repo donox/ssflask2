@@ -3,6 +3,7 @@ from flask_login import login_required
 from db_mgt.setup import get_engine, create_session, close_session
 from ssfl.main.front_page import BuildFrontPage
 from ssfl.main.build_page import BuildPage
+from ssfl.main.views.calendar_view import RandomCalendarAPI
 
 
 
@@ -10,6 +11,10 @@ from ssfl.main.build_page import BuildPage
 main_bp = Blueprint('main', __name__,
                     template_folder='templates/main',
                     static_folder='static')
+
+cal_view = RandomCalendarAPI.as_view('cal_api')
+main_bp.add_url_rule('/cal/', defaults={'count': 10},
+                 view_func=cal_view, methods=['GET'])
 
 
 @main_bp.route('/main', methods=['GET'])
