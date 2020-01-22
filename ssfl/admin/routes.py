@@ -1,4 +1,4 @@
-from flask import Flask, Blueprint, render_template, url_for, request, send_file, render_template_string
+from flask import Flask, Blueprint, render_template, url_for, request, send_file, render_template_string, abort
 from flask_login import login_required
 from flask import current_app as app
 from db_mgt.setup import get_engine, create_session, close_session
@@ -8,7 +8,7 @@ from wtforms.validators import ValidationError
 from .edit_local_file import edit_database_file
 from .manage_events.manage_calendar import manage_calendar
 from config import Config
-import os, sys
+import os
 from db_mgt.photo_tables import Photo
 
 
@@ -25,6 +25,9 @@ def get_download(file_path):
     if os.path.exists(path):
         with open(path, 'r') as fl:
             return send_file(fl, mimetype='application/octet')
+    else:
+        abort(404)
+
 
 
 @admin_bp.route('/getimage/<path:image_path>', methods=['GET'])

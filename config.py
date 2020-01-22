@@ -80,5 +80,5 @@ class ProdConfig:
 class TestConfig(Config):
     TESTING = True
     WTF_CSRF_ENABLED = False
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:' + '/home/don/devel/temp/testing.db'
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + '/home/don/devel/temp/testing.db'
     HASH_ROUNDS = 1

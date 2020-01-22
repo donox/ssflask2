@@ -9,6 +9,8 @@ from ssfl import db
 from ssfl import create_app as ca
 app = ca()
 
+# from ssfl.tests import test_main
+
 
 class BaseTestCase(TestCase):
     """A base test case for flask-tracking."""
