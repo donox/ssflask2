@@ -17,6 +17,11 @@ main_bp.add_url_rule('/cal/', defaults={'count': 10},
                  view_func=cal_view, methods=['GET'])
 
 
+@main_bp.route('/main/<string:page_name>/')
+def render_static(page_name):
+    return render_template('main/%s.html' % page_name)
+
+
 @main_bp.route('/main', methods=['GET'])
 @login_required
 def sst_main():

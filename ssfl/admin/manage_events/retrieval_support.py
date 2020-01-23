@@ -1,6 +1,7 @@
 from db_mgt.event_tables import Event, EventMeta, EventTime, event_meta_tbl
 import csv
 import datetime as dt
+from time import mktime
 import random
 
 # These are needed when running standalone
@@ -78,7 +79,7 @@ class EventsInPeriod(object):
         if type(start_time) == dt.datetime:
             self.start = start_time.strftime('%Y-%m-%d %H:%M:%S')
             self.end = end_time.strftime('%Y-%m-%d %H:%M:%S')
-        else:
+        else:       # TODO:  What is this else clause supposed to be???
             self.start = start_time.data.strftime('%Y-%m-%d %H:%M:%S')
             self.end = end_time.data.strftime('%Y-%m-%d %H:%M:%S')
         self.audiences = ", ".join([quotify(x.upper()) for x in audiences])
@@ -118,6 +119,21 @@ class EventsInPeriod(object):
     def get_events(self):
         return self.all_events
 
+    def get_events_as_dict(self):
+        """Create dict with properties suitable for Calendar.js"""
+        'id, groupId, allDay, start, end, title, url, classNames, editable(=False), '
+        event_list = []
+        for event in self.all_events:
+            this_event = {}
+            this_event['id'] = event.id
+            this_event['title'] = event.event_name
+            this_event['groupId'] = None
+            this_event['allDay'] = event.all_day
+            this_event['start'] = (event.event_start - dt.datetime(1970, 1, 1) ).total_seconds() + 5*3600
+            this_event['end'] = (event.event_end - dt.datetime(1970, 1, 1)).total_seconds() + 5*3600
+            this_event['className'] = 'info'
+            event_list.append(this_event)
+        return event_list
 
 if __name__ == '__main__':
     class dummy(object):

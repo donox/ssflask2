@@ -1,4 +1,4 @@
-from flask import Flask, Blueprint, render_template, url_for, request, send_file, render_template_string, abort
+from flask import Flask, Blueprint, render_template, url_for, request, send_file, render_template_string, abort, jsonify
 from flask_login import login_required
 from flask import current_app as app
 from db_mgt.setup import get_engine, create_session, close_session
@@ -10,6 +10,9 @@ from .manage_events.manage_calendar import manage_calendar
 from config import Config
 import os
 from db_mgt.photo_tables import Photo
+import datetime as dt
+from .manage_events.retrieval_support import EventsInPeriod
+
 
 
 
@@ -28,6 +31,18 @@ def get_download(file_path):
     else:
         abort(404)
 
+
+@admin_bp.route('/admin/events', methods=['GET'])
+def get_events():
+    args = request.args
+    start = dt.datetime.utcfromtimestamp(int(args['start']))
+    end = dt.datetime.utcfromtimestamp(int(args['end']))
+    db_session = create_session(get_engine())
+    audiences = ['IL', 'AL', 'HC']
+    categories = ['Event', 'Wellness', 'Religion', 'Resident Clubs']
+    event_class = EventsInPeriod(db_session, start, end, audiences, categories)
+    events = event_class.get_events_as_dict()
+    return jsonify(events)
 
 
 @admin_bp.route('/getimage/<path:image_path>', methods=['GET'])

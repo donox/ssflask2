@@ -25,7 +25,6 @@
     "imports-loader": "^0.8.0",
     "jQuery": "^1.7.4",
     "node-sass": "^4.13.0",
-    "requirejs": "^2.3.6",
     "style-loader": "^1.0.1",
     "webpack": "^4.41.2",
     "webpack-cli": "^3.3.10"
