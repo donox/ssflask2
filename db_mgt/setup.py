@@ -20,7 +20,7 @@ def get_engine():
         login_string = Config.SQLALCHEMY_DATABASE_URI
         engine = create_engine(login_string, echo=False, poolclass=NullPool, pool_recycle=280, pool_pre_ping=True)
         engine.connect()
-        print("sqlAlchemy engine connected successfully on: {}".format(login_string))
+        # print("sqlAlchemy engine connected successfully on: {}".format(login_string))
         return engine
     except OperationalError as err:
         print(type(err))

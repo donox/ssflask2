@@ -13,13 +13,13 @@ load_dotenv(dotenv_path=env_path)
 import db_mgt.setup as su
 
 
-def get_random_events(session, count):
-    all = session.query(Event.id).all()
+def get_random_events(db_session, count):
+    all = db_session.query(Event.id).all()
     events_to_return = []
     nbr_events = len(all)
     for i_cnt in range(count):
         events_to_return.append(all[random.randint(0, nbr_events - 1)].id)
-    res = session.query(Event).filter(Event.id.in_(events_to_return)).all()
+    res = db_session.query(Event).filter(Event.id.in_(events_to_return)).all()
     return res
 
 
@@ -50,8 +50,8 @@ class Evt(object):
 
 class EventsInPeriod(object):
     """Retrieve a list of events that occur in a particular period/audience(s)/category(s)."""
-    sql = 'select event.id, event.event_name as name, event.event_description as description, event.event_cost as cost, '
-    sql += 'event.event_sign_up as sign_up, event.event_EC_pickup as ec_pickup, event.event_HL_pick_up as hl_pickup, '
+    sql = 'select event.id, event.event_name as name, event.event_description as description, event.event_cost as cost,'
+    sql += ' event.event_sign_up as sign_up, event.event_EC_pickup as ec_pickup, event.event_HL_pick_up as hl_pickup, '
     sql += 'et.start as start, et.end as end, et.all_day_event as all_day, '
     sql += 'em3.meta_value as location, em.meta_value as audience, em2.meta_value as category '
     sql += 'from event '
@@ -121,19 +121,17 @@ class EventsInPeriod(object):
 
     def get_events_as_dict(self):
         """Create dict with properties suitable for Calendar.js"""
-        'id, groupId, allDay, start, end, title, url, classNames, editable(=False), '
+        # calendar.js attributes: id, groupId, allDay, start, end, title, url, classNames, editable(=False)
         event_list = []
         for event in self.all_events:
-            this_event = {}
-            this_event['id'] = event.id
-            this_event['title'] = event.event_name
-            this_event['groupId'] = None
-            this_event['allDay'] = event.all_day
-            this_event['start'] = (event.event_start - dt.datetime(1970, 1, 1) ).total_seconds() + 5*3600
-            this_event['end'] = (event.event_end - dt.datetime(1970, 1, 1)).total_seconds() + 5*3600
-            this_event['className'] = 'info'
+            this_event = {'id': event.id, 'title': event.event_name,
+                          'groupId': None, 'allDay': event.all_day,
+                          'start': (event.event_start - dt.datetime(1970, 1, 1)).total_seconds() + 5 * 3600,
+                          'end': (event.event_end - dt.datetime(1970, 1, 1)).total_seconds() + 5 * 3600,
+                          'className': 'info'}
             event_list.append(this_event)
         return event_list
+
 
 if __name__ == '__main__':
     class dummy(object):

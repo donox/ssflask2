@@ -42,6 +42,7 @@ def get_events():
     categories = ['Event', 'Wellness', 'Religion', 'Resident Clubs']
     event_class = EventsInPeriod(db_session, start, end, audiences, categories)
     events = event_class.get_events_as_dict()
+    close_session(db_session)
     return jsonify(events)
 
 

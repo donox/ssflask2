@@ -20,6 +20,8 @@ class Config:
     SQLALCHEMY_TABLE = 'passwords_table - fix if used'
     SQLALCHEMY_DB_SCHEMA = 'public - fix if used'
     SQLALCHEMY_TRACK_MODIFICATIONS = os.environ.get('SQLALCHEMY_TRACK_MODIFICATIONS')
+    SQLALCHEMY_ENGINE_OPTIONS = {'pool_recycle': 280, 'pool_pre_ping': True}
+
 
     # Flask-Mail SMTP server settings
     MAIL_SERVER = 'smtp.gmail.com'
