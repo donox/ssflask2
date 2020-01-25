@@ -71,8 +71,7 @@ class EventsInPeriod(object):
     sql += 'and em2.meta_key = \'category\' and em2.meta_value in ({}) '
     sql += 'and et.event_id = event.id '
     sql += 'and em3.meta_key = \'location\' '
-    # sql += 'and event.id=1237 '
-    sql += 'order by start;'
+    sql += 'order by event.id, start;'
 
     def __init__(self, db_session, start_time, end_time, audiences: list, categories: list):
         self.session = db_session
@@ -88,20 +87,29 @@ class EventsInPeriod(object):
         res = db_session.execute(full_sql)
         all_events = []
         last_id = None
+        last_start = None
         evt = None
         auds = None
         cats = None
         try:
-            for id, name, desc, cost, signup, ec_pickup, hl_pickup, start, end, all_day, \
+            for ev_id, name, desc, cost, signup, ec_pickup, hl_pickup, start, ev_end, all_day, \
                     location, audience, category in res.fetchall():
-                if id != last_id:
+                # Note - the query returns a separate row for each audience or category if multiple
+                #       audiences and/or categories are requested.  They will share a common event.id
+                #       and will start at the same time.  The query is ordered by id then start, so we
+                #       can create the actual event on the first change then accumulate additional events
+                #       by updating the audience or category as appropriate.  Note also that we depend on
+                #       the fact that the created value in Evt is a REFERENCE to a list that we can update
+                #       after Evt has been created.
+                if ev_id != last_id or start != last_start:
                     if last_id:
-                        evt.event_audiences = auds      # update as these values are accumulated after evt created
+                        evt.event_audiences = auds
                         evt.event_categories = cats
                         all_events.append(evt)
-                    evt = Evt(id, name, desc, cost, signup, hl_pickup, ec_pickup, all_day, start, end,
+                    evt = Evt(ev_id, name, desc, cost, signup, hl_pickup, ec_pickup, all_day, start, ev_end,
                               location, auds, cats)
-                    last_id = id
+                    last_id = ev_id
+                    last_start = start
                     auds = [audience]
                     cats = [category]
                 else:
@@ -125,9 +133,12 @@ class EventsInPeriod(object):
         event_list = []
         for event in self.all_events:
             this_event = {'id': event.id, 'title': event.event_name,
+                          'description': event.event_description,
+                          'categories': event.event_categories,
+                          'audiences': event.event_audiences,
                           'groupId': None, 'allDay': event.all_day,
-                          'start': (event.event_start - dt.datetime(1970, 1, 1)).total_seconds() + 5 * 3600,
-                          'end': (event.event_end - dt.datetime(1970, 1, 1)).total_seconds() + 5 * 3600,
+                          'start': event.event_start.isoformat(),
+                          'end': event.event_end.isoformat(),
                           'className': 'info'}
             event_list.append(this_event)
         return event_list

@@ -4,7 +4,10 @@
   "description": "Package for files for Sunnyside Resident Website",
   "main": "ssfl/sass/mystyles.scss",
   "dependencies": {
+    "@fullcalendar/core": "^4.3.1",
+    "@fullcalendar/daygrid": "^4.3.0",
     "amdefine": ">=0.1.0",
+    "babel-preset-env": "^1.7.0",
     "backbone": "^1.4.0",
     "flask": "^0.2.10",
     "jquery": "^3.4.1",
@@ -15,7 +18,6 @@
   "devDependencies": {
     "@babel/core": "^7.7.5",
     "@babel/preset-env": "^7.7.6",
-    "@babel/preset-es2015": "^7.0.0-beta.53",
     "@babel/preset-react": "^7.7.4",
     "amdefine": "^1.0.1",
     "babel-core": "^6.26.3",

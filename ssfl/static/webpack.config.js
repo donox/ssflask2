@@ -4,12 +4,12 @@ const webpack = require('webpack');
 
 let dir_path = path.resolve('ssfl/static')
 module.exports = {
-    entry: [dir_path + '/js/sst_javascript.js',
+    entry: [
         dir_path + '/js/index.js',
     ],
     output: {
-        filename: 'bundle.js',
-        path: dir_path + '/dist',
+        filename: 'packed.js',
+        path: dir_path + '/gen',
     },
     resolve: {
         extensions: ['.js', '.jsx', '.css'],
@@ -30,7 +30,7 @@ module.exports = {
                     // babel-loader to convert ES6 code to ES5 + amdCleaning requirejs code into simple JS code, taking care of modules to load as desired
                     loader: 'babel-loader',
                     options: {
-                        presets: [],
+                        presets: ['babel-preset-env'],
                         plugins: []
                     },
                 },

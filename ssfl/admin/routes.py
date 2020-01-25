@@ -11,6 +11,7 @@ from config import Config
 import os
 from db_mgt.photo_tables import Photo
 import datetime as dt
+import dateutil.parser
 from .manage_events.retrieval_support import EventsInPeriod
 
 
@@ -35,11 +36,13 @@ def get_download(file_path):
 @admin_bp.route('/admin/events', methods=['GET'])
 def get_events():
     args = request.args
-    start = dt.datetime.utcfromtimestamp(int(args['start']))
-    end = dt.datetime.utcfromtimestamp(int(args['end']))
+    start = dateutil.parser.isoparse(args['start'])
+    end = dateutil.parser.isoparse(args['end'])
     db_session = create_session(get_engine())
-    audiences = ['IL', 'AL', 'HC']
-    categories = ['Event', 'Wellness', 'Religion', 'Resident Clubs']
+    # audiences = ['IL', 'AL', 'HC']
+    # categories = ['Event', 'Wellness', 'Religion', 'Resident Clubs']
+    audiences = ['IL']              # REMOVE ###########################################################
+    categories = ['Event']
     event_class = EventsInPeriod(db_session, start, end, audiences, categories)
     events = event_class.get_events_as_dict()
     close_session(db_session)
