@@ -24,6 +24,7 @@ admin_bp = Blueprint('admin_bp', __name__,
 
 
 @admin_bp.route('/downloads/<string:file_path>', methods=['GET'])
+@login_required
 def get_download(file_path):
     path = Config.USER_DIRECTORY_BASE + file_path
     if os.path.exists(path):
@@ -34,17 +35,27 @@ def get_download(file_path):
 
 
 @admin_bp.route('/admin/events', methods=['GET'])
+@login_required
 def get_events():
-    args = request.args
-    start = dateutil.parser.isoparse(args['start'])
-    end = dateutil.parser.isoparse(args['end'])
-    db_session = create_session(get_engine())
-    audiences = [args['audience']]
-    categories = [args['category']]
-    event_class = EventsInPeriod(db_session, start, end, audiences, categories)
-    events = event_class.get_events_as_dict()
-    close_session(db_session)
-    return jsonify(events)
+    """Retrieve events to support FullCalendar
+
+    Returns:  JSON list of events
+
+    """
+    try:
+        args = request.args
+        start = dateutil.parser.isoparse(args['start'])
+        end = dateutil.parser.isoparse(args['end'])
+        db_session = create_session(get_engine())
+        audiences = [args['audience']]
+        categories = [args['category']]
+        event_class = EventsInPeriod(db_session, start, end, audiences, categories)
+        events = event_class.get_events_as_dict()
+        close_session(db_session)
+        return jsonify(events)
+    except Exception as e:      # Normally occurs if there are no events to show
+        close_session(db_session)
+        return jsonify({})
 
 
 @admin_bp.route('/getimage/<path:image_path>', methods=['GET'])

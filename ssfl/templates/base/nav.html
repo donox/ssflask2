@@ -19,6 +19,10 @@
                 Home
             </a>
 
+            <a class="navbar-item" href="/main/calendar">
+                Calendar
+            </a>
+
             <a class="navbar-item" href="{{ url_for('main.sst_get_menu_page', page='activities-index') }}">
                 Activities
             </a>
@@ -42,14 +46,15 @@
 
                 <div class="navbar-dropdown">
                     <a class="navbar-item" href="{{ url_for('main.sst_get_menu_page', page='quick-access') }}">
-                Quick Links
-            </a>
+                        Quick Links
+                    </a>
                     <a class="navbar-item" href="{{ url_for('main.sst_get_menu_page', page='news-index') }}">
-                News
-            </a>
-                   <a class="navbar-item" href="{{ url_for('main.sst_get_menu_page', page='sunnyside-resident-maps') }}">
-                Maps
-            </a>
+                        News
+                    </a>
+                    <a class="navbar-item"
+                       href="{{ url_for('main.sst_get_menu_page', page='sunnyside-resident-maps') }}">
+                        Maps
+                    </a>
                     <hr class="navbar-divider">
                     <a class="navbar-item">
                         Report an issue
@@ -61,12 +66,12 @@
         <div class="navbar-end">
             <div class="navbar-item">
                 <div class="buttons">
-{#                    <a class="button is-primary">#}
-{#                        <strong>Sign up</strong>#}
-{#                    </a>#}
-{#                    <a class="button is-light">#}
-{#                        Log in#}
-{#                    </a>#}
+                    {# <a class="button is-primary">#}
+                    {# <strong>Sign up</strong>#}
+                    {# </a>#}
+                    {# <a class="button is-light">#}
+                    {# Log in#}
+                    {# </a>#}
                 </div>
             </div>
         </div>

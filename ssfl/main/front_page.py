@@ -4,7 +4,7 @@ from db_mgt.photo_tables import Photo
 from config import Config
 from .views.calendar_view import RandomCalendarAPI, get_random_events
 from flask import render_template
-from .calendar import Calendar
+from .calendar_snippet import Calendar
 
 
 class BuildFrontPage(object):
