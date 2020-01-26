@@ -39,10 +39,8 @@ def get_events():
     start = dateutil.parser.isoparse(args['start'])
     end = dateutil.parser.isoparse(args['end'])
     db_session = create_session(get_engine())
-    # audiences = ['IL', 'AL', 'HC']
-    # categories = ['Event', 'Wellness', 'Religion', 'Resident Clubs']
-    audiences = ['IL']              # REMOVE ###########################################################
-    categories = ['Event']
+    audiences = [args['audience']]
+    categories = [args['category']]
     event_class = EventsInPeriod(db_session, start, end, audiences, categories)
     events = event_class.get_events_as_dict()
     close_session(db_session)

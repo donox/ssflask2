@@ -20,26 +20,25 @@
     <!--    {% endassets %}-->
 
     <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
-    <!--    <script type="text/javascript" src="{{ url_for('static', filename='dist/bundle.js') }}"></script>-->
-    <!--    <script type="application/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/4.2.0/bootstrap/main.js"></script>-->
+
     <script type="application/javascript"
             src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/4.2.0/core/main.js"></script>
     <script type="application/javascript"
             src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/4.2.0/daygrid/main.js"></script>
-    <!--    <script type="application/javascript" src="{{ url_for('static', filename='js/my_calendar.js') }}"></script>-->
+    <script type="text/javascript" src="{{ url_for('static', filename='js/my_calendar.js') }}"></script>
 
     <link href="https://fonts.googleapis.com/css?family=Roboto:100,100i,300,300i,400,400i,500,500i,700,700i,900,900i"
           rel="stylesheet">
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            var calendarEl = document.getElementById('calendar');
-            var calendar = new FullCalendar.Calendar(calendarEl, {
+            let calendarEl = document.getElementById('calendar');
+            let calendar = new FullCalendar.Calendar(calendarEl, {
                 plugins: ['dayGrid'],
                 header: {
-                    left: 'title',
+                    left: 'title, il_button, al_button',
                     center: 'agendaDay,agendaWeek,month',
-                    right: 'prev,next today'
+                    right: 'evt_button, well_button, rel_button, club_button, prev,next today'
                 },
                 editable: true,
                 firstDay: 0, //  1(Monday) this can be changed to 0(Sunday) for the USA system
@@ -47,6 +46,62 @@
                 defaultView: 'dayGridMonth',
                 dateClick: function () {
                     alert('a day has been clicked!');
+                },
+                customButtons: {
+                    il_button: {
+                        text: 'IL',
+                        click: function () {
+                            button_state.set_audience(this.firstChild.valueOf());
+                            let src = calendar.getEventSources();
+                            src[0].refetch();
+                            calendar.render();
+                        },
+                    },
+                    al_button: {
+                        text: 'AL',
+                        click: function () {
+                            button_state.set_audience(this.firstChild.valueOf());
+                            let src = calendar.getEventSources();
+                            src[0].refetch();
+                            calendar.render();
+                        },
+                    },
+                    evt_button: {
+                        text: 'Event',
+                        click: function () {
+                            button_state.set_category(this.firstChild.valueOf());
+                            let src = calendar.getEventSources();
+                            src[0].refetch();
+                            calendar.render();
+                        },
+                    },
+                    rel_button: {
+                        text: 'Religion',
+                        click: function () {
+                            button_state.set_category(this.firstChild.valueOf());
+                            let src = calendar.getEventSources();
+                            src[0].refetch();
+                            calendar.render();
+                        },
+                    },
+                    well_button: {
+                        text: 'Wellness',
+                        click: function () {
+                            button_state.set_category(this.firstChild.valueOf());
+                            let src = calendar.getEventSources();
+                            src[0].refetch();
+                            calendar.render();
+                        },
+                    },
+                    club_button: {
+                        text: 'Resident Clubs',
+                        click: function () {
+                            button_state.set_category(this.firstChild.valueOf());
+                            let src = calendar.getEventSources();
+                            src[0].refetch();
+                            calendar.render();
+                        },
+                    },
                 },
                 eventMouseEnter: function (info) {
                     // alert('Event: ' + info.event.title);
@@ -106,21 +161,21 @@
                 },
                 allDaySlot: false,
                 selectHelper: true,
-                select: function (start, end, allDay) {
-                    let title = prompt('Event Title:');
-                    if (title) {
-                        calendar.fullCalendar('renderEvent',
-                            {
-                                title: title,
-                                start: start,
-                                end: end,
-                                allDay: allDay
-                            },
-                            true // make the event "stick"
-                        );
-                    }
-                    calendar.fullCalendar('unselect');
-                },
+                // select: function (start, end, allDay) {
+                //     let title = prompt('Event Title:');
+                //     if (title) {
+                //         calendar.fullCalendar('renderEvent',
+                //             {
+                //                 title: title,
+                //                 start: start,
+                //                 end: end,
+                //                 allDay: allDay
+                //             },
+                //             true // make the event "stick"
+                //         );
+                //     }
+                //     calendar.fullCalendar('unselect');
+                // },
                 droppable: true, // this allows things to be dropped onto the calendar !!!
                 drop: function (date, allDay) { // this function is called when something is dropped
 
@@ -145,15 +200,28 @@
                     }
 
                 },
-                events: '/admin/events',
-                eventsXX: [
-                    {
-                        title: 'Click for Google',
-                        // start: new Date(y, m, 28),
-                        // end: new Date(y, m, 29),
-                        url: 'https://ccp.cloudaccess.net/aff.php?aff=5188',
-                        className: 'success'
-                    }
+                eventSources: [function (info, success, fail) {
+                    $.ajax({
+                        url: '/admin/events',
+                        type: 'GET',
+                        dataType: 'json',
+                        data: {
+                            start: info.start.toISOString(),
+                            end: info.end.toISOString(),
+                            category: button_state.get_category(),
+                            audience: button_state.get_audience(),
+                        },
+                        success: function (doc) {
+                            let events = eval(doc);
+                            success(events);
+                        },
+                        error: function (doc) {
+                            alert("FAILED");
+                            let events = eval(doc);
+                            fail(events);
+                        }
+                    });
+                },
                 ],
             });
             calendar.render();
