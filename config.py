@@ -50,14 +50,23 @@ class Config:
     USER_DOWNLOADABLE_FILES = USER_DIRECTORY_BASE + 'downloads/'
     USER_AUTO_GENERATED_PAGES = USER_DIRECTORY_BASE + 'gen_pages/'
     USER_PLOTS = USER_DIRECTORY_BASE + 'plots/'
-    USER_UPLOADS = USER_DIRECTORY_BASE + 'uploads/'
     USER_DEFINITION_FILES = USER_DIRECTORY_BASE + 'definition_files/'
+    # Config name assumed by Flask-Upload
+    UPLOAD_FOLDER = USER_DIRECTORY_BASE + 'uploads/'
+    # Storage for docx pages that master for html pages
+    USER_PAGE_MASTERS = UPLOAD_FOLDER + 'page_masters/'
 
     USER_DIRECTORY_STATIC = os.environ.get('USER_DIRECTORY_STATIC')
     USER_DIRECTORY_IMAGES = os.environ.get('USER_DIRECTORY_IMAGES')
     TEMP_COUNT = 50
     TEMP_CURRENT = 1
     TEMP_FILE_LOC = os.environ.get('TEMP_FILE_LOC')
+
+    # NEEDED FOR FLASK-CLOUDY
+    STORAGE_PROVIDER = 'LOCAL'
+    STORAGE_CONTAINER = os.environ.get('STORAGE_CONTAINER')
+    STORAGE_SECRET = ""
+    STORAGE_SERVER = True
 
     # Admin
     FLASK_ADMIN_SWATCH = 'cerulean'

@@ -2,6 +2,7 @@ from sqlalchemy import UnicodeText
 from ssfl import db
 from config import Config
 from PIL import Image
+from utilities.miscellaneous import get_temp_file_name
 
 
 class Photo(db.Model):
@@ -34,19 +35,12 @@ class Photo(db.Model):
 
     def get_resized_photo(self, session, width=None, height=None):
         """Get  resized copy of self photo into temporary file.
-
-        Temporary files are maintained on a rotating basis and reused.  This seems to
-        avoid problems managing the closing and deleting of temporary files.
         """
         file = Config.USER_DIRECTORY_IMAGES + Photo.get_photo_url(session, self.old_id)
         image = Image.open(file)
         print(f'Image Size {image.size}')
         image.thumbnail((width, height))
-        fl = Config.TEMP_FILE_LOC + 'photo' + str(Config.TEMP_CURRENT) + '.jpg'
-        tmp = int(Config.TEMP_CURRENT) + 1
-        if tmp > int(Config.TEMP_COUNT):
-            tmp = 1
-        Config.TEMP_CURRENT = tmp
+        fl = get_temp_file_name('photo', 'jpg')
         image.save(fl)
         return fl
 

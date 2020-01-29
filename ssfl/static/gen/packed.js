@@ -34,8 +34,10 @@ var button_state = (function () {
     let club_state = false;
     let audiences = [al_state, il_state];
     let audience_names = ['AL', 'IL'];
+    let audience_classes = ['fc-al_button-button', 'fc-il_button-button'];
     let categories = [event_state, wellness_state, religion_state, club_state];
     let category_names = ['Event', 'Wellness', 'Religion', 'Resident Clubs'];
+    let category_classes = ['fc-evt_button-button', 'fc-well_button-button', 'fc-rel_button-button', 'fc-club_button-button'];
     return {
         initialize: function () {
             //Do anything needed here
@@ -43,8 +45,26 @@ var button_state = (function () {
         set_audience: function (btn) {
             for (let i = 0; i < audiences.length; i++) {
                 audiences[i] = false;
-                if (btn.textContent == audience_names[i]) audiences[i] = true;
+                $('.' + audience_classes[i]).removeClass('sst-highlight');
+                if (btn.textContent == audience_names[i]) {
+                    audiences[i] = true;
+                    $('.' + audience_classes[i]).addClass('sst-highlight');
+                }
             }
+        },
+        color_buttons: function(info){
+            for (let i = 0; i < audiences.length; i++) {
+                $('.' + audience_classes[i]).removeClass('sst-highlight');
+                if (audiences[i]) {
+                    $('.' + audience_classes[i]).addClass('sst-highlight');
+                }
+            };
+            for (let i = 0; i < categories.length; i++) {
+                $('.' + category_classes[i]).removeClass('sst-highlight');
+                if (categories[i]) {
+                    $('.' + category_classes[i]).addClass('sst-highlight');
+                }
+            };
         },
         set_category: function (btn) {
             let res = '';
