@@ -1,24 +1,22 @@
-from flask import Flask, Blueprint, render_template, url_for, request, send_file, \
-    render_template_string, abort, jsonify, redirect, flash
-from flask_login import login_required
+import os
+
+import dateutil.parser
+from flask import Blueprint, render_template, url_for, request, send_file, \
+    abort, jsonify, redirect, flash
 from flask import current_app as app
+from flask_login import login_required
 from flask_uploads import secure_filename
+
+from config import Config
+from db_mgt.photo_tables import Photo
 from db_mgt.setup import get_engine, create_session, close_session
+from .edit_local_file import edit_database_file
 from .forms.edit_db_content_form import DBContentEditForm
 from .forms.manage_calendar_form import DBManageCalendarForm
 from .forms.process_page_masters_form import DBTranslateDocxToPage
-from wtforms.validators import ValidationError
-from .edit_local_file import edit_database_file
-from .process_page_masters import translate_docx_and_add_to_db
 from .manage_events.manage_calendar import manage_calendar
-from config import Config
-import os
-from db_mgt.photo_tables import Photo
-import datetime as dt
-import dateutil.parser
 from .manage_events.retrieval_support import EventsInPeriod
-
-import flask_uploads
+from .process_page_masters import translate_docx_and_add_to_db
 
 # Set up a Blueprint
 admin_bp = Blueprint('admin_bp', __name__,
@@ -147,7 +145,7 @@ def sst_admin_calendar():
         raise ValueError('Invalid method type: {}'.format(request.method))
 
 
-@admin_bp.route('/upload_form', methods=['GET', 'POST'])
+@admin_bp.route('/admin/upload_form', methods=['GET', 'POST'])
 def upload_form():
     return render_template('admin/upload.html')
 

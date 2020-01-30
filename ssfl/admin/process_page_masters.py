@@ -17,7 +17,7 @@ def translate_docx_and_add_to_db(db_session, form):
     author = form.author.data
 
     try:
-        if function_to_execute == 'up':
+        if function_to_execute == 'db':
             page_query = db_session.query(Page).filter(Page.page_name == page_name)
             ct = page_query.count()
             if new_page and ct > 0:

@@ -61,6 +61,41 @@
                     </a>
                 </div>
             </div>
+
+             <div class="navbar-item has-dropdown is-hoverable">
+                <a class="navbar-link">
+                    Site Admin
+                </a>
+
+                <div class="navbar-dropdown">
+                    <a class="navbar-item" href="{{ url_for('admin_bp.sst_admin_edit') }}">
+                        Edit DB Page
+                    </a>
+                    <a class="navbar-item" href="{{ url_for('admin_bp.sst_admin_calendar') }}">
+                        Manage Calendar
+                    </a>
+                    <a class="navbar-item" href="{{ url_for('admin_bp.upload_form') }}">
+                        Upload DOCX File
+                    </a>
+                    <a class="navbar-item" href="{{ url_for('admin_bp.translate_to_html') }}">
+                        Translate DOCX and Add to DB
+                    </a>
+                    <a class="navbar-item" href="{{ url_for('admin_bp.translate_to_html') }}">
+                        Delete DOCX File
+                    </a>
+                    <a class="navbar-item" href="{{ url_for('admin_bp.translate_to_html') }}">
+                        Delete Page from DB
+                    </a>
+                    <a class="navbar-item"
+                       href="{{ url_for('main.sst_get_menu_page', page='sunnyside-resident-maps') }}">
+                        Maps
+                    </a>
+                    <hr class="navbar-divider">
+                    <a class="navbar-item">
+                        Report an issue
+                    </a>
+                </div>
+            </div>
         </div>
 
         <div class="navbar-end">
