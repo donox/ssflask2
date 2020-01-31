@@ -17,12 +17,7 @@ class DBManageIndexPages(object):
         self.index_page_items = []
         self.index_page_name = None
 
-        # id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-        # item_name = db.Column(db.String(length=128), nullable=True)
         # item_index_page = db.Column(db.ForeignKey('index_page.id'), nullable=True)
-        # button_name = db.Column(db.String(length=128), nullable=False)
-        # button_page_url = db.Column(db.ForeignKey('page.id'), nullable=True)  # one of url's must exist to work
-        # button_url_link = db.Column(db.String(length=256), nullable=True)
         # item_content = db.Column(db.String(length=1024), nullable=True)
         # item_date = db.Column(db.DateTime, default='2000-01-01')
         # sequence = db.Column(db.Integer, default=0)
@@ -40,13 +35,50 @@ class DBManageIndexPages(object):
                     form.errors['Page Exists'] = 'Specified Index Page already exists.'
                     return False
             except SiteObjectNotFoundError as e:
-                pass            # This is normal case
+                pass  # This is normal case
             self.create_new_index_page(db_session, page_title=form.page_title.data, page_name=form.page_name.data,
                                        page_template='manage_index_page.html')
             return True
-
-        form.errors['Not Implemented'] = 'Specified Function not yet implemented.'
-        return False
+        elif work_function == 'aii':
+            btn_url = form.button_url_link.data
+            if btn_url == '':
+                btn_url = None
+            btn_name = form.button_name.data
+            btn_page = form.button_page_name.data
+            if btn_page == '':
+                btn_page = None
+            item_name = form.item_name.data
+            page_name = form.page_name.data
+            try:
+                self.index_page = db_session.query(IndexPage).filter(IndexPage.page_name == page_name).first()
+            except SiteObjectNotFoundError as e:
+                form.error['Page Not Found'] = 'Index page with given name not found'
+                return False
+            if (not btn_page and not btn_url) or (btn_page and btn_url):
+                form.errors['Button Targets'] = 'Must specify exactly one of Button Target Page or Button URL.'
+                return False
+            if btn_page:
+                target_page = None
+                try:
+                    target_page = db_session.query(Page).filter(Page.page_name == btn_page).first()
+                except SiteObjectNotFoundError as e:
+                    form.errors['Missing Target'] = 'Target page does not exist.'
+                    return False
+                target_page = target_page.id
+            if btn_name == '':
+                form.errors['Button Name'] = 'Must specify Button Name.'
+                return False
+            if item_name == '':
+                form.errors['Item Name'] = 'Must specify Item Name.'
+                return False
+            try:
+                index_item = IndexPageItem(item_name=item_name, item_index_page=self.index_page.id,
+                                           button_name=btn_name, button_page_url=target_page, button_url_link=btn_url,
+                                           item_content=form.item_content.data, item_date=None, sequence=0)
+                index_item.add_to_db(db_session, commit=True)
+            except Exception as e:
+                db_session.rollback()
+                raise e
 
     def create_new_index_page(self, db_session, page_title=None, page_name=None, page_content=None, page_cached=False,
                               sequence_type='numeric', page_template=None):
@@ -59,7 +91,7 @@ class DBManageIndexPages(object):
             db_session.rollback()
             raise e
 
-    def add_index_item(self, db_session, item_name=None,  button_page_url=None, button_name=None,
+    def add_index_item(self, db_session, item_name=None, button_page_url=None, button_name=None,
                        button_url_link=None, item_content=None, item_date=dt.datetime.now(), sequence=-1):
         mysql_datetime = None
         if item_date:
@@ -73,6 +105,27 @@ class DBManageIndexPages(object):
         except Exception as e:
             foo = 3
             db_session.rollback()
+
+
+def build_index_page_context(db_session, page):
+    context = dict()
+    context['title'] = page.page_title
+    context['content'] = page.page_content
+    item_list = []
+    context['items'] = item_list
+
+    items = db_session.query(IndexPageItem).filter(IndexPageItem.item_index_page == page.id).all()
+    for item in items:
+        item_dict = dict()
+        item_dict['name'] = item.item_name
+        item_dict['button_name'] = item.button_name
+        item_dict['content'] = item.item_content
+        item_dict['number'] = item.sequence
+        item_dict['link_type'] = 'page' if item.button_page_url else 'url'
+        item_dict['button_page'] = item.button_page_url
+        item_dict['button_url'] = item.button_url_link
+        item_list.append(item_dict)
+    return context
 
 
 if __name__ == '__main__':

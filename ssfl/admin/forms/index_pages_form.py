@@ -12,18 +12,17 @@ class ManageIndexPagesForm(FlaskForm):
     """Support operations for creating, modifying, deleting index pages and items."""
     work_function = SelectField(label='Select Function',
                                 choices=supported_functions)
+    # Index Page Content
     page_title = StringField(label='Page Title', validators=[Optional()])
     page_name = StringField(label='Page Name', validators=[DataRequired()])
-
-    # id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    # item_name = db.Column(db.String(length=128), nullable=True)
-    # item_index_page = db.Column(db.ForeignKey('index_page.id'), nullable=True)
-    # button_name = db.Column(db.String(length=128), nullable=False)
-    # button_page_url = db.Column(db.ForeignKey('page.id'), nullable=True)  # one of url's must exist to work
-    # button_url_link = db.Column(db.String(length=256), nullable=True)
-    # item_content = db.Column(db.String(length=1024), nullable=True)
-    # item_date = db.Column(db.DateTime, default='2000-01-01')
-    # sequence = db.Column(db.Integer, default=0)
+    page_content = StringField(label='Page Content', validators=[Optional()])
+    # Index Item Content
+    item_name = StringField(label='Item Name', validators=[Optional()])
+    button_name = StringField(label='Button Name', validators=[Optional()])
+    button_page_name = StringField(label='Button Page Name', validators=[Optional()])
+    button_url_link = StringField(label='Button URL', validators=[Optional()])
+    item_content = StringField(label='Item Content', validators=[Optional()])
+    item_sequence_nbr = IntegerField(label='Sequence Number', validators=[Optional()])
 
     def validate_on_submit(self):
         res = super().validate_on_submit()

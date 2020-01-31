@@ -6,7 +6,7 @@
     <div class="XXX">
         <h3>Manage Creation of Index Pages and Index Items</h3>
         <form action="{{ url_for('admin_bp.manage_index_page') }}" method="post">
-            <div class="input">
+            <div class="input">    <!-- work function -->
                 {{ form.work_function.label }}
                 {{ form.work_function(placeholder='0000') }}
                 {% if form.work_function.errors %}
@@ -16,19 +16,8 @@
                     {% endfor %}
                 </ul>
                 {% endif %}
-            </div>
-            <div class="input">
-                {{ form.page_title.label }}
-                {{ form.page_title(placeholder='Page title)') }}
-                {% if form.page_title.errors %}
-                <ul class="errors">
-                    {% for error in form.page_title.errors %}
-                    <li>{{ error }}</li>
-                    {% endfor %}
-                </ul>
-                {% endif %}
-            </div>
-            <div class="input">
+            </div>                      <!-- End Work function -->
+            <div class="input">             <!-- Page Name -->
                 {{ form.page_name.label }}
                 {{ form.page_name(placeholder='Page name (e.g., foo-bar-xx)') }}
                 {% if form.page_name.errors %}
@@ -38,11 +27,106 @@
                     {% endfor %}
                 </ul>
                 {% endif %}
-            </div>
+            </div>                      <!-- End Page Name -->
+            <h4>Answer These to Create a New Index Page</h4>
+            <div class="input">     <!-- Page Title  -->
+                {{ form.page_title.label }}
+                {{ form.page_title(placeholder='Page title)') }}
+                {% if form.page_title.errors %}
+                <ul class="errors">
+                    {% for error in form.page_title.errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>                      <!-- End Page Title  -->
+            <div class="input">             <!-- Page Content -->
+                {{ form.page_content.label }}
+                {{ form.page_content(placeholder='Page Content (up to 1K chars)') }}
+                {% if form.page_content.errors %}
+                <ul class="errors">
+                    {% for error in form.page_content.errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>                      <!-- End Page Content -->
 
-            <div class="button">
+            <div class="button">        <!-- Submit -->
                 <input id="submit" type="submit" value="Submit">
-            </div>
+            </div>                     <!-- End Submit -->
+            <h4>Answer These to Create a New Index Page Item</h4>
+            <div class="input">     <!--Item Name  -->
+                {{ form.item_name.label }}
+                {{ form.item_name(placeholder='Item Name') }}
+                {% if form.item_name.errors %}
+                <ul class="errors">
+                    {% for error in form.item_name.errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>                      <!-- End Item Name  -->
+            <div class="input">     <!--Button Name  -->
+                {{ form.button_name.label }}
+                {{ form.button_name(placeholder='Item Name') }}
+                {% if form.button_name.errors %}
+                <ul class="errors">
+                    {% for error in form.button_name.errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>                      <!-- End Button Name  -->
+            <div class="input">             <!-- Item Content -->
+                {{ form.item_content.label }}
+                {{ form.item_content(placeholder='Item Content (up to 1K chars)') }}
+                {% if form.item_content.errors %}
+                <ul class="errors">
+                    {% for error in form.item_content.errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>                      <!-- End Item Content -->
+            <div class="input">     <!--Item Sequence Number  -->
+                {{ form.item_sequence_nbr.label }}
+                {{ form.item_sequence_nbr(placeholder='Item Sequence Number') }}
+                {% if form.item_sequence_nbr.errors %}
+                <ul class="errors">
+                    {% for error in form.item_sequence_nbr.errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>                      <!-- End Item Sequence Number  -->
+            <h6>Provide only one of button target specifications.</h6>
+            <div class="input">     <!--Button Page Name  -->
+                {{ form.button_page_name.label }}
+                {{ form.button_page_name(placeholder='Button Page Name') }}
+                {% if form.button_page_name.errors %}
+                <ul class="errors">
+                    {% for error in form.button_page_name.errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>                      <!-- End Button PageName  -->
+            <div class="input">     <!--Button URL Link  -->
+                {{ form.button_url_link.label }}
+                {{ form.button_url_link(placeholder='Button URL Link') }}
+                {% if form.button_url_link.errors %}
+                <ul class="errors">
+                    {% for error in form.button_url_link.errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>                      <!-- End Button URL Link  -->
+            <div class="button">        <!-- Submit -->
+                <input id="submit_item" type="submit" value="Submit">
+            </div>                     <!-- End Submit Item -->
+            <h4>Page Summary Errors</h4>
             {% if form.errors %}
             <ul class="errors">
                 {% for error in form.errors.keys() %}
@@ -50,7 +134,7 @@
                 <li>{{ error }} : {{ specific }}</li>
                 {% endfor %}
                 {% endfor %}
-            </ul>
+            </ul>                      <!-- End Overall Form Errors -->
             {% endif %}
             {{ form.csrf_token }}
         </form>
