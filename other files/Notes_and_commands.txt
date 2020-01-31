@@ -2,7 +2,7 @@ Blueprints need to be registered in __init__.py for Application
 
 ADDING TABLES:
 To add a table to the database:  NOTE: db name is 'dummy' - will want to change.
-    Add import of table classes to env.py (around line 10)
+    Add import of table classes to env.py (around line 24) in folder migrations
 
 Run:
     alembic revision --autogenerate -m "Added xxxx table"

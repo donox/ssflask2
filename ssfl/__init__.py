@@ -41,7 +41,7 @@ def create_app():
 
     # Initialize Flask-BabelEx
     babel = Babel(app)
-    from db_mgt.models import User, Role
+    from db_mgt.user_models import User, Role
 
     # Set up Flask-Assets
     assets = Environment(app)

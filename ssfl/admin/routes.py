@@ -12,11 +12,13 @@ from db_mgt.photo_tables import Photo
 from db_mgt.setup import get_engine, create_session, close_session
 from .edit_local_file import edit_database_file
 from .forms.edit_db_content_form import DBContentEditForm
-from .forms.manage_calendar_form import DBManageCalendarForm
-from .forms.process_page_masters_form import DBTranslateDocxToPage
+from .forms.manage_calendar_form import ManageCalendarForm
+from .forms.process_page_masters_form import TranslateDocxToPageForm
+from .forms.index_pages_form import ManageIndexPagesForm
 from .manage_events.manage_calendar import manage_calendar
 from .manage_events.retrieval_support import EventsInPeriod
 from .process_page_masters import translate_docx_and_add_to_db
+from .manage_index_pages import DBManageIndexPages
 
 # Set up a Blueprint
 admin_bp = Blueprint('admin_bp', __name__,
@@ -128,10 +130,10 @@ def sst_admin_calendar():
     """Transfer content to-from DB for local editing."""
     if request.method == 'GET':
         context = dict()
-        context['form'] = DBManageCalendarForm()
+        context['form'] = ManageCalendarForm()
         return render_template('admin/calendar.html', **context)
     elif request.method == 'POST':
-        form = DBManageCalendarForm()
+        form = ManageCalendarForm()
         context = dict()
         context['form'] = form
         if form.validate_on_submit():
@@ -190,10 +192,10 @@ def translate_to_html():
     """Translate file to HTML and store in database."""
     if request.method == 'GET':
         context = dict()
-        context['form'] = DBTranslateDocxToPage()
+        context['form'] = TranslateDocxToPageForm()
         return render_template('admin/docx_to_db.html', **context)
     elif request.method == 'POST':
-        form = DBTranslateDocxToPage()
+        form = TranslateDocxToPageForm()
         context = dict()
         context['form'] = form
         if form.validate_on_submit():
@@ -203,6 +205,36 @@ def translate_to_html():
             if res:
                 return render_template('admin/docx_to_db.html', **context)  # redirect to success url
         return render_template('admin/docx_to_db.html', **context)
+    else:
+        raise ValueError('Invalid method type: {}'.format(request.method))
+
+@admin_bp.route('/admin/manage_index_page', methods=['GET', 'POST'])
+@login_required
+def manage_index_page():
+    """Manage Index Page CRUD and Index Items CRUD."""
+    if request.method == 'GET':
+        context = dict()
+        context['form'] = ManageIndexPagesForm()
+        return render_template('admin/manage_index_page.html', **context)
+    elif request.method == 'POST':
+        form = ManageIndexPagesForm()
+        context = dict()
+        context['form'] = form
+        if form.validate_on_submit():
+            try:
+                db_session = create_session(get_engine())
+                mip = DBManageIndexPages()
+                res = mip.process_form(db_session, form)
+                close_session(db_session)
+                if res:
+                    return render_template('admin/manage_index_page.html', **context)  # redirect to success url
+                else:
+                    return render_template('admin/manage_index_page.html', **context)   # redirect to failure url
+            except Exception as e:
+                db_session.rollback()
+                close_session(db_session)
+                raise e
+        return render_template('admin/manage_index_page.html', **context)
     else:
         raise ValueError('Invalid method type: {}'.format(request.method))
 # app.register_blueprint(admin_bp)

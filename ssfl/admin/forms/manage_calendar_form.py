@@ -7,7 +7,7 @@ from flask_wtf import FlaskForm
 import datetime as dt
 
 
-class DBManageCalendarForm(FlaskForm):
+class ManageCalendarForm(FlaskForm):
     """Manage Calendar content."""
     work_function = SelectField(label='Select Function',
                                 choices=[('pc', 'Print Calendar'), ('uc', 'Upload Calendar'), ('ds', 'Do Something')])

@@ -6,7 +6,7 @@ from flask_wtf import FlaskForm
 from config import Config
 
 
-class DBTranslateDocxToPage(FlaskForm):
+class TranslateDocxToPageForm(FlaskForm):
     supported_functions = [('db', 'Add Page to Database'), ('dpdb', 'Delete Page from Database'),
                            ('df', 'Delete File from Page Masters')]
     """Support uploading files, managing their directory and adding/removing from database."""
