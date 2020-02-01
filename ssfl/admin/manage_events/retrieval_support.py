@@ -117,9 +117,9 @@ class EventsInPeriod(object):
                         auds.append(audience)
                     if category not in cats:
                         cats.append(category)
-            evt.event_audiences = auds
-            evt.event_categories = cats
-            all_events.append(evt)
+                evt.event_audiences = auds
+                evt.event_categories = cats
+                all_events.append(evt)
             self.all_events = all_events
         except Exception as e:
             raise e

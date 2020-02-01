@@ -241,27 +241,31 @@ class CsvToDb(object):
     def add_events(self):
         """Create list of all events in CSV file."""
         event_list = []
-        for row in self.read_file():
-            new_event = CalendarEvent()
-            new_event.name = row[CAL_EVENT_NAME]
-            new_event.venue = row[CAL_LOCATION]
-            dl = [CsvToDb._try_parsing_date(x) for x in row[CAL_DATES_BEGIN:] if x]
-            st = CsvToDb._try_parsing_time(row[CAL_START])
-            nd = CsvToDb._try_parsing_time(row[CAL_END])
-            new_event.occurs = [(st, nd, x) for x in dl]
-            new_event.all_day = row[CAL_ALL_DAY]
-            new_event.description = row[CAL_DESCRIPTION]
-            cat_list = []
-            if row[CAL_CATEGORIES]:
-                cat_list = [x.lower().strip() for x in row[CAL_CATEGORIES].split(',')]
-            new_event.categories = cat_list
-            new_event.audience = [x.upper().strip() for x in row[CAL_AUDIENCE].lower().split(',')]
-            new_event.cost = row[CAL_COST]
-            new_event.sign_up = row[CAL_SIGN_UP]
-            new_event.ec_depart = row[CAL_EC]
-            new_event.hl_depart = row[CAL_HL]
-            event_list.append(new_event)
-        self.events = event_list
+        try:
+            for row in self.read_file():
+                new_event = CalendarEvent()
+                new_event.name = row[CAL_EVENT_NAME]
+                new_event.venue = row[CAL_LOCATION]
+                dl = [CsvToDb._try_parsing_date(x) for x in row[CAL_DATES_BEGIN:] if x]
+                st = CsvToDb._try_parsing_time(row[CAL_START])
+                nd = CsvToDb._try_parsing_time(row[CAL_END])
+                new_event.occurs = [(st, nd, x) for x in dl]
+                new_event.all_day = row[CAL_ALL_DAY]
+                new_event.description = row[CAL_DESCRIPTION]
+                cat_list = []
+                if row[CAL_CATEGORIES]:
+                    cat_list = [x.lower().strip() for x in row[CAL_CATEGORIES].split(',')]
+                new_event.categories = cat_list
+                new_event.audience = [x.upper().strip() for x in row[CAL_AUDIENCE].lower().split(',')]
+                new_event.cost = row[CAL_COST]
+                new_event.sign_up = row[CAL_SIGN_UP]
+                new_event.ec_depart = row[CAL_EC]
+                new_event.hl_depart = row[CAL_HL]
+                event_list.append(new_event)
+            self.events = event_list
+        except Exception as e:
+            foo = 3
+            raise e
 
     def get_event_list(self):
         return self.events
