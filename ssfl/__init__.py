@@ -4,6 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_assets import Environment, Bundle
 from flask_user import UserManager
 from flask_migrate import Migrate
+from utilities.logging_support import SsTLogger
 
 from sqlalchemy.ext.declarative import declarative_base
 import platform
@@ -25,11 +26,20 @@ import flask_mail as fm
 from login import my_flask_mail as mfm
 fm.Mail = mfm.Mail
 
+# Config Loggers
+wsgi_logger = SsTLogger()
+wsgi_logger.define_wsgi_logger()
+
+sst_logger = SsTLogger()
+sst_logger.define_file_logger('syslog')
+
+
 Base = declarative_base()
 
 # Globally accessible libraries
 # login_manager = LoginManager()
 db = SQLAlchemy()
+
 
 
 def create_app():

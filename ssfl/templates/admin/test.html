@@ -4,27 +4,13 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-{#    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css">#}
-{#    {% assets output="gen/packed.css", "css/*.css" %}#}
-{#        <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}"></link>#}
-{#    {% endassets %}#}
 
-{#    <script#}
-{#            src="https://code.jquery.com/jquery-3.4.1.min.js"#}
-{#            integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="#}
-{#            crossorigin="anonymous"></script>#}
-    {% assets output="dist/bundle.js", "js" %}
-        <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-    {% endassets %}
-
-{#    <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>#}
-{#    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>#}
-{#    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">#}
 
 </head>
 <body class="   ">
+<h1>TEST.HTML</h1>
 {% assets output="foo", "*" %}
-<h1>XXX{{ ASSET_URL }}YYY</h1>
+<h3>Asset URL: {{ ASSET_URL }}</h3>
 {% endassets %}
 </body>
 </html>

@@ -3,7 +3,7 @@ from lxml.html import html5parser as hp
 import lxml
 from db_mgt.event_tables import Event, EventMeta, EventTime
 from flask import render_template
-from ssfl.admin.manage_events.retrieval_support import get_random_events, EventsInPeriod, Evt
+from ssfl.admin.manage_events.event_retrieval_support import get_random_events, EventsInPeriod, Evt
 from flask.views import MethodView
 from db_mgt.setup import get_engine, create_session, close_session
 import datetime as dt

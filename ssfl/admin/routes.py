@@ -1,5 +1,5 @@
 import os
-
+from ssfl import sst_logger
 import dateutil.parser
 from flask import Blueprint, render_template, url_for, request, send_file, \
     abort, jsonify, redirect, flash
@@ -16,7 +16,7 @@ from .forms.manage_calendar_form import ManageCalendarForm
 from .forms.process_page_masters_form import TranslateDocxToPageForm
 from .forms.index_pages_form import ManageIndexPagesForm
 from .manage_events.manage_calendar import manage_calendar
-from .manage_events.retrieval_support import EventsInPeriod
+from .manage_events.event_retrieval_support import EventsInPeriod
 from .process_page_masters import translate_docx_and_add_to_db
 from .manage_index_pages import DBManageIndexPages
 
@@ -77,7 +77,7 @@ def get_image(image_path):
 @admin_bp.route('/admin/test', methods=['GET'])
 def admin():
     """Admin page route."""
-    print("Came here")
+    sst_logger.make_info_entry("Called /admin/test")
     return render_template('admin/test.html')
 
 

@@ -1,8 +1,8 @@
 from db_mgt.event_tables import Event, EventTime, EventMeta
 from utilities.sst_exceptions import DataEditingSystemError
 from wtforms import ValidationError
-from .retrieval_support import EventsInPeriod, Evt
-from .operations import CsvToDb
+from .event_retrieval_support import EventsInPeriod, Evt
+from .event_operations import CsvToDb
 
 
 def manage_calendar(session, form):
