@@ -4,7 +4,9 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_assets import Environment, Bundle
 from flask_user import UserManager
 from flask_migrate import Migrate
-from utilities.logging_support import SsTLogger
+from pathlib import Path
+from dotenv import load_dotenv
+
 
 from sqlalchemy.ext.declarative import declarative_base
 import platform
@@ -14,11 +16,14 @@ if platform.node() == 'Descartes':
 else:
     local_server = False
 
-if not local_server:
-    from pathlib import Path
-    from dotenv import load_dotenv
 
+
+if not local_server:
     env_path = '/home/doxley/ssflask2/.env_PA'
+    load_dotenv(dotenv_path=env_path)
+else:
+    env_path = Path('.') / '.env'
+    env_path = '/home/don/devel/ssflask2/.env'
     load_dotenv(dotenv_path=env_path)
 
 # Monkey-patch flask_mail to fix problem in configuration variable - line 548 - DEBUG being converted to int
@@ -27,6 +32,7 @@ from login import my_flask_mail as mfm
 fm.Mail = mfm.Mail
 
 # Config Loggers
+from utilities.logging_support import SsTLogger
 wsgi_logger = SsTLogger()
 wsgi_logger.define_wsgi_logger()
 
