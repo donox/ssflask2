@@ -2,10 +2,12 @@ from db_mgt.event_tables import Event, EventMeta, EventTime, event_meta_tbl
 import csv
 import datetime as dt
 from ssfl import sst_logger
+from unidecode import unidecode
 
 # These are needed when running standalone
 from pathlib import Path
 from dotenv import load_dotenv
+
 env_path = '/home/don/devel/ssflask2/.env'
 load_dotenv(dotenv_path=env_path)
 import db_mgt.setup as su
@@ -25,6 +27,11 @@ CAL_START = 10
 CAL_END = 11
 CAL_DATES_BEGIN = 12
 
+calendar_categories = ['Religion', 'Wellness', 'Resident Clubs', 'Event']
+
+calendar_audiences = ['IL', 'AL', 'HC']
+
+
 # TODO: Need to check if an event is a duplicate which can mean the base event is duplicated but has
 #       a different audience or category.  Issue:  if there is a different category or audience are they
 #       full replacements or we add the deltas and have separate removal means
@@ -32,6 +39,7 @@ CAL_DATES_BEGIN = 12
 class CalendarEvent(object):
     """A CalendarEvent object is a temporary layer between outside info and the DB."""
     zero_time = dt.time(hour=0, minute=0, second=0)
+
     def __init__(self):
         self.name = ''
         self.description = ''
@@ -59,13 +67,13 @@ class CalendarEvent(object):
 
     def add_to_db(self, db_session):
         """Add event(s) to database represented by this event, if not already there."""
-        if self.name.find('eopard') > -1:
-            foo = 3
         already_there = self._check_if_there(db_session, check_location=True, check_time=True)
         if 'location' not in already_there.keys():
+
+
             # Get Venue if it exists or add it, if not.
             if self.venue:
-                res = db_session.query(EventMeta).filter(EventMeta.meta_key == 'location').\
+                res = db_session.query(EventMeta).filter(EventMeta.meta_key == 'location'). \
                     filter(EventMeta.meta_value == self.venue).all()
                 if res:
                     self.venue = res[0]
@@ -81,15 +89,15 @@ class CalendarEvent(object):
             self.venue = already_there['location']
 
         audience_list = [x.upper() for x in self.audience]  # Make sure of capitalization
-        res = db_session.query(EventMeta).\
-            filter(EventMeta.meta_key == 'audience').filter(EventMeta.meta_value.in_(audience_list)).all()
+
+        res = db_session.query(EventMeta).filter(EventMeta.meta_key ==
+                                                 'audience').filter(EventMeta.meta_value.in_(audience_list)).all()
         if not res:
             raise ValueError("Can't find audience")
         else:
             audiences = res
-
-        res = db_session.query(EventMeta). \
-            filter(EventMeta.meta_key == 'category').filter(EventMeta.meta_value.in_(self.categories)).all()
+        res = db_session.query(EventMeta).filter(EventMeta.meta_key ==
+                                                 'category').filter(EventMeta.meta_value.in_(self.categories)).all()
         if not res:
             raise ValueError("Can't find category")
         else:
@@ -117,7 +125,6 @@ class CalendarEvent(object):
         else:
             db_event_id = already_there['event']
 
-
         for time in self.occurs:
             if self.all_day > '0':
                 ad = True
@@ -127,7 +134,7 @@ class CalendarEvent(object):
                 tm = time[0]
             else:
                 tm = CalendarEvent.zero_time
-            st = dt.datetime.combine(time[2], tm)       # Ensure there is a time component to match DB retrieval
+            st = dt.datetime.combine(time[2], tm)  # Ensure there is a time component to match DB retrieval
             if time[1]:
                 tm = time[1]
             else:
@@ -144,7 +151,7 @@ class CalendarEvent(object):
         db_session.commit()
 
     def _check_if_there(self, db_session, check_time=False, check_location=False):
-        #TODO: Handle All Day Event
+        # TODO: Handle All Day Event
         """Determine if a potential new event already exists in the database.
 
         Audiences and categories are assumed to be present (new ones need to be added behind the scenes).
@@ -170,7 +177,7 @@ class CalendarEvent(object):
         sql_time2 = 'and start = \'{}\' and end = \'{}\'; '
 
         elements_found = {}
-        name = self.name.replace("'", "''")                 # MySQL escape single quote chars
+        name = self.name.replace("'", "''")  # MySQL escape single quote chars
         full_sql = sql.format(name, self.cost, self.sign_up, self.ec_depart, self.hl_depart)
         res = db_session.execute(full_sql).first()
         if not res:
@@ -217,7 +224,26 @@ class CsvToDb(object):
         with open(self.csv_file, 'r', encoding='utf-8', errors='ignore') as fl:
             rdr = csv.reader(fl)
             for row in rdr:
-                yield row
+                valid, new_row = CsvToDb._sanitize_row(row)
+                if valid:
+                    yield new_row
+                # else:
+                #     raise ValueError(row)
+
+    @staticmethod
+    def _sanitize_row(row):
+        success = True
+        if row[CAL_CATEGORIES] == '' or row[CAL_AUDIENCE] == '':
+            success = False
+            return success, row
+        categories = row[CAL_CATEGORIES].split(',')
+        for cat in categories:                      # This is primarily defending against problems in
+            if cat not in calendar_categories:      # earlier columns that cause errors in the csv file
+                success = False
+                return success, row
+        row[CAL_EVENT_NAME] = unidecode(row[CAL_EVENT_NAME])
+        row[CAL_DESCRIPTION] = unidecode(row[CAL_DESCRIPTION])
+        return success, row
 
     @staticmethod
     def _try_parsing_time(text):
@@ -230,6 +256,7 @@ class CsvToDb(object):
                 pass
         raise ValueError('No valid format found to parse {}'.format(text))
 
+
     @staticmethod
     def _try_parsing_date(text):
         for fmt in ('%m/%d/%Y %H:%M:%S',):
@@ -238,6 +265,7 @@ class CsvToDb(object):
             except ValueError:
                 pass
         raise ValueError('No valid format found to parse {}'.format(text))
+
 
     def add_events(self):
         """Create list of all events in CSV file."""
@@ -271,13 +299,3 @@ class CsvToDb(object):
     def get_event_list(self):
         return self.events
 
-
-if __name__ == '__main__':
-    df = '/home/don/devel/nightly-scripts/worktemp/calendars/JanuaryCalendar.csv'
-    engine = su.get_engine()
-    session = su.create_session(engine)
-    tables = su.create_tables(engine)
-    build_calendar = CsvToDb(df)
-    build_calendar.add_events()
-    for evt in build_calendar.get_event_list():
-        evt.add_to_db(session)

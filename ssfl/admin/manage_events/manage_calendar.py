@@ -2,10 +2,10 @@ from db_mgt.event_tables import Event, EventTime, EventMeta
 from utilities.sst_exceptions import DataEditingSystemError
 from wtforms import ValidationError
 from .event_retrieval_support import EventsInPeriod, Evt
-from .event_operations import CsvToDb
+from .event_operations import CsvToDb, calendar_categories, calendar_audiences
 
 
-def manage_calendar(session, form):
+def manage_calendar(db_session, form):
     """Process calendar form as requested."""
     audiences = form.audiences.data
     categories = form.categories.data
@@ -18,7 +18,7 @@ def manage_calendar(session, form):
     try:
         if work_function.data == 'pc':
             # Print Calendar to file
-            ev = EventsInPeriod(session, cal_start, cal_end, audiences, categories)
+            ev = EventsInPeriod(db_session, cal_start, cal_end, audiences, categories)
             events = ev.get_events()
             with open(direct + '/' + file, 'w') as fl:
                 s = f'{len(events)} : {ev.start} : {ev.end} : {ev.audiences} : {ev.categories}\n'
@@ -49,7 +49,19 @@ def manage_calendar(session, form):
             build_calendar = CsvToDb(direct + '/' + file)
             build_calendar.add_events()
             for evt in build_calendar.get_event_list():
-                evt.add_to_db(session)
+                evt.add_to_db(db_session)
+        elif work_function.data == 'init':
+            # Clear all event tables and reinitialize Event_Meta
+            db_session.query(EventTime).delete()
+            db_session.query(Event).delete()
+            db_session.query(EventMeta).delete()
+            db_session.commit()
+            for aud in calendar_audiences:
+                evm = EventMeta(meta_key='audience', meta_value=aud)
+                evm.add_to_db(db_session, commit=True)
+            for cat in calendar_categories:
+                evm = EventMeta(meta_key='category', meta_value=cat.lower())
+                evm.add_to_db(db_session, commit=True)
     except Exception as e:
         # TODO: handle error/log, and return useful message to user
         form.errors['Exception'] = ['Exception occurred processing page']

@@ -1,5 +1,5 @@
 from ssfl.tests import test_main
-from ssfl.tests import test_manage_calendar_form
+from ssfl.tests import test_calendar_support
 import unittest
 import inspect
 
@@ -17,9 +17,9 @@ def ssTTests():
    res = get_methods(test_main.MainRoutesTests)
    for method in res:
       suite.addTest(test_main.MainRoutesTests(method))
-   res = get_methods(test_manage_calendar_form.TestDBManageCalendarForm)
+   res = get_methods(test_calendar_support.TestDBManageCalendarForm)
    for method in res:
-      suite.addTest(test_manage_calendar_form.TestDBManageCalendarForm(method))
+      suite.addTest(test_calendar_support.TestDBManageCalendarForm(method))
    return suite
 
 runner = unittest.TextTestRunner(verbosity=2)

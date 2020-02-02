@@ -10,7 +10,8 @@ import datetime as dt
 class ManageCalendarForm(FlaskForm):
     """Manage Calendar content."""
     work_function = SelectField(label='Select Function',
-                                choices=[('pc', 'Print Calendar'), ('uc', 'Upload Calendar'), ('ds', 'Do Something')])
+                                choices=[('uc', 'Upload Calendar'), ('pc', 'Print Calendar'),
+                                         ('init', 'Initialize Calendar'), ('ds', 'Do Something Else')])
     audiences = SelectMultipleField(label='Select Audiences', choices=[('IL', 'IL'), ('AL', 'AL'), ('HC', 'HC')])
     categories = \
         SelectMultipleField(label='Select Categories',
