@@ -75,6 +75,7 @@ class EventsInPeriod(object):
 
     def __init__(self, db_session, start_time, end_time, audiences: list, categories: list):
         self.session = db_session
+        self.evt_count = 0
         if type(start_time) == dt.datetime:
             self.start = start_time.strftime('%Y-%m-%d %H:%M:%S')
             self.end = end_time.strftime('%Y-%m-%d %H:%M:%S')
@@ -105,7 +106,6 @@ class EventsInPeriod(object):
                     if last_id:
                         evt.event_audiences = auds
                         evt.event_categories = cats
-                        all_events.append(evt)
                     evt = Evt(ev_id, name, desc, cost, signup, hl_pickup, ec_pickup, all_day, start, ev_end,
                               location, auds, cats)
                     last_id = ev_id
@@ -119,6 +119,7 @@ class EventsInPeriod(object):
                         cats.append(category)
                 evt.event_audiences = auds
                 evt.event_categories = cats
+                self.evt_count += 1
                 all_events.append(evt)
             self.all_events = all_events
         except Exception as e:
