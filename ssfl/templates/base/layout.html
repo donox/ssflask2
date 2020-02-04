@@ -5,10 +5,19 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ tab_title }}</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous"></script>
+    <script src = "https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity = "sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin = "anonymous" ></script>
     {% assets "css_bundle" %}
-        <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}"></link>
-    {% endassets %}
+    <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}"></link>
+        {% endassets %}
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+          integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
+          crossorigin="anonymous">
+
 
     <script
             src="https://code.jquery.com/jquery-3.4.1.min.js"
@@ -16,7 +25,7 @@
             crossorigin="anonymous"></script>
 
     {% assets "js_bundle" %}
-        <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+    <script type="text/javascript" src="{{ ASSET_URL }}"></script>
     {% endassets %}
 
     <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
@@ -24,13 +33,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
 </head>
-<body class="   ">
-<section class="section">
-    <div class="container">
-        {% include 'base/nav.html' %}
-        {% block content %}{% endblock %}
-        {% include 'base/footer.html' %}
-    </div>
-</section>
+<body>
+<div class="container-fluid">
+    {% include 'base/nav.html' %}
+    {% block content %}{% endblock %}
+    {% include 'base/footer.html' %}
+</div>
 </body>
 </html>
