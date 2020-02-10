@@ -162,6 +162,7 @@ def allowed_file(filename):
 @admin_bp.route('/upload_file', methods=['POST'])
 @login_required
 def upload_file():
+    """Upload file to system file directory."""
     if request.method == 'POST':
         upload_type = request.form['upload_type']
         # check if the post request has the file part

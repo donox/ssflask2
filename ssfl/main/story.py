@@ -120,7 +120,6 @@ class Story(object):
         self._create_read_more()
         try:
             body = lxml.html.tostring(story, method='html').decode('utf-8')
-            foo = 3
         except Exception as e:
             print(e.args)
             raise e

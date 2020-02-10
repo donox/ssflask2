@@ -102,7 +102,7 @@ class PageBody(object):
         # string.  We also enclose non-empty strings in span element
         for el in body_list:
             if type(el) is str:
-                if el:
+                if el != '':
                     res = PageBody._break_text_string(el)
                     for elnew in res:
                         body.append(elnew)
@@ -121,7 +121,7 @@ class PageBody(object):
                 body.append(el)
             else:
                 body.append(el)
-        foo = tostring(body, 'utf-8').decode('utf-8').replace('<html:', '<').replace('/html:', '/')
+        # foo = tostring(body, 'utf-8').decode('utf-8').replace('<html:', '<').replace('/html:', '/')
         return body
 
     @staticmethod
@@ -133,7 +133,7 @@ class PageBody(object):
         tsl = ts3.split('\n')
         res = []
         for segment in tsl:
-            el = etree.Element(XHTML + 'p', nsmap=NSMAP)
+            el = etree.Element(XHTML + 'span', nsmap=NSMAP)
             el.text = segment
             res.append(el)
         return res
