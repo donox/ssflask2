@@ -24,17 +24,17 @@ class TranslateDocxToPageForm(FlaskForm):
             return False
         if self.work_function.data == 'db':
             if self.author.data == '':
-                self.errors['author'] = ['form-validate - Must specify an author when adding to database']
+                self.errors['author'] = ['You must specify an author when adding to database']
                 return False
             if self.page_name.data == '':
-                self.errors['page_name'] = ['form-validate - Must specify a name (form: xx-ee-ff-ss) to add to database']
+                self.errors['page_name'] = ['You  must specify a name (form: xx-ee-ff-ss) to add to database']
             filepath = os.path.join(Config.USER_PAGE_MASTERS, self.filename.data) + '.docx'
             title = self.page_title
             if title.data == '':        # Page invalid if already in DB?  extension not docx if UploadPage
-                self.errors['page_title'] = ['form-validate - Must specify a title for new page']
+                self.errors['page_title'] = ['You must specify a title for new page']
                 return False
             if not os.path.isfile(filepath):
-                self.errors['filename'] = ['form-validate - Specified file does not exist']
+                self.errors['filename'] = ['Specified file does not exist']
                 return False
             return True
         elif self.work_function.data == 'dpdb':
@@ -42,6 +42,6 @@ class TranslateDocxToPageForm(FlaskForm):
             return True
         elif self.work_function.data == 'df':
             if self.filename.data == '':
-                self.errors['Page page_name'] = ['form-validate - Must specify the name of the file to be deleted']
+                self.errors['page_name'] = ['You must specify the name of the file to be deleted']
             return True
         return False

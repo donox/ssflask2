@@ -20,12 +20,12 @@ class ImportMSWordForm(FlaskForm):
         res = super().validate_on_submit()
         title = self.page_name
         if self.page_name.data and not self.overwrite:
-            flash(u'import_mo_word - Page already exists, no overwrite specified.', 'error')
+            flash(u'Page already exists, no overwrite specified.', 'error')
             self.errors['page_name'] = ['import_mo_word - age already exists, no overwrite specified.']
             res = False
         direct = self.directory
         if not os.path.exists(direct.data) or os.path.isfile(direct.data):
-            flash(u'import_mo_word - Specified directory does not exist.', 'error')
-            self.errors['directory'] = ['import_mo_word - Specified directory does not exist']
+            flash(u'Specified directory does not exist.', 'error')
+            self.errors['directory'] = ['Specified directory does not exist']
             res = False
         return res

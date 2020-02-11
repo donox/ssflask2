@@ -23,10 +23,10 @@ def translate_docx_and_add_to_db(db_session, form):
             page_query = db_session.query(Page).filter(Page.page_name == page_name)
             ct = page_query.count()
             if new_page and ct > 0:
-                form.errors['page_name'] = ['process_page_masters - Page already exists, but overwrite not permitted.']
+                form.errors['page_name'] = [f'Page {page_name} already exists, but overwrite not permitted.']
                 return False
             elif not new_page and ct == 0:
-                form.errors['page_name'] = ['process_page_masters - Page does not exist, but new page is not indicated.']
+                form.errors['page_name'] = [f'Page {page_name} does not exist, but new page is not indicated.']
                 return False
 
             html_fl = get_temp_file_name('html', 'html')
@@ -37,7 +37,7 @@ def translate_docx_and_add_to_db(db_session, form):
             wsd.read_docs_as_html()
             html = wsd.build_html_output_tree()
             if not html:
-                form.errors['function_to_execute'] = ['process_page_masters - Translation from docx to html failed']
+                form.errors['work_function'] = ['Translation from docx to html failed']
                 return False
             new_page = Page(page_title=page_title, page_name=page_name, page_date=dt.datetime.now(),
                             page_content=html, page_status='publish', page_guid='Needs GUID', )
@@ -48,7 +48,7 @@ def translate_docx_and_add_to_db(db_session, form):
             page_query = db_session.query(Page).filter(Page.page_name == page_name)
             ct = page_query.count()
             if ct == -1:
-                form.errors['page_name'] = ['process_page_masters - Page does not exist']
+                form.errors['page_name'] = [f'Page {page_name} does not exist']
                 return False
             page_query.delete()
             db_session.commit()
@@ -57,9 +57,10 @@ def translate_docx_and_add_to_db(db_session, form):
             os.remove(filename)
             return True
         else:
-            form.errors['function_to_execute'] = ['process_page_masters - Selected Work Function Not Yet Implemented']
+            form.errors['work_function'] = ['Selected Work Function Not Yet Implemented']
             return False
     except Exception as e:
         # TODO: handle error/log, and return useful message to user
-        form.errors['function_to_execute'] = ['process_page_masters - Exception occurred processing page']
+        form.errors['work_function'] = ['file process_page_masters - Exception occurred processing page']
+        form.errors['work_function'] = [e.args]
         return False
