@@ -187,7 +187,6 @@ def upload_file():
             filename = secure_filename(file.filename)
             filepath = os.path.join(Config.USER_PAGE_MASTERS, filename)
             file.save(filepath)
-            flash(filepath, 'error')                                # Remove
             flash('File successfully uploaded', 'success')
             return redirect('/upload_form')
         else:
