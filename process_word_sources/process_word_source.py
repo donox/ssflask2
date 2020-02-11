@@ -2,6 +2,7 @@ from lxml import etree
 from utilities.run_log_command import run_shell_command
 from utilities.miscellaneous import get_temp_file_name
 import re
+import mammoth
 
 
 class WordSourceDocument(object):
@@ -49,15 +50,11 @@ class WordSourceDocument(object):
         # Translate DOCX to HTML
         html_source = get_temp_file_name('html', 'html')
         try:
-            cmd_run_mammoth = f'mammoth {self.docx_source} {html_source}'
-            run_shell_command(cmd_run_mammoth, self.logger)
-            with open(html_source, 'r') as fl:
-                html_only_list = fl.readlines()
-            html_only = '<html>'
-            for line in html_only_list:
-                html_only += line
-            html_only += '</html>'
-            self.html_etree = etree.fromstring(html_only)
+            with open(self.docx_source, 'rb') as docx_file:
+                result = mammoth.convert_to_html(docx_file)
+                html = result.value
+                html_only = '<html>' + html + '</html>'
+                self.html_etree = etree.fromstring(html_only)
         except Exception as e:
             self.logger.make_error_entry(f'Fail to create HTML from {self.docx_source}')
             raise e
