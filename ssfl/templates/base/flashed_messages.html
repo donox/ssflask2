@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+    {% with messages = get_flashed_messages(category_filter=[flash_message_type]) %}
+        {% if messages %}
+            <ul class=flashes>
+                {%- for  message in messages %}
+                <li class="alert-error">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}

@@ -5,7 +5,7 @@ from flask import Blueprint, render_template, url_for, request, send_file, \
     abort, jsonify, redirect, flash
 from flask import current_app as app
 from flask_login import login_required
-from flask_uploads import secure_filename
+from werkzeug.utils import secure_filename
 
 from config import Config
 from db_mgt.photo_tables import Photo
@@ -24,6 +24,13 @@ from .manage_index_pages import DBManageIndexPages
 admin_bp = Blueprint('admin_bp', __name__,
                      template_folder='templates',
                      static_folder='static')
+
+
+def flash_errors(form):
+    """Flashes form errors"""
+    for field, errors in form.errors.items():
+        for error in errors:
+            flash(u"routes - Error in the %s field - %s" % (getattr(form, field).label.text,  error), 'error')
 
 
 @admin_bp.route('/downloads/<string:file_path>', methods=['GET'])
@@ -204,10 +211,13 @@ def translate_to_html():
             res = translate_docx_and_add_to_db(db_session, form)
             close_session(db_session)
             if res:
+                flash('You were successful in translating file', 'success')
                 return render_template('admin/docx_to_db.html', **context)  # redirect to success url
+        flash_errors(form)
         return render_template('admin/docx_to_db.html', **context)
     else:
         raise ValueError('Invalid method type: {}'.format(request.method))
+
 
 @admin_bp.route('/admin/manage_index_page', methods=['GET', 'POST'])
 @login_required
@@ -230,7 +240,7 @@ def manage_index_page():
                 if res:
                     return render_template('admin/manage_index_page.html', **context)  # redirect to success url
                 else:
-                    return render_template('admin/manage_index_page.html', **context)   # redirect to failure url
+                    return render_template('admin/manage_index_page.html', **context)  # redirect to failure url
             except Exception as e:
                 db_session.rollback()
                 close_session(db_session)

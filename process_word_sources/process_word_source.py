@@ -28,6 +28,8 @@ class WordSourceDocument(object):
         self.process_element['h3'] = self._element_h3
         self.process_element['h4'] = self._element_h4
         self.process_element['sup'] = self._element_sup
+        self.process_element['img'] = self._element_img
+        self.process_element['a'] = self._element_a
         self.process_element['X'] = self._element_x
 
         self.process_latex = dict()
@@ -269,8 +271,8 @@ class WordSourceDocument(object):
     def _element_sup(self, item):
         return '<sup>'
 
-    def _element_x(self, item):
-        return '<x>'
+    def _element_img(self, item):
+        return '<h4>IMG NEEDED</h4>'
 
     def _element_x(self, item):
         return '<x>'
@@ -285,7 +287,7 @@ class WordSourceDocument(object):
         return '<x>'
 
     def _element_a(self, item):
-        return '<h2>Bad Element "a"</h2>'
+        return f'<h2>Element "a" found: {item}</h2>'
 
     def _latex_title(self, item, start_end):
         if start_end == 'start':
