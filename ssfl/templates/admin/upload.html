@@ -1,27 +1,19 @@
 <!doctype html>
 <title>Python Flask File Upload Example</title>
-<h2>Select a file to upload</h2>
-<p>
-    {% with messages = get_flashed_messages() %}
-    {% if messages %}
-<ul class=flashes>
-    {% for message in messages %}
-    <li>{{ message }}</li>
-    {% endfor %}
-</ul>
-{% endif %}
-{% endwith %}
-</p>
-<h2> Worry about overwriting</h2>
-<form method="post" action="/upload_file" enctype="multipart/form-data">
-	<p>
-        Input file type such as 'docx', 'jpg', ...
-		<input type="text" name="upload_type" placeholder="docx" required>
-	</p>
-    <p>
-        <input type="file" name="file" autocomplete="off" required>
-    </p>
-    <p>
-        <input type="submit" value="Submit">
-    </p>
-</form>
+{% include 'base/layout.html' %}
+{% block content %}
+    <h2>Select a file to upload</h2>
+    <h3> Need to worry about overwriting</h3>
+    <form method="post" action="/upload_file" enctype="multipart/form-data">
+        <p>
+            Input file type such as 'docx', 'jpg', ...
+            <input type="text" name="upload_type" placeholder="docx" required>
+        </p>
+        <p>
+            <input type="file" name="file" autocomplete="off" required>
+        </p>
+        <p>
+            <input type="submit" value="Submit">
+        </p>
+    </form>
+{% endblock %}

@@ -174,20 +174,21 @@ def upload_file():
         upload_type = request.form['upload_type']
         # check if the post request has the file part
         if upload_type not in ['docx']:
-            flash('Improper file type')
+            flash('Improper file type', 'error')
             return redirect('/upload_form')
         if 'file' not in request.files:
-            flash('No file part')
+            flash('No file part', 'error')
             return redirect('/upload_form')
         file = request.files['file']
         if file.filename == '':
-            flash('No file selected for uploading')
+            flash('No file selected for uploading', 'error')
             return redirect('/upload_form')
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             filepath = os.path.join(Config.USER_PAGE_MASTERS, filename)
             file.save(filepath)
-            flash('File successfully uploaded')
+            flash(filepath, 'error')                                # Remove
+            flash('File successfully uploaded', 'success')
             return redirect('/upload_form')
         else:
             flash('Allowed file types are txt, pdf, png, jpg, jpeg, gif')
