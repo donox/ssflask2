@@ -33,19 +33,21 @@ fm.Mail = mfm.Mail
 
 # Config Loggers
 from utilities.logging_support import SsTLogger
+
 wsgi_logger = SsTLogger()
 wsgi_logger.define_wsgi_logger()
 
-sst_logger = SsTLogger()
-sst_logger.define_file_logger('syslog')
+sst_syslog = SsTLogger()
+sst_syslog.define_file_logger('syslog')
 
+sst_admin_access_log = SsTLogger()
+sst_admin_access_log.define_file_logger('admin_access')
 
 Base = declarative_base()
 
 # Globally accessible libraries
 # login_manager = LoginManager()
 db = SQLAlchemy()
-
 
 
 def create_app():
@@ -85,7 +87,6 @@ def create_app():
     assets.register('css_bundle', css_bundle)
 
     return app
-
 
 if not local_server:
     app = create_app()

@@ -1,6 +1,45 @@
-class DataMgtModuleError(Exception):
+from ssfl import sst_syslog, sst_admin_access_log, wsgi_logger
+
+def log_error(e, *args, **kwargs):
+    """This is a generalized logging function to handle all sst_exceptions."""
+    if issubclass(type(e), SSTException):
+        if len(args) > 0:
+            sst_syslog.make_error_entry(args[0])
+        else:
+            sst_syslog.make_error_entry(f'Error type: {type(e).__repr__}; no args provided')
+    else:
+        sst_syslog.make_error_entry(f'Unrecognized Exception Type: {type(e)}')
+        sst_syslog.logging.exception("Unexpected Exception Type (this message in sst_exceptions")
+        raise e
+
+
+class SSTException(Exception):
+    """Base Exception Class for All SsT exceptions."""
+    pass
+
+
+class DataMgtModuleError(SSTException):
     """Base Exception Class for Data Management module"""
     pass
+
+
+class ShortcodeError(SSTException):
+    """Base Exception Class for Shortcode module"""
+    pass
+
+
+class SsTFormError(SSTException):
+    """Base Exception Class for errors associated with forms."""
+    pass
+
+
+class RequestInvalidMethodError(SsTFormError):
+    """Error raised for invalid methods for web request."""
+
+    def __init__(self, obj_id, obj_type, msg):
+        self.object_id = obj_id
+        self.object_type = obj_type
+        self.error_message = msg
 
 
 class SiteObjectNotFoundError(DataMgtModuleError):
@@ -28,11 +67,6 @@ class SiteIdentifierError(DataMgtModuleError):
         self.obj_id = obj_id
         self.object_type = obj_type
         self.error_message = msg
-
-
-class ShortcodeError(Exception):
-    """Base Exception Class for Shortcode module"""
-    pass
 
 
 class ShortcodeParameterError(ShortcodeError):

@@ -1,7 +1,7 @@
 from db_mgt.event_tables import Event, EventMeta, EventTime, event_meta_tbl
 import csv
 import datetime as dt
-from ssfl import sst_logger
+from ssfl import sst_syslog
 from unidecode import unidecode
 
 # These are needed when running standalone

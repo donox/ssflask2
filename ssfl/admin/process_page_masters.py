@@ -6,7 +6,7 @@ from utilities.shell_commands import run_shell_command
 from utilities.miscellaneous import get_temp_file_name
 import datetime as dt
 from process_word_sources.process_word_source import WordSourceDocument
-from ssfl import sst_logger
+from ssfl import sst_syslog
 
 
 def translate_docx_and_add_to_db(db_session, form):
@@ -19,7 +19,7 @@ def translate_docx_and_add_to_db(db_session, form):
     author = form.author.data
 
     try:
-        if function_to_execute == 'db':
+        if function_to_execute == 'db':     # 'Add Page to Database'
             page_query = db_session.query(Page).filter(Page.page_name == page_name)
             ct = page_query.count()
             if new_page and ct > 0:
@@ -30,10 +30,9 @@ def translate_docx_and_add_to_db(db_session, form):
                 return False
 
             html_fl = get_temp_file_name('html', 'html')
-            # cmd_run_mammoth = f'mammoth {filename}  {html_fl}'
-            # res = run_shell_command(cmd_run_mammoth)
+
             # FIX THIS TO REMOVE FILE DIRECTORY HANDLING FROM WSD
-            wsd = WordSourceDocument(filename,  sst_logger)
+            wsd = WordSourceDocument(filename, sst_syslog)
             wsd.read_docs_as_html()
             html = wsd.build_html_output_tree()
             if not html:
@@ -44,7 +43,7 @@ def translate_docx_and_add_to_db(db_session, form):
             new_page.add_to_db(db_session, commit=True)
             return True
 
-        elif function_to_execute == 'dpdb':
+        elif function_to_execute == 'dpdb':     # 'Delete Page from Database'
             page_query = db_session.query(Page).filter(Page.page_name == page_name)
             ct = page_query.count()
             if ct == -1:
@@ -53,7 +52,7 @@ def translate_docx_and_add_to_db(db_session, form):
             page_query.delete()
             db_session.commit()
             return True
-        elif function_to_execute == 'df':
+        elif function_to_execute == 'df':           # 'Delete File from Page Masters'
             os.remove(filename)
             return True
         else:

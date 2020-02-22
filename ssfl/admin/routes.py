@@ -1,5 +1,6 @@
 import os
-from ssfl import sst_logger
+from ssfl import sst_syslog, sst_admin_access_log
+from utilities.sst_exceptions import log_error, SiteObjectNotFoundError, RequestInvalidMethodError
 import dateutil.parser
 from flask import Blueprint, render_template, url_for, request, send_file, \
     abort, jsonify, redirect, flash
@@ -36,6 +37,7 @@ def flash_errors(form):
 @admin_bp.route('/downloads/<string:file_path>', methods=['GET'])
 @login_required
 def get_download(file_path):
+    sst_admin_access_log.make_info_entry(f"Route: /admin/get_download/{file_path}")
     path = Config.USER_DIRECTORY_BASE + file_path
     if os.path.exists(path):
         with open(path, 'r') as fl:
@@ -52,6 +54,7 @@ def get_events():
     Returns:  JSON list of events
 
     """
+    sst_admin_access_log.make_info_entry(f"Route: /admin/get_events")
     try:
         args = request.args
         start = dateutil.parser.isoparse(args['start'])
@@ -70,6 +73,7 @@ def get_events():
 
 @admin_bp.route('/getimage/<path:image_path>', methods=['GET'])
 def get_image(image_path):
+    sst_admin_access_log.make_info_entry(f"Route: /admin/get_image/{image_path}")
     path = Config.USER_DIRECTORY_IMAGES + image_path
     args = request.args
     width = int(args['w'])
@@ -84,7 +88,11 @@ def get_image(image_path):
 @admin_bp.route('/admin/test', methods=['GET'])
 def admin():
     """Admin page route."""
-    sst_logger.make_info_entry("Called /admin/test")
+    sst_admin_access_log.make_info_entry("Route: /admin/test")
+    try:
+        raise SiteObjectNotFoundError("Hi", "Boo", "baz")
+    except SiteObjectNotFoundError as e:
+        log_error(e, "testing error processing")
     return render_template('admin/test.html')
 
 
@@ -96,6 +104,7 @@ def has_no_empty_params(rule):
 
 @admin_bp.route('/site-map')
 def site_map():
+    sst_admin_access_log.make_info_entry(f"Route: /admin/site-map")
     links = []
     for rule in app.url_map.iter_rules():
         # Filter out rules we can't navigate to in a browser
@@ -112,6 +121,7 @@ def site_map():
 @login_required
 def sst_admin_edit():
     """Transfer content to-from DB for local editing."""
+    sst_admin_access_log.make_info_entry(f"Route: /admin/ss_admin_edit")
     if request.method == 'GET':
         context = dict()
         context['form'] = DBContentEditForm()
@@ -128,13 +138,14 @@ def sst_admin_edit():
                 return render_template('admin/edit.html', **context)  # redirect to success url
         return render_template('admin/edit.html', **context)
     else:
-        raise ValueError('Invalid method type: {}'.format(request.method))
+        raise RequestInvalidMethodError('Invalid method type: {}'.format(request.method))
 
 
 @admin_bp.route('/admin/calendar', methods=['GET', 'POST'])
 @login_required
 def sst_admin_calendar():
     """Transfer content to-from DB for local editing."""
+    sst_admin_access_log.make_info_entry(f"Route: /admin/sst_admin_calendar")
     if request.method == 'GET':
         context = dict()
         context['form'] = ManageCalendarForm()
@@ -151,11 +162,12 @@ def sst_admin_calendar():
                 return render_template('admin/calendar.html', **context)  # redirect to success url
         return render_template('admin/calendar.html', **context)
     else:
-        raise ValueError('Invalid method type: {}'.format(request.method))
+        raise RequestInvalidMethodError('Invalid method type: {}'.format(request.method))
 
 
 @admin_bp.route('/admin/upload_form', methods=['GET', 'POST'])
 def upload_form():
+    sst_admin_access_log.make_info_entry(f"Route: /admin/upload_form")
     return render_template('admin/upload.html')
 
 
@@ -170,6 +182,7 @@ def allowed_file(filename):
 @login_required
 def upload_file():
     """Upload file to system file directory."""
+    sst_admin_access_log.make_info_entry(f"Route: /admin/upload_file")
     if request.method == 'POST':
         upload_type = request.form['upload_type']
         # check if the post request has the file part
@@ -198,6 +211,7 @@ def upload_file():
 @login_required
 def translate_to_html():
     """Translate file to HTML and store in database."""
+    sst_admin_access_log.make_info_entry(f"Route: /admin/translate_to_html")
     if request.method == 'GET':
         context = dict()
         context['form'] = TranslateDocxToPageForm()
@@ -216,13 +230,14 @@ def translate_to_html():
         flash_errors(form)
         return render_template('admin/docx_to_db.html', **context)
     else:
-        raise ValueError('Invalid method type: {}'.format(request.method))
+        raise RequestInvalidMethodError('Invalid method type: {}'.format(request.method))
 
 
 @admin_bp.route('/admin/manage_index_page', methods=['GET', 'POST'])
 @login_required
 def manage_index_page():
     """Manage Index Page CRUD and Index Items CRUD."""
+    sst_admin_access_log.make_info_entry(f"Route: /admin/manage_index_page")
     if request.method == 'GET':
         context = dict()
         context['form'] = ManageIndexPagesForm()
@@ -247,5 +262,4 @@ def manage_index_page():
                 raise e
         return render_template('admin/manage_index_page.html', **context)
     else:
-        raise ValueError('Invalid method type: {}'.format(request.method))
-# app.register_blueprint(admin_bp)
+        raise RequestInvalidMethodError('Invalid method type: {}'.format(request.method))

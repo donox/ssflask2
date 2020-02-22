@@ -36,11 +36,11 @@ def sst_main():
     return render_template('main/main.html', **context)
 
 
-@main_bp.route('/main/page/<int:page_id>', methods=['GET'])
+@main_bp.route('/main/page/<string:page_ident>', methods=['GET'])
 @login_required
-def sst_get_specific_page(page_id):
+def sst_get_specific_page(page_ident):
     db_session = create_session(get_engine())
-    bp = BuildPage(db_session, page_id)
+    bp = BuildPage(db_session, page_ident)
     context = bp.display_page()
     context['APP_ROOT'] = request.base_url
     close_session(db_session)

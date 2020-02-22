@@ -3,14 +3,19 @@ from db_mgt.page_tables import Page
 
 
 class BuildPage(object):
-    def __init__(self, session, page_id):
-        self.page_id = page_id
+    def __init__(self, session, page_ident):
+        self.page_id = None
+        self.page_name = None
+        try:
+            self.page_id = int(page_ident)
+        except:
+            self.page_name = page_ident
         self.context = dict()
         self.session = session
 
     def display_page(self):
         story_to_display = Story(self.session, 12)      # 12 is full width
-        story_to_display.create_story_from_db(self.page_id)
+        story_to_display.create_story_from_db(page_id=self.page_id, page_name=self.page_name)
         self.context['story'] = story_to_display.story
         return self.context
 

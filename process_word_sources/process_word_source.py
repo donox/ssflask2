@@ -1,22 +1,302 @@
 from lxml import etree
+from xml.etree import ElementTree
 from utilities.run_log_command import run_shell_command
-from utilities.miscellaneous import get_temp_file_name
+
 import re
 import mammoth
+
+
+def get_temp_file_name(a, b):
+    return '/home/don/devel/temp/proto.html'
+
+class ParsedElement(object):
+    """ Base bcass to represent elements of the parse and support expansion.
+
+    """
+    def __init__(self, element_type, source, parent):
+        self.element_type = element_type
+        self.source = source
+        self.parent = parent
+        self.parsed_result = []         # List of 2-tuples and objects.  Tuple is ('node_type', content)
+
+    def get_parent(self):
+        return self.parent
+
+    def get_parent_type(self):
+        if self.parent:
+            return self.parent.element_type
+        else:
+            return 'Top'
+
+    def process_opening_node(self):             # default - overridden if something different required
+        self.parsed_result.append(('Open', self.source_item))
+
+    def parse(self):
+        """Parse input source associated with this element.
+
+        (1) Self.source does not include open node (if exists).  Parse runs through close node (if exists).
+            Each object provides (if needed) a function to perform any actions associated with the encounter
+            of the opening node since the actual call to parse will be past that node(avoid infinite recursion).
+        (2) It is initiated immediately after creation and calls subordinate nodes to parse themselves
+            as it creates them.  That call returns the number of nodes consumed.
+        (3) max_ndx exists to prevent indexing errors on ill-formed (no close) input.
+        (4) Output is self.parsed_result as a list of nodes in directly a part of this node and objects
+            representing each node subordinate to it.
+
+        :return: None.  self.parsed_result properly formed.
+        """
+        if not self.source:
+            return 0
+        ndx = 0
+        max_ndx = len(self.source)
+        this_el_type = ''
+        try:
+            while True:
+                if ndx >= max_ndx:
+                    return ndx
+                el, item = self.source[ndx]
+                if el == 'Free':
+                    free_el = FreeElement(item, self.source[ndx+1:], self)
+                    free_el.process_opening_node()
+                    self.parsed_result.append(free_el)
+                    ndx += 1
+                # Process HTML Elements
+                elif el == 'HOpen':
+                    html_el = HTMLElement(item, self.source[ndx + 1:], self)
+                    html_el.process_opening_node()
+                    self.parsed_result.append(html_el)
+                    cnt_nodes_parsed = html_el.parse()
+                    ndx += cnt_nodes_parsed + 1
+                elif el == 'HSelf':
+                    html_el = HTMLElement(item, self.source[ndx + 1:], self)
+                    html_el.process_opening_node()
+                    self.parsed_result.append(html_el)
+                    cnt_nodes_parsed = html_el.parse()
+                    ndx += cnt_nodes_parsed + 1
+                elif el == 'HClose':
+                    self.parsed_result.append(('Close', item))
+                    return ndx + 1
+                # Process Latex Elements
+                elif el == 'LOpen':
+                    latex_el = LatexElement(item, self.source[ndx+1:], self)
+                    latex_el.process_opening_node()
+                    self.parsed_result.append(latex_el)
+                    cnt_nodes_parsed = latex_el.parse()
+                    ndx += cnt_nodes_parsed + 1
+                elif el == 'LMult':
+                    self.parsed_result.append(('NewArg', item))
+                    ndx += 1
+                elif el == 'LClose':
+                    self.parsed_result.append(('Close', item))
+                    return ndx + 1
+                else:
+                    raise ValueError(f'Invalid  parse_tree input: {self.source[ndx]}')
+
+
+        except Exception as e:
+            foo = 3
+
+    def render(self):
+        res = ''
+        for node in self.parsed_result:
+            if type(node) == tuple:
+                el, item = node
+                if el == 'HSelf':
+                    res += str(item)
+                else:
+                    res += '<UndrendredElement>' + str(node) + '</UndrendredElement>'
+            else:
+                res += str(node.render())
+        if self.element_type == 'Top':
+            return res
+        else:
+            return '<UndrendredElement>' + res + '</UndrendredElement>'
+
+class TopElement(ParsedElement):
+    def __init__(self,  source_list):
+        super().__init__('Top', source_list, None)
+        pass
+
+    def parse(self):
+        super().parse()
+        return self
+
+class FreeElement(ParsedElement):
+    def __init__(self, item, source_list, parent):
+        super().__init__('Free', source_list, parent)
+        self.source_item = item
+
+    def render(self, renderer=None):
+        parent_type = self.get_parent_type()
+        if not renderer:
+            if parent_type == 'HTML':
+                return '<scan>' + self.source_item + '</scan>'
+            elif parent_type == 'Latex':
+                return self.source_item
+            elif parent_type == 'Top':                     # Free standing element not in expression => at start or end
+                return '<scan>' + self.source_item + '</scan>'
+            else:
+                raise ValueError(f'Invalid element type: {parent_type}')
+        else:
+            return renderer(self.source_item)
+
+
+class LatexElement(ParsedElement):
+    def __init__(self, item, source_list, parent):
+        super().__init__('Latex', source_list, parent)
+        self.source_item = item
+        self.command = None
+        self.args = [[]]        # We accumulate the elements and render at close based on verb (name of element)
+                                # args are added to self.args[-1] as encountered.  New args are added on 'LMult'
+        self.command_processors = dict()
+        self.command_processors['bold'] = self._latex_textbf
+        self.command_processors['textbf'] = self._latex_textbf
+        self.command_processors['italics'] = self._latex_textif
+        self.command_processors['textif'] = self._latex_textif
+        self.command_processors['title'] = self._latex_title
+        self.command_processors['subtitle'] = self._latex_subtitle
+        self.command_processors['byline'] = self._latex_byline
+        self.command_processors['bold'] = self._latex_textbf
+        self.command_processors['bold'] = self._latex_textbf
+        self.command_processors['bold'] = self._latex_textbf
+
+    def process_opening_node(self):
+        self.parsed_result.append(('Open', self.source_item[1:-1]))     # Remove backslash and left brace
+
+    def render(self):
+        try:
+            res = ''
+            for el_structure in self.parsed_result:
+                if type(el_structure) == tuple:
+                    el, item = el_structure
+                    if el == 'Open':
+                        self.command = item.strip()
+                    elif el == 'NewArg':
+                        self.args.append(list())
+                    elif el == 'Close':
+                        res += self._render_from_args()
+                    else:
+                        raise ValueError(f'Invalid structure type in Latex node: {el}')
+                else:
+                    if len(self.args) > 0:
+                        tmp = el_structure.render()
+                        self.args[-1].append(tmp)
+                    else:
+                        foo = 3
+            return res
+        except Exception as e:
+            foo = 3
+
+    def _render_from_args(self):
+        """All args processed, so now can render properly."""
+        if self.command in self.command_processors:
+            cmd = self.command_processors[self.command]
+            tmp = cmd()
+            return tmp
+        else:
+            el = 'LATEXElement_' + self.command + '>'
+            return '<' + el + '>El:' + el + 'Has: ' + str(len(self.args)) + ' args</' + el
+
+    def _latex_textbf(self):
+        res = '<strong>'
+        if len(self.args) != 1:
+            raise ValueError(f'Latex Bold called with wrong args: {self.args}')
+        for arg in self.args[0]:
+            res += str(arg)
+        return res + '</strong>'
+
+    def _latex_textif(self):
+        res = '<em>'
+        if len(self.args) != 1:
+            raise ValueError(f'Latex Italics called with wrong args: {self.args}')
+        for arg in self.args[0]:
+            res += str(arg)
+        return res + '</em>'
+
+    def _latex_title(self):
+        res = '<div class="title">'
+        if len(self.args) != 1:
+            raise ValueError(f'Latex title called with wrong args: {self.args}')
+        for arg in self.args[0]:
+            res += str(arg)
+        return res + '</div>'
+
+    def _latex_byline(self):
+        res = '<div class="byline">'
+        if len(self.args) != 1:
+            raise ValueError(f'Latex title called with wrong args: {self.args}')
+        for arg in self.args[0]:
+            res += str(arg)
+        return res + '</div>'
+
+    def _latex_subtitle(self):
+        res = '<div class="subtitle">'
+        if len(self.args) != 1:
+            raise ValueError(f'Latex title called with wrong args: {self.args}')
+        for arg in self.args[0]:
+            res += str(arg)
+        return res + '</div>'
+
+    def _latex_underline(self, item, start_end):
+        if start_end == 'start':
+            return '<u>'
+        else:
+            return '</u>'
+
+    def _latex_x(self, item, start_end):
+        if start_end == 'start':
+            return '<h2>Surround X</h2>'
+        else:
+            return '<h2>End X</h2>'
+
+class HTMLElement(ParsedElement):
+    def __init__(self, item, source_list, parent):
+        super().__init__('HTML', source_list, parent)
+        self.source_item = item
+
+    def process_opening_node(self):
+        res = self.source_item[1:-1]
+        if res[-1] == '/':              # Self closing HTML - remove trailing slash
+            res = res[:-1]
+        self.parsed_result.append(('Open', self.source_item))
+
+    def render(self):
+        res = ''
+        for el_structure in self.parsed_result:
+            if type(el_structure) == tuple:
+                el, item = el_structure
+                if el == 'Open':
+                    res += str(item)      # Should not need str - unless there is an error
+                elif el == 'HSelf':
+                    res += item
+                elif el == 'Close':
+                    res += item
+                else:
+                    raise ValueError(f'Invalid structure type in Latex node: {el}')
+            else:
+                tmp = el_structure.render()
+                res += tmp
+        return res
+
 
 
 class WordSourceDocument(object):
     """Convert marked up Document in MS Word format to HTML.
 
     """
-    def __init__(self, source_file,  logger):
+
+    def __init__(self, source_file, logger):
         self.logger = logger
         self.docx_source = source_file + '.docx'
+        self.text_as_substrings = []
         self.html_etree = None
-        self.node_count = 0             # unique ID for nodes in tree walk
-        self.pending_close_cmd = []    # stack of outstanding latex commands that are not closed via '}'
-                                        #    does not address environment close (???)
+        self.env_blocks = []  # Stack of outstanding environment blocks
+        self.node_count = 0  # unique ID for nodes in tree walk
+        #    does not address environment close (???)
         self.no_span_needed = ['p', 'h1', 'h2', 'h3', 'h4', 'span', 'em', 'strong']
+        self.flat_list = []  # flattened result list after parsing
+
+        self.trace_list = []
 
         self.process_element = dict()
         self.process_element['html'] = self._element_html
@@ -33,18 +313,13 @@ class WordSourceDocument(object):
         self.process_element['a'] = self._element_a
         self.process_element['X'] = self._element_x
 
-        self.process_latex = dict()
-        self.process_latex['title'] = self._latex_title
-        self.process_latex['byline'] = self._latex_byline
-        self.process_latex['subtitle'] = self._latex_subtitle
-        self.process_latex['textbf'] = self._latex_textbf
-        self.process_latex['textif'] = self._latex_textif
-        self.process_latex['underline'] = self._latex_underline
-        self.process_latex['X'] = self._latex_x
-        self.process_latex['X'] = self._latex_x
 
+    def trace(self, **kwargs):
+        self.trace_list.append(kwargs)
 
-
+    def print_trace(self):
+        for entry in self.trace_list:
+            print(entry.__repr__())
 
     def read_docs_as_html(self):
         # Translate DOCX to HTML
@@ -59,183 +334,75 @@ class WordSourceDocument(object):
             self.logger.make_error_entry(f'Fail to create HTML from {self.docx_source}')
             raise e
 
-    def get_html_tree_walk_iterator(self, node, res_list):
-        '''Return nodes from tree in document order, converting to either list of children or text only nodes.
+    def _find_last_element_in_nested_list(self, res):
+        if type(res) == list:
+            if not res:
+                foo = 3
+            return self._find_last_element_in_nested_list(res[-1])
+        else:
+            return res
 
-        Processing:
-            (1) Any node containing both text and children is converted to a node list in which the text elements
-                are surrounded with 'scan' tags.
-            (2) Any node containing a latex command is converted to a 'command' node.  It is ASSUMED that any
-                latex command is contained in a single text string of its containing node.
-            (3) Any closing brace not in a latex command is ASSUMED to be the close of a latex command initiated
-                earlier.
-        '''
-        if etree.iselement(node):
-            children = list(node)
-            if not res_list:
-                res_list = []
-                res_index = 0
-            else:
-                res_index = len(res_list)
-            res_list.append(self._make_tree_walk_dict('start', node.tag))
-            if node.text:
-                self._convert_text_node(res_list, node.text)
-            for child in children:
-                res_list.append(self._make_tree_walk_dict('child', child))
-            res_list.append(self._make_tree_walk_dict('end', node.tag))
-            if node.tail:
-                self._convert_text_node(res_list, node.tail)
+    def _create_delimited_strings(self, txt):
+        """Convert html/latex source to strings delimited by open/close latex/html and text.
 
-            for item in res_list[res_index:]:
-                if item['type'] != 'child':
-                    yield item
-                else:
-                    for next_item in self.get_html_tree_walk_iterator(item['content'], res_list):
-                        yield next_item
+        :param txt: str
+        :return: List(2-tuples): (node type, node content)
 
-    def get_html_etree_iterator(self):
-        for el in self.html_etree.iter():
-            yield el
+        To simplify checking for types of character sequences ('free text', 'html expressions', 'latex expressions') we
+        convert the input string into a list of characters or sequences of characters indicating the text strings and
+        delimiters.  We can then do simple counting to find matching pairs of delimiters and detect mismatched cases
+        (where an html expression or latex expression is not wholly contained in a single element of the other).
 
-    def _make_tree_walk_dict(self, node_type, node_content):
-        res = dict()
-        res['id'] = self.node_count
-        self.node_count += 1
-        res['type'] = node_type
-        res['content'] = node_content
-        return res
+        There are several cases:
+          (1) '\...{' - open latex expression.  Only ordinary text allowed.
+          (2) '{' - multiple arguments in latex expression.  May be preceded by '}' or '} whitespace'
+          (3) '}' - close latex expression.
+          (4) '<...>' - open html expression.  No '\', '{', '}', '/', '<'.  allowed.
+          (5) '</...>' - close html expression.  Only ordinary text allowed.
+          (6) '<.../>' - self closing html.  No '\', '{', '}', '/', '<'. '>' allowed.
+          (7) 'free text' - no '>' allowed.
+        To avoid problems that confuse backslashes in latex, with python and regex escape sequences we
+              modify the searched string by replacing backslashes with an unused but otherwise normal char ('\a') and
+              modify the regex expressions to search for them.
+        These regex expressions use an '@' sign where an ascii BEL ('\a') should be, then replace it with the BEL
+        Input strings containing a '\' replace the backslash with a BEL
+        Processing of the results of matches should remove all BEL's, but any left are converted back to
+              backslashes after processing."""
+        latex_open = r'(?P<LOpen>@[\w ]+{)'.replace('@', '\a')              # \xxxx{
+        latex_multiple = r'(?P<LMult>}\s*{)'                                # }{
+        latex_close = r'(?P<LClose>})'                                      # }
+        html_open = r'(?P<HOpen><[^><&@/]+>)'.replace('@', '\a')          # <tag attributes>
+        html_close = r'(?P<HClose></[^><&@/]+>)'.replace('@', '\a')         # </tag>
+        html_self_close = r'(?P<HSelf><[^><&@/]+/>)'.replace('@', '\a')   # <tag attributes/>
+        free_text = r'(?P<Free>[^@<>{}]+)'.replace('@', '\a')               # text
+        tmp = ''.join(['(', latex_open, '|', latex_multiple, '|', latex_close, '|', html_close, '|', html_self_close,
+                       '|', html_open, '|', free_text, ')'])
 
-    def _enclose_in_span(self, res_list, node_text):
-        if len(res_list) > 1:
-            last_cmd = res_list[-1]['content']
-            last_type = res_list[-1]['type']
-            if last_type == 'start' and last_cmd in self.no_span_needed:
-                res_list.append(self._make_tree_walk_dict('text', node_text))
-                return
-        res_list.append(self._make_tree_walk_dict('start', 'span'))
-        res_list.append(self._make_tree_walk_dict('text', node_text))
-        res_list.append(self._make_tree_walk_dict('end', 'span'))
+        txt_parse = re.compile(tmp)
+        txt_positions = []
+        for match in re.finditer(txt_parse, txt.replace('\\', '\a')):
+            tmp = [(k, v) for k, v in match.groupdict().items() if v][0]
+            txt_positions.append(tmp)
+        return txt_positions
 
-    def _process_command_first_in_string(self, res_list, node_text, m_start, m_end):
-        if m_start > 0:
-            self._enclose_in_span(res_list, node_text[:m_start])
-        cmd = node_text[m_start + 1:m_end - 1]
-        res_list.append(self._make_tree_walk_dict('cmdstart', cmd))
-        self.pending_close_cmd.append(cmd)
-        self._convert_text_node(res_list, node_text[m_end:])
-        return
-
-    def _convert_text_node(self, res_list, node_text):
+    def _parse_whole_text(self, txt):
         try:
-            re_env = re.compile(r"\\(begin|end){([^}]*)}")   # Special processing command
-            re_st = re.compile(r"\\([a-z]+){")      # Simple command with no arguments
-            re_st_1 = re.compile(r"\\([a-z]+){([^}]*)} *{")     # Command with one argument - all in same text
-            if len(node_text) == 0:
-                return
-            cur_start = 0
-            m_cmd_arg = None
-            text_len = len(node_text)
-            re_env_match = re_env.search(node_text)
-            if re_env_match:
-                m_cmd = re_env_match.group(1)
-                m_cmd_arg = re_env_match.group(2)
-                if m_cmd == 'begin':      # Begin environment
-                    self.pending_close_cmd.append(m_cmd_arg)
-                    res_list.append(self._make_tree_walk_dict('envstart', m_cmd_arg))
-                elif m_cmd == 'end':      # End environment
-                    if not self.pending_close_cmd:
-                        raise ValueError('Encountered latex expression close when none is open')
-                    if not self.pending_close_cmd[-1] == m_cmd_arg:
-                        raise ValueError(f'Expected env close, found {self.pending_close_cmd[-1]} instead {m_cmd_arg} ')
-                    self.pending_close_cmd.pop()
-                    res_list.append(self._make_tree_walk_dict('envclose', m_cmd_arg))
-                self._convert_text_node(res_list, node_text[re_env_match.end():])
-                return
-            else:
-                # process regular command
-                re_first_match = re_st.search(node_text)
-                first_close = node_text.find('}')
-                re_first_match_arg = re_st_1.search(node_text)
-                # First real command is earliest of the two matches.  If re_first_match_arg hits then so will
-                # re_first_match
-                if re_first_match_arg and (re_first_match_arg.start() == re_first_match.start()):
-                    m_end = re_first_match_arg.end()
-                    first_close = node_text[m_end:].find('}')
-                    if first_close > -1:        # if there is real first_close, must determine actual position
-                        first_close += m_end
-                    m_cmd_arg = re_first_match_arg.group(2)
-                    self._make_tree_walk_dict('cmdarg', m_cmd_arg)
-                    re_first_match = re_first_match_arg     # with arg recorded, can pretend that re's are the same
-                if not re_first_match and (first_close == -1):
-                    self._enclose_in_span(res_list, node_text)
-                    return
-                if re_first_match:          # have a match but need to check for closing bracket after the match (don't
-                                            #    hit arg close)
-                    m_start = re_first_match.start()
-                    m_end = re_first_match.end()
-                    if first_close > -1:
-                        if first_close < m_start:
-                            # close a prior expression and process remainder of string
-                            if not self.pending_close_cmd:
-                                raise ValueError('Encountered latex expression close when none is open')
-                            else:
-                                if first_close > 0:   # There is text before the close
-                                    self._enclose_in_span(res_list, node_text[0:first_close])
-                                cmd = self.pending_close_cmd.pop()
-                                res_list.append(self._make_tree_walk_dict('cmdend', cmd))
-                                self._convert_text_node(res_list, node_text[first_close+1:])
-                                return
-                        else:      # BEWARE - DON'T PICK UP ARG CLOSE - should not be a problem if matcher captures args
-                            # new command comes first - enclose any preceding text, push command and process
-                            self._process_command_first_in_string(res_list, node_text, m_start, m_end)
-                            return
-                    else:
-                        # There are no closing braces - process command initiation
-                        self._process_command_first_in_string(res_list, node_text, m_start, m_end)
-                        return
-                else:   # No match, but found close - enclosed initial in span, add close, process rest of string
-                    self._enclose_in_span(res_list, node_text[0:first_close])
-                    cmd = self.pending_close_cmd.pop()
-                    res_list.append(self._make_tree_walk_dict('cmdend', cmd))
-                    self._convert_text_node(res_list, node_text[first_close + 1:])
-                    return
+            txt_strings = self._create_delimited_strings(txt)
+            te = TopElement(txt_strings)
+            te.parse()
+            res = te.render()
+            return res
+
         except Exception as e:
-            foo = 3
             raise e
 
     def build_html_output_tree(self):
-        '''Construct html incorporating expanded latex suitable for use in Jinja Templates.
-
-        The document is constructed as an HTML body.  Elements or parts of elements are created
-        as text items in a list which is joined with single spaces between items.'''
+        all_text = ElementTree.tostring(self.html_etree).decode()
         try:
-            page_body = []
-            pe_keys = self.process_element.keys()
-            for item in self.get_html_tree_walk_iterator(self.html_etree, None):
-                if item['type'] == 'start':             # 'start', 'end' handle ordinary html elements
-                    elem_kind = item['content']
-                    if elem_kind not in pe_keys:
-                        raise ValueError(f'No processor for element {elem_kind}')
-                    page_body.append(self.process_element[elem_kind](item))
-                elif item['type'] == 'text':
-                    page_body.append(item['content'])
-                elif item['type'] == 'end':
-                    page_body.append('</' + item['content'] + '>')
-                elif item['type'] == 'cmdstart':                        # 'cmdstart', 'cmdend' handle latex elements
-                    ltx_cmd = item['content']
-                    page_body.append(self.process_latex[ltx_cmd](item, 'start'))
-                elif item['type'] == 'cmdend':
-                    page_body.append(self.process_latex[ltx_cmd](item, 'end'))
-                elif item['type'] == 'envstart':                        # 'envstart', 'envclose' handle latex environments
-                    page_body.append('<h1>LATEX CMD: ' + item['content'] + '</h1>')
-                elif item['type'] == 'envclose':
-                    page_body.append('<h1>LATEX CMD: ' + item['content'] + '</h1>')
-                else:
-                    raise ValueError(f"Item type: {item['type']} not recognized.")
-            return ' '.join(page_body)
+            res = self._parse_whole_text(all_text)
+            return res.replace('\a', '\\')           # Replace ASCII BEL with backslash (reverse earlier translation)
         except Exception as e:
             foo = 3
-            raise e
 
     def _element_html(self, item):
         """Body is our top level element.  The document is assumed to contain no header information."""
@@ -285,47 +452,5 @@ class WordSourceDocument(object):
 
     def _element_a(self, item):
         return f'<h2>Element "a" found: {item}</h2>'
-
-    def _latex_title(self, item, start_end):
-        if start_end == 'start':
-            return '<div class="display-2">'
-        else:
-            return '</div>'
-
-    def _latex_byline(self, item, start_end):
-        if start_end == 'start':
-            return '<strong>by '
-        else:
-            return '</strong>'
-
-    def _latex_subtitle(self, item, start_end):
-        if start_end == 'start':
-            return '<div class="display-3">'
-        else:
-            return '</div>'
-
-    def _latex_textbf(self, item, start_end):
-        if start_end == 'start':
-            return '<strong>'
-        else:
-            return '</strong>'
-
-    def _latex_textif(self, item, start_end):
-        if start_end == 'start':
-            return '<em>'
-        else:
-            return '</em>'
-
-    def _latex_underline(self, item, start_end):
-        if start_end == 'start':
-            return '<u>'
-        else:
-            return '</u>'
-
-    def _latex_x(self, item, start_end):
-        if start_end == 'start':
-            return '<h2>Surround X</h2>'
-        else:
-            return '<h2>End X</h2>'
 
 

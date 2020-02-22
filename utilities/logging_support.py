@@ -8,6 +8,7 @@ class SsTLogger(object):
         self.log_name = None
         self.log_directory = None
         self.logger_type = None
+        self.logging = logging  # Used to allow logging.exception for traceback
         self.handler = None
 
     def define_wsgi_logger(self):
