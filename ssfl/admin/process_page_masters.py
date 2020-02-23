@@ -2,7 +2,6 @@ import os
 
 from config import Config
 from db_mgt.page_tables import Page
-from utilities.shell_commands import run_shell_command
 from utilities.miscellaneous import get_temp_file_name
 import datetime as dt
 from process_word_sources.process_word_source import WordSourceDocument
@@ -32,7 +31,7 @@ def translate_docx_and_add_to_db(db_session, form):
             html_fl = get_temp_file_name('html', 'html')
 
             # FIX THIS TO REMOVE FILE DIRECTORY HANDLING FROM WSD
-            wsd = WordSourceDocument(filename, sst_syslog)
+            wsd = WordSourceDocument(db_session, filename, sst_syslog)
             wsd.read_docs_as_html()
             html = wsd.build_html_output_tree()
             if not html:

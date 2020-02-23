@@ -33,6 +33,12 @@ class SsTFormError(SSTException):
     pass
 
 
+class SsTDocParseError(SSTException):
+    """Base Exception Class for errors associated with parsing Word Docs."""
+    pass
+
+
+# ######################################################
 class RequestInvalidMethodError(SsTFormError):
     """Error raised for invalid methods for web request."""
 
@@ -93,3 +99,23 @@ class DataEditingSystemError(ShortcodeError):
         self.obj_id = obj_id
         self.object_type = obj_type
         self.error_message = msg
+
+
+class WordLatexExpressionError(SsTDocParseError):
+    """Error raised a parsing error occurs parsing a Latex style expression in a Word Document."""
+
+    def __init__(self, msg):
+        self.error_message = msg
+
+class WordHTMLExpressionError(SsTDocParseError):
+    """Error raised a parsing error occurs parsing HTML in a Word Document."""
+
+    def __init__(self, msg):
+        self.error_message = msg
+
+class WordInputError(SsTDocParseError):
+    """Error raised a parsing error occurs  in a Word Document."""
+
+    def __init__(self, msg):
+        self.error_message = msg
+

@@ -1,6 +1,8 @@
 from lxml import etree
 from xml.etree import ElementTree
-from utilities.run_log_command import run_shell_command
+from utilities.sst_exceptions import WordHTMLExpressionError, WordLatexExpressionError, WordInputError
+from .photos import PagePhotoFrame, Photo
+from config import Config
 
 import re
 import mammoth
@@ -10,14 +12,23 @@ def get_temp_file_name(a, b):
     return '/home/don/devel/temp/proto.html'
 
 class ParsedElement(object):
-    """ Base bcass to represent elements of the parse and support expansion.
+    """ Base class to represent elements of the parse and support expansion.
 
     """
     def __init__(self, element_type, source, parent):
         self.element_type = element_type
         self.source = source
         self.parent = parent
+        self.top = None
         self.parsed_result = []         # List of 2-tuples and objects.  Tuple is ('node_type', content)
+        if self.parent:
+            self.top = self.parent.get_top()
+
+    def get_top(self):
+        if self.parent:
+            return self.top
+        else:
+            return self
 
     def get_parent(self):
         return self.parent
@@ -90,7 +101,7 @@ class ParsedElement(object):
                     self.parsed_result.append(('Close', item))
                     return ndx + 1
                 else:
-                    raise ValueError(f'Invalid  parse_tree input: {self.source[ndx]}')
+                    raise WordInputError(f'Invalid  parse_tree input: {self.source[ndx]}')
 
 
         except Exception as e:
@@ -112,14 +123,48 @@ class ParsedElement(object):
         else:
             return '<UndrendredElement>' + res + '</UndrendredElement>'
 
+
 class TopElement(ParsedElement):
-    def __init__(self,  source_list):
+    def __init__(self,  source_list, db_session):
+        self.db_session = db_session
+        self.environment = []           # Environments that control interpretation set/cleared by latex expressions
+        self.photo_frames = dict()
+        self.current_photo_frame = None
         super().__init__('Top', source_list, None)
         pass
 
     def parse(self):
         super().parse()
         return self
+
+    def open_environment(self, env_name):
+        if env_name in self.environment:
+            raise WordInputError(f'Environment: {env_name} already open.')
+        else:
+            self.environment.append(env_name)
+
+    def close_environment(self, env_name):
+        if self.environment and self.environment[-1] != env_name:
+            raise WordInputError(f'Environment: {env_name} not most recently created environment.')
+
+    def add_photo_frame(self, name):
+        if name in self.photo_frames.keys():
+            raise WordLatexExpressionError(f'Photo Frame {name} exists.')
+        new_frame = PagePhotoFrame(name, self.db_session)
+        self.photo_frames[name] = new_frame
+        self.current_photo_frame = new_frame
+        return new_frame
+
+    def clear_current_frame(self, arg):
+        if self.current_photo_frame.name != arg:
+            raise WordLatexExpressionError(f'Attempt to clear wrong photo frame: {arg}')
+        self.current_photo_frame = None
+
+    def get_photo_frame(self, name):
+        if name in self.photo_frames.keys():
+            return self.photo_frames[name]
+        else:
+            raise WordLatexExpressionError(f'Photo Frame {name} does not exist.')
 
 class FreeElement(ParsedElement):
     def __init__(self, item, source_list, parent):
@@ -136,7 +181,7 @@ class FreeElement(ParsedElement):
             elif parent_type == 'Top':                     # Free standing element not in expression => at start or end
                 return '<scan>' + self.source_item + '</scan>'
             else:
-                raise ValueError(f'Invalid element type: {parent_type}')
+                raise WordInputError(f'Invalid element type: {parent_type}')
         else:
             return renderer(self.source_item)
 
@@ -152,13 +197,23 @@ class LatexElement(ParsedElement):
         self.command_processors['bold'] = self._latex_textbf
         self.command_processors['textbf'] = self._latex_textbf
         self.command_processors['italics'] = self._latex_textif
+        self.command_processors['underline'] = self._latex_underline
         self.command_processors['textif'] = self._latex_textif
         self.command_processors['title'] = self._latex_title
         self.command_processors['subtitle'] = self._latex_subtitle
         self.command_processors['byline'] = self._latex_byline
-        self.command_processors['bold'] = self._latex_textbf
-        self.command_processors['bold'] = self._latex_textbf
-        self.command_processors['bold'] = self._latex_textbf
+        self.command_processors['begin'] = self._latex_begin_env
+        self.command_processors['end'] = self._latex_end_env
+        self.command_processors['figure'] = self._latex_begin_figure
+        self.command_processors['endfigure'] = self._latex_end_figure
+        self.command_processors['photoset'] = self._latex_photoset
+        self.command_processors['photo'] = self._latex_photo
+        self.command_processors['phototitle'] = self._latex_photo_title
+        self.command_processors['photoposition'] = self._latex_photo_postion
+        self.command_processors['photorotation'] = self._latex_photo_rotation
+        self.command_processors['placefigure'] = self._latex_place_figure
+        self.command_processors['photosize'] = self._latex_photo_size
+        self.command_processors['bold'] = self._latex_photo
 
     def process_opening_node(self):
         self.parsed_result.append(('Open', self.source_item[1:-1]))     # Remove backslash and left brace
@@ -174,9 +229,12 @@ class LatexElement(ParsedElement):
                     elif el == 'NewArg':
                         self.args.append(list())
                     elif el == 'Close':
-                        res += self._render_from_args()
+                        try:
+                            res += self._render_from_args()
+                        except Exception as e:
+                            raise e
                     else:
-                        raise ValueError(f'Invalid structure type in Latex node: {el}')
+                        raise WordLatexExpressionError(f'Invalid structure type in Latex node: {el}')
                 else:
                     if len(self.args) > 0:
                         tmp = el_structure.render()
@@ -185,7 +243,7 @@ class LatexElement(ParsedElement):
                         foo = 3
             return res
         except Exception as e:
-            foo = 3
+            raise 3
 
     def _render_from_args(self):
         """All args processed, so now can render properly."""
@@ -200,48 +258,162 @@ class LatexElement(ParsedElement):
     def _latex_textbf(self):
         res = '<strong>'
         if len(self.args) != 1:
-            raise ValueError(f'Latex Bold called with wrong args: {self.args}')
-        for arg in self.args[0]:
-            res += str(arg)
+            raise WordLatexExpressionError(f'Latex Bold called with wrong args: {self.args}')
+        arg = self.args[0][0]
+        res += str(arg)
         return res + '</strong>'
 
     def _latex_textif(self):
         res = '<em>'
         if len(self.args) != 1:
-            raise ValueError(f'Latex Italics called with wrong args: {self.args}')
-        for arg in self.args[0]:
-            res += str(arg)
+            raise WordLatexExpressionError(f'Latex Italics called with wrong args: {self.args}')
+        arg = self.args[0][0]
+        res += str(arg)
         return res + '</em>'
+
+    def _latex_underline(self):
+        res = '<span style="text-decoration:underline">'
+        if len(self.args) != 1:
+            raise WordLatexExpressionError(f'Latex Underline called with wrong args: {self.args}')
+        arg = self.args[0][0]
+        res += str(arg)
+        return res + '</span>'
 
     def _latex_title(self):
         res = '<div class="title">'
         if len(self.args) != 1:
-            raise ValueError(f'Latex title called with wrong args: {self.args}')
-        for arg in self.args[0]:
-            res += str(arg)
+            raise WordLatexExpressionError(f'Latex title called with wrong args: {self.args}')
+        arg = self.args[0][0]
+        res += str(arg)
         return res + '</div>'
 
     def _latex_byline(self):
         res = '<div class="byline">'
         if len(self.args) != 1:
-            raise ValueError(f'Latex title called with wrong args: {self.args}')
-        for arg in self.args[0]:
-            res += str(arg)
+            raise WordLatexExpressionError(f'Latex title called with wrong args: {self.args}')
+        arg = self.args[0][0]
+        res += str(arg)
         return res + '</div>'
 
     def _latex_subtitle(self):
         res = '<div class="subtitle">'
         if len(self.args) != 1:
-            raise ValueError(f'Latex title called with wrong args: {self.args}')
-        for arg in self.args[0]:
-            res += str(arg)
+            raise WordLatexExpressionError(f'Latex subtitle called with wrong args: {self.args}')
+        arg = self.args[0][0]
+        res += str(arg)
         return res + '</div>'
 
-    def _latex_underline(self, item, start_end):
-        if start_end == 'start':
-            return '<u>'
-        else:
-            return '</u>'
+    def _latex_begin_env(self):
+        if len(self.args) != 1:
+            raise WordLatexExpressionError(f'Latex begin environment called with wrong args: {self.args}')
+        arg = self.args[0][0]
+        top_element = super().get_top()
+        top_element.open_environment(arg)
+        return ''
+
+    def _latex_end_env(self):
+        if len(self.args) != 1:
+            raise WordLatexExpressionError(f'Latex end environment called with wrong args: {self.args}')
+        arg = self.args[0][0]
+        top_element = super().get_top()
+        top_element.close_environment(arg)
+        return ''
+
+    def _latex_begin_figure(self):
+        if len(self.args) != 1:
+            raise WordLatexExpressionError(f'Latex figure called with wrong args: {self.args}')
+        arg = self.args[0][0]
+        top_element = super().get_top()
+        top_element.add_photo_frame(arg)
+        return ''
+
+    def _latex_end_figure(self):
+        if len(self.args) != 1:
+            raise WordLatexExpressionError(f'Latex end figure called with wrong args: {self.args}')
+        arg = self.args[0][0]
+        top_element = super().get_top()
+        top_element.clear_current_frame(arg)
+        return ''
+
+    def _latex_photoset(self):
+        """Accept comma separated list of photo IDs and add to photo frame"""
+        if len(self.args) != 1:
+            raise WordLatexExpressionError(f'Latex end figure called with wrong args: {self.args}')
+        photo_list_text = self.args[0][0]
+        top_element = super().get_top()
+        try:
+            photo_list = photo_list_text.split(',')
+            for photo_nbr in photo_list:
+                photo_id = int(photo_nbr.strip())
+                top_element.current_photo_frame.add_photo(photo_id)
+        except Exception as e:
+            pass
+            raise e
+        return ''
+
+    def _latex_photo(self):
+        photo = self.args[0][0]
+        try:
+            top_element = super().get_top()
+            photo_id = int(photo.strip())
+            top_element.current_photo_frame.add_photo(photo_id)
+        except Exception as e:
+            pass
+            raise e
+        return ''
+
+    def _latex_photo_title(self):
+        top_element = super().get_top()
+        if len(self.args) != 1:
+            raise WordLatexExpressionError(f'Latex end figure called with wrong args: {self.args}')
+        arg = self.args[0][0]
+        top_element.current_photo_frame.add_title(arg)
+        return ''
+
+    def _latex_photo_postion(self):
+        top_element = super().get_top()
+        if len(self.args) != 1:
+            raise WordLatexExpressionError(f'Latex end figure called with wrong args: {self.args}')
+        arg = self.args[0][0]
+        if arg not in ['center', 'left', 'right']:
+            raise WordLatexExpressionError(f'Photo Frame unrecognized position: {arg}')
+        top_element.current_photo_frame.set_position(arg)
+        return ''
+
+    def _latex_photo_size(self):
+        try:
+            top_element = super().get_top()
+            for arg in self.args[0]:
+                els = arg.split('=')
+                if els[0].startswith('w'):
+                    dimension = 'width'
+                else:
+                    dimension = 'height'
+                size = int(els[1].strip())
+                top_element.current_photo_frame.set_dimension(dimension, size)
+            return ''
+        except Exception as e:
+            raise e
+
+    def _latex_photo_rotation(self):
+        top_element = super().get_top()
+        if len(self.args) != 1:
+            raise WordLatexExpressionError(f'Latex end figure called with wrong args: {self.args}')
+        arg = self.args[0][0]
+        try:
+            arg_float = float(arg)
+        except Exception as e:
+            raise WordLatexExpressionError(f'Latex invalid value for photo frame rotation speed: {arg}')
+        top_element.current_photo_frame.set_rotation(arg_float)
+        return ''
+
+    def _latex_place_figure(self):
+        top_element = super().get_top()
+        if len(self.args) != 1:
+            raise WordLatexExpressionError(f'Latex end figure called with wrong args: {self.args}')
+        arg = self.args[0][0]
+        frame = top_element.get_photo_frame(arg)
+        return frame.get_html()
 
     def _latex_x(self, item, start_end):
         if start_end == 'start':
@@ -261,22 +433,25 @@ class HTMLElement(ParsedElement):
         self.parsed_result.append(('Open', self.source_item))
 
     def render(self):
-        res = ''
-        for el_structure in self.parsed_result:
-            if type(el_structure) == tuple:
-                el, item = el_structure
-                if el == 'Open':
-                    res += str(item)      # Should not need str - unless there is an error
-                elif el == 'HSelf':
-                    res += item
-                elif el == 'Close':
-                    res += item
+        try:
+            res = ''
+            for el_structure in self.parsed_result:
+                if type(el_structure) == tuple:
+                    el, item = el_structure
+                    if el == 'Open':
+                        res += str(item)      # Should not need str - unless there is an error
+                    elif el == 'HSelf':
+                        res += item
+                    elif el == 'Close':
+                        res += item
+                    else:
+                        raise WordLatexExpressionError(f'Invalid structure type in Latex node: {el}')
                 else:
-                    raise ValueError(f'Invalid structure type in Latex node: {el}')
-            else:
-                tmp = el_structure.render()
-                res += tmp
-        return res
+                    tmp = el_structure.render()
+                    res += tmp
+            return res
+        except Exception as e:
+            raise e
 
 
 
@@ -285,8 +460,9 @@ class WordSourceDocument(object):
 
     """
 
-    def __init__(self, source_file, logger):
+    def __init__(self, db_session, source_file, logger):
         self.logger = logger
+        self.db_session = db_session
         self.docx_source = source_file + '.docx'
         self.text_as_substrings = []
         self.html_etree = None
@@ -298,20 +474,20 @@ class WordSourceDocument(object):
 
         self.trace_list = []
 
-        self.process_element = dict()
-        self.process_element['html'] = self._element_html
-        self.process_element['p'] = self._element_p
-        self.process_element['span'] = self._element_span
-        self.process_element['em'] = self._element_em
-        self.process_element['strong'] = self._element_strong
-        self.process_element['h1'] = self._element_h1
-        self.process_element['h2'] = self._element_h2
-        self.process_element['h3'] = self._element_h3
-        self.process_element['h4'] = self._element_h4
-        self.process_element['sup'] = self._element_sup
-        self.process_element['img'] = self._element_img
-        self.process_element['a'] = self._element_a
-        self.process_element['X'] = self._element_x
+        # self.process_element = dict()
+        # self.process_element['html'] = self._element_html
+        # self.process_element['p'] = self._element_p
+        # self.process_element['span'] = self._element_span
+        # self.process_element['em'] = self._element_em
+        # self.process_element['strong'] = self._element_strong
+        # self.process_element['h1'] = self._element_h1
+        # self.process_element['h2'] = self._element_h2
+        # self.process_element['h3'] = self._element_h3
+        # self.process_element['h4'] = self._element_h4
+        # self.process_element['sup'] = self._element_sup
+        # self.process_element['img'] = self._element_img
+        # self.process_element['a'] = self._element_a
+        # self.process_element['X'] = self._element_x
 
 
     def trace(self, **kwargs):
@@ -388,7 +564,7 @@ class WordSourceDocument(object):
     def _parse_whole_text(self, txt):
         try:
             txt_strings = self._create_delimited_strings(txt)
-            te = TopElement(txt_strings)
+            te = TopElement(txt_strings, self.db_session)
             te.parse()
             res = te.render()
             return res
@@ -404,53 +580,53 @@ class WordSourceDocument(object):
         except Exception as e:
             foo = 3
 
-    def _element_html(self, item):
-        """Body is our top level element.  The document is assumed to contain no header information."""
-        return '<body>'
-
-    def _element_p(self, item):
-        return '<p>'
-
-    def _element_span(self, item):
-        return '<span>'
-
-    def _element_em(self, item):
-        return '<em>'
-
-    def _element_strong(self, item):
-        return '<strong>'
-
-    def _element_h1(self, item):
-        return '<h1>'
-
-    def _element_h2(self, item):
-        return '<h2>'
-
-    def _element_h3(self, item):
-        return '<h3>'
-
-    def _element_h4(self, item):
-        return '<h4>'
-
-    def _element_sup(self, item):
-        return '<sup>'
-
-    def _element_img(self, item):
-        return '<h4>IMG NEEDED</h4>'
-
-    def _element_x(self, item):
-        return '<x>'
-
-    def _element_x(self, item):
-        return '<x>'
-
-    def _element_x(self, item):
-        return '<x>'
-
-    def _element_x(self, item):
-        return '<x>'
-
-    def _element_a(self, item):
-        return f'<h2>Element "a" found: {item}</h2>'
+    # def _element_html(self, item):
+    #     """Body is our top level element.  The document is assumed to contain no header information."""
+    #     return '<body>'
+    #
+    # def _element_p(self, item):
+    #     return '<p>'
+    #
+    # def _element_span(self, item):
+    #     return '<span>'
+    #
+    # def _element_em(self, item):
+    #     return '<em>'
+    #
+    # def _element_strong(self, item):
+    #     return '<strong>'
+    #
+    # def _element_h1(self, item):
+    #     return '<h1>'
+    #
+    # def _element_h2(self, item):
+    #     return '<h2>'
+    #
+    # def _element_h3(self, item):
+    #     return '<h3>'
+    #
+    # def _element_h4(self, item):
+    #     return '<h4>'
+    #
+    # def _element_sup(self, item):
+    #     return '<sup>'
+    #
+    # def _element_img(self, item):
+    #     return '<h4>IMG NEEDED</h4>'
+    #
+    # def _element_x(self, item):
+    #     return '<x>'
+    #
+    # def _element_x(self, item):
+    #     return '<x>'
+    #
+    # def _element_x(self, item):
+    #     return '<x>'
+    #
+    # def _element_x(self, item):
+    #     return '<x>'
+    #
+    # def _element_a(self, item):
+    #     return f'<h2>Element "a" found: {item}</h2>'
 
 
