@@ -4,28 +4,15 @@
 {% block content %}
 <section class="container">
     <div class="XXX">
-        <h3>Translate Existing Word Document to HTML and Store in Database</h3>
-        <p>Note that document must have been previously uploaded to system.</p>
-        <p>Note that file name does not include the .docx extension.</p>
+        <h3>Miscellaneous Admin Functions</h3>
         <p>Only required parameters for an action are required.</p>
-        <form action="{{ url_for('admin_bp.translate_to_html') }}" method="post">
+        <form action="{{ url_for('admin_bp.sst_miscellaneous') }}" method="post">
             <div class="input">
                 {{ form.work_function.label }}
                 {{ form.work_function(placeholder='0000') }}
                 {% if form.work_function.errors %}
                 <ul class="errors">
                     {% for error in form.work_function.errors %}
-                    <li>{{ error }}</li>
-                    {% endfor %}
-                </ul>
-                {% endif %}
-            </div>
-            <div class="input">
-                {{ form.page_title.label }}
-                {{ form.page_title(placeholder='Page title)') }}
-                {% if form.page_title.errors %}
-                <ul class="errors">
-                    {% for error in form.page_title.errors %}
                     <li>{{ error }}</li>
                     {% endfor %}
                 </ul>
@@ -42,34 +29,12 @@
                 </ul>
                 {% endif %}
             </div>
-            <div class="input">
-                {{ form.author.label }}
-                {{ form.author(placeholder="Author's name for byline") }}
-                {% if form.author.errors %}
-                <ul class="errors">
-                    {% for error in form.author.errors %}
-                    <li>{{ error }}</li>
-                    {% endfor %}
-                </ul>
-                {% endif %}
-            </div>
             <div class="file">
                 {{ form.filename.label }}
                 {{ form.filename(placeholder='File to be translated') }}
                 {% if form.filename.errors %}
                 <ul class="errors">
                     {% for error in form.filename.errors %}
-                    <li>{{ error }}</li>
-                    {% endfor %}
-                </ul>
-                {% endif %}
-            </div>
-            <div class="file">
-                {{ form.new_page.label }}
-                {{ form.new_page() }}
-                {% if form.new_page.errors %}
-                <ul class="errors">
-                    {% for error in form.new_page.errors %}
                     <li>{{ error }}</li>
                     {% endfor %}
                 </ul>

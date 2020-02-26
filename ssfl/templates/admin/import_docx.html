@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+{% extends 'base/layout.html' %}
+
+{% block content %}
+<section class="container">
+    <div class="XXX">
+        <h3>Import MS Word Page to Database</h3>
+        <form action="{{ url_for('admin_bp.sst_import_page') }}" method="post" enctype="multipart/form-data">
+            <div class="input">
+                {{ form.page_name.label }}
+                {{ form.page_name(placeholder='Page name (e.g., foo-bar-xx)') }}
+                {% if form.page_name.errors %}
+                <ul class="errors">
+                    {% for error in form.page_name.errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+            <div class="file">
+                {{ form.file_name.label }} {{ form.file_name }}
+                {% if form.file_name.errors %}
+                <ul class="errors">
+                    {% for error in form.file_name.errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+            <div class="file">
+                {{ form.overwrite.label }}
+                {{ form.overwrite() }}
+                {% if form.overwrite.errors %}
+                <ul class="errors">
+                    {% for error in form.overwrite.errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+            <div class="button">
+                <input id="submit" type="submit" value="Submit">
+            </div>
+            {% if form.errors %}
+            <ul class="errors">
+                {% for error in form.errors.keys() %}
+                {% for specific in form.errors[error] %}
+                <li>{{ error }} : {{ specific }}</li>
+                {% endfor %}
+                {% endfor %}
+            </ul>
+            {% endif %}
+            {{ form.csrf_token }}
+        </form>
+
+    </div>
+</section>
+{% endblock %}

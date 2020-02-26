@@ -1,5 +1,22 @@
 from ssfl import db
 import datetime as dt
+from sqlalchemy.orm import defer
+
+
+class PageManager(object):
+    def __init__(self, db_session):
+        self.db_session = db_session
+
+    def generate_page_records(self, key_list):
+        res = self.db_session.query(Page).options(defer('page_content'),
+                                                  defer('page_cached_content')).all()
+        for record in res:
+            rec = record.__dict__
+            rec_list = []
+            for key in key_list:
+                rec_list.append(rec[key])
+            yield rec_list
+
 
 
 class Page(db.Model):
@@ -27,6 +44,7 @@ class Page(db.Model):
                 session.commit()
             except Exception as e:
                 foo = 3
+                raise e
         return self
 
     def fetch_content(self, session):

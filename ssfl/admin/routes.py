@@ -1,6 +1,7 @@
 import os
 from ssfl import sst_syslog, sst_admin_access_log
 from utilities.sst_exceptions import log_error, SiteObjectNotFoundError, RequestInvalidMethodError
+from utilities.miscellaneous import get_temp_file_name
 import dateutil.parser
 from flask import Blueprint, render_template, url_for, request, send_file, \
     abort, jsonify, redirect, flash
@@ -14,11 +15,12 @@ from db_mgt.setup import get_engine, create_session, close_session
 from .edit_local_file import edit_database_file
 from .forms.edit_db_content_form import DBContentEditForm
 from .forms.manage_calendar_form import ManageCalendarForm
-from .forms.process_page_masters_form import TranslateDocxToPageForm
+from .forms.miscellaneous_functions_form import MiscellaneousFunctionsForm
 from .forms.index_pages_form import ManageIndexPagesForm
+from .forms.import_word_doc_form import ImportMSWordDocForm
 from .manage_events.manage_calendar import manage_calendar
 from .manage_events.event_retrieval_support import EventsInPeriod
-from .process_page_masters import translate_docx_and_add_to_db
+from .miscellaneous_functions import miscellaneous_functions, import_docx_and_add_to_db
 from .manage_index_pages import DBManageIndexPages
 
 # Set up a Blueprint
@@ -207,28 +209,30 @@ def upload_file():
         return redirect('/upload_form')
 
 
-@admin_bp.route('/admin/translate_to_html', methods=['GET', 'POST'])
+@admin_bp.route('/admin/sst_miscellaneous', methods=['GET', 'POST'])
 @login_required
-def translate_to_html():
+def sst_miscellaneous():
     """Translate file to HTML and store in database."""
     sst_admin_access_log.make_info_entry(f"Route: /admin/translate_to_html")
     if request.method == 'GET':
         context = dict()
-        context['form'] = TranslateDocxToPageForm()
-        return render_template('admin/docx_to_db.html', **context)
+        context['form'] = MiscellaneousFunctionsForm()
+        return render_template('admin/miscellaneous_functions.html', **context)
     elif request.method == 'POST':
-        form = TranslateDocxToPageForm()
+        form = MiscellaneousFunctionsForm()
         context = dict()
         context['form'] = form
         if form.validate_on_submit():
             db_session = create_session(get_engine())
-            res = translate_docx_and_add_to_db(db_session, form)
+            func, res = miscellaneous_functions(db_session, form)
             close_session(db_session)
-            if res:
-                flash('You were successful in translating file', 'success')
-                return render_template('admin/docx_to_db.html', **context)  # redirect to success url
+            if func in ['dpdb', 'df'] and res:
+                flash('You were successful', 'success')
+                return render_template('admin/miscellaneous_functions.html', **context)  # redirect to success url
+            else:
+                return send_file(res, mimetype="text/csv", as_attachment=True)
         flash_errors(form)
-        return render_template('admin/docx_to_db.html', **context)
+        return render_template('admin/miscellaneous_functions.html', **context)
     else:
         raise RequestInvalidMethodError('Invalid method type: {}'.format(request.method))
 
@@ -263,3 +267,36 @@ def manage_index_page():
         return render_template('admin/manage_index_page.html', **context)
     else:
         raise RequestInvalidMethodError('Invalid method type: {}'.format(request.method))
+
+
+@admin_bp.route('/admin/sst_import_page', methods=['GET', 'POST'])
+@login_required
+def sst_import_page():
+    """Import Word Document, translate it and store in database."""
+    sst_admin_access_log.make_info_entry(f"Route: /admin/sst_import_page")
+    if request.method == 'GET':
+        context = dict()
+        context['form'] = ImportMSWordDocForm()
+        return render_template('admin/import_docx.html', **context)
+    elif request.method == 'POST':
+        form = ImportMSWordDocForm()
+        context = dict()
+        context['form'] = form
+        db_session = create_session(get_engine())
+        if form.validate_on_submit(db_session):
+            file = form.file_name.data
+            secure_filename(file.filename)
+            file_path = get_temp_file_name('word', 'docx')
+            file.save(file_path)
+            res = import_docx_and_add_to_db(db_session, form, file_path)
+            close_session(db_session)
+            if res:
+                flash(f'You were successful in importing {file}', 'success')
+                return render_template('admin/import_docx.html', **context)  # redirect to success url
+        else:
+            close_session(db_session)
+        flash_errors(form)
+        return render_template('admin/import_docx.html', **context)
+    else:
+        raise RequestInvalidMethodError('Invalid method type: {}'.format(request.method))
+

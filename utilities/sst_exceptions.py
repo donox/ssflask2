@@ -114,7 +114,19 @@ class WordHTMLExpressionError(SsTDocParseError):
         self.error_message = msg
 
 class WordInputError(SsTDocParseError):
-    """Error raised a parsing error occurs  in a Word Document."""
+    """Error raised when a parsing error occurs  in a Word Document."""
+
+    def __init__(self, msg):
+        self.error_message = msg
+
+class WordRenderingError(SsTDocParseError):
+    """Error raised when a error occurs rendering a parsed Word Document."""
+
+    def __init__(self, msg):
+        self.error_message = msg
+
+class WordContentFeatureExists(SsTDocParseError):
+    """Error raised when a specific content feature is added more than once as a single feature."""
 
     def __init__(self, msg):
         self.error_message = msg

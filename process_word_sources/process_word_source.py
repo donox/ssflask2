@@ -1,6 +1,7 @@
 from lxml import etree
 from xml.etree import ElementTree
-from utilities.sst_exceptions import WordHTMLExpressionError, WordLatexExpressionError, WordInputError
+from utilities.sst_exceptions import WordHTMLExpressionError, WordLatexExpressionError, WordInputError, \
+    WordRenderingError, WordContentFeatureExists
 from .photos import PagePhotoFrame, Photo
 from config import Config
 
@@ -11,16 +12,18 @@ import mammoth
 def get_temp_file_name(a, b):
     return '/home/don/devel/temp/proto.html'
 
+
 class ParsedElement(object):
     """ Base class to represent elements of the parse and support expansion.
 
     """
+
     def __init__(self, element_type, source, parent):
         self.element_type = element_type
         self.source = source
         self.parent = parent
         self.top = None
-        self.parsed_result = []         # List of 2-tuples and objects.  Tuple is ('node_type', content)
+        self.parsed_result = []  # List of 2-tuples and objects.  Tuple is ('node_type', content)
         if self.parent:
             self.top = self.parent.get_top()
 
@@ -39,7 +42,7 @@ class ParsedElement(object):
         else:
             return 'Top'
 
-    def process_opening_node(self):             # default - overridden if something different required
+    def process_opening_node(self):  # default - overridden if something different required
         self.parsed_result.append(('Open', self.source_item))
 
     def parse(self):
@@ -67,7 +70,7 @@ class ParsedElement(object):
                     return ndx
                 el, item = self.source[ndx]
                 if el == 'Free':
-                    free_el = FreeElement(item, self.source[ndx+1:], self)
+                    free_el = FreeElement(item, self.source[ndx + 1:], self)
                     free_el.process_opening_node()
                     self.parsed_result.append(free_el)
                     ndx += 1
@@ -89,7 +92,7 @@ class ParsedElement(object):
                     return ndx + 1
                 # Process Latex Elements
                 elif el == 'LOpen':
-                    latex_el = LatexElement(item, self.source[ndx+1:], self)
+                    latex_el = LatexElement(item, self.source[ndx + 1:], self)
                     latex_el.process_opening_node()
                     self.parsed_result.append(latex_el)
                     cnt_nodes_parsed = latex_el.parse()
@@ -125,11 +128,12 @@ class ParsedElement(object):
 
 
 class TopElement(ParsedElement):
-    def __init__(self,  source_list, db_session):
+    def __init__(self, source_list, db_session):
         self.db_session = db_session
-        self.environment = []           # Environments that control interpretation set/cleared by latex expressions
+        self.environment = []  # Environments that control interpretation set/cleared by latex expressions
         self.photo_frames = dict()
         self.current_photo_frame = None
+        self.content_features = dict()      # A dictionary of things found in the parse (e.g, title) useful to parents
         super().__init__('Top', source_list, None)
         pass
 
@@ -166,6 +170,23 @@ class TopElement(ParsedElement):
         else:
             raise WordLatexExpressionError(f'Photo Frame {name} does not exist.')
 
+    # Content features are intended to provide a mechanism for accumulating information
+    # while processing a document that may be useful at a higher level such as placing the
+    # title in the database.
+    def get_content_features(self):
+        return self.content_features
+
+    def add_content_feature(self, name, value):
+        if name in self.content_features.keys():
+            raise WordContentFeatureExists(f'Feature: {name} has already been added')
+        self.content_features[name] = value
+
+    def add_content_feature_list(self, name, value):
+        if name in self.content_features.keys():
+            self.content_features[name].append(value)
+        else:
+            self.content_features[name] = [value]
+
 class FreeElement(ParsedElement):
     def __init__(self, item, source_list, parent):
         super().__init__('Free', source_list, parent)
@@ -178,7 +199,7 @@ class FreeElement(ParsedElement):
                 return '<scan>' + self.source_item + '</scan>'
             elif parent_type == 'Latex':
                 return self.source_item
-            elif parent_type == 'Top':                     # Free standing element not in expression => at start or end
+            elif parent_type == 'Top':  # Free standing element not in expression => at start or end
                 return '<scan>' + self.source_item + '</scan>'
             else:
                 raise WordInputError(f'Invalid element type: {parent_type}')
@@ -191,8 +212,8 @@ class LatexElement(ParsedElement):
         super().__init__('Latex', source_list, parent)
         self.source_item = item
         self.command = None
-        self.args = [[]]        # We accumulate the elements and render at close based on verb (name of element)
-                                # args are added to self.args[-1] as encountered.  New args are added on 'LMult'
+        self.args = [[]]  # We accumulate the elements and render at close based on verb (name of element)
+        # args are added to self.args[-1] as encountered.  New args are added on 'LMult'
         self.command_processors = dict()
         self.command_processors['bold'] = self._latex_textbf
         self.command_processors['textbf'] = self._latex_textbf
@@ -216,7 +237,7 @@ class LatexElement(ParsedElement):
         self.command_processors['bold'] = self._latex_photo
 
     def process_opening_node(self):
-        self.parsed_result.append(('Open', self.source_item[1:-1]))     # Remove backslash and left brace
+        self.parsed_result.append(('Open', self.source_item[1:-1]))  # Remove backslash and left brace
 
     def render(self):
         try:
@@ -229,10 +250,7 @@ class LatexElement(ParsedElement):
                     elif el == 'NewArg':
                         self.args.append(list())
                     elif el == 'Close':
-                        try:
-                            res += self._render_from_args()
-                        except Exception as e:
-                            raise e
+                        res += self._render_from_args()
                     else:
                         raise WordLatexExpressionError(f'Invalid structure type in Latex node: {el}')
                 else:
@@ -240,10 +258,10 @@ class LatexElement(ParsedElement):
                         tmp = el_structure.render()
                         self.args[-1].append(tmp)
                     else:
-                        foo = 3
+                        raise ValueError(f'System error - invalid length in args structure in Latex Element render')
             return res
         except Exception as e:
-            raise 3
+            raise WordLatexExpressionError(f'Error in Latex Element render: {el_structure}')
 
     def _render_from_args(self):
         """All args processed, so now can render properly."""
@@ -284,6 +302,7 @@ class LatexElement(ParsedElement):
         if len(self.args) != 1:
             raise WordLatexExpressionError(f'Latex title called with wrong args: {self.args}')
         arg = self.args[0][0]
+        super().get_top().add_content_feature('title',  arg)
         res += str(arg)
         return res + '</div>'
 
@@ -292,6 +311,7 @@ class LatexElement(ParsedElement):
         if len(self.args) != 1:
             raise WordLatexExpressionError(f'Latex title called with wrong args: {self.args}')
         arg = self.args[0][0]
+        super().get_top().add_content_feature('byline', arg)
         res += str(arg)
         return res + '</div>'
 
@@ -421,6 +441,7 @@ class LatexElement(ParsedElement):
         else:
             return '<h2>End X</h2>'
 
+
 class HTMLElement(ParsedElement):
     def __init__(self, item, source_list, parent):
         super().__init__('HTML', source_list, parent)
@@ -428,18 +449,24 @@ class HTMLElement(ParsedElement):
 
     def process_opening_node(self):
         res = self.source_item[1:-1]
-        if res[-1] == '/':              # Self closing HTML - remove trailing slash
+        if res[-1] == '/':  # Self closing HTML - remove trailing slash
             res = res[:-1]
         self.parsed_result.append(('Open', self.source_item))
 
     def render(self):
+        """This rendering is just copying the html from the source document to the output.
+
+        This is an artifact of the HTML element not using a command structure (i.e., element
+        tag) like a Latex element. Switching to a full command structure will allow the
+        easy addition of new features (such as finding empty 'scan'  or 'p' elements, adding
+        css classes, ..."""
         try:
             res = ''
             for el_structure in self.parsed_result:
                 if type(el_structure) == tuple:
                     el, item = el_structure
                     if el == 'Open':
-                        res += str(item)      # Should not need str - unless there is an error
+                        res += str(item)  # Should not need str - unless there is an error
                     elif el == 'HSelf':
                         res += item
                     elif el == 'Close':
@@ -451,8 +478,7 @@ class HTMLElement(ParsedElement):
                     res += tmp
             return res
         except Exception as e:
-            raise e
-
+            raise WordRenderingError(f'Unspecified Error in Word Render')
 
 
 class WordSourceDocument(object):
@@ -463,7 +489,8 @@ class WordSourceDocument(object):
     def __init__(self, db_session, source_file, logger):
         self.logger = logger
         self.db_session = db_session
-        self.docx_source = source_file + '.docx'
+        self.docx_source = source_file
+        self.content_features = None
         self.text_as_substrings = []
         self.html_etree = None
         self.env_blocks = []  # Stack of outstanding environment blocks
@@ -489,7 +516,6 @@ class WordSourceDocument(object):
         # self.process_element['a'] = self._element_a
         # self.process_element['X'] = self._element_x
 
-
     def trace(self, **kwargs):
         self.trace_list.append(kwargs)
 
@@ -499,7 +525,6 @@ class WordSourceDocument(object):
 
     def read_docs_as_html(self):
         # Translate DOCX to HTML
-        html_source = get_temp_file_name('html', 'html')
         try:
             with open(self.docx_source, 'rb') as docx_file:
                 result = mammoth.convert_to_html(docx_file)
@@ -517,6 +542,9 @@ class WordSourceDocument(object):
             return self._find_last_element_in_nested_list(res[-1])
         else:
             return res
+
+    def get_content_features(self):
+        return self.content_features
 
     def _create_delimited_strings(self, txt):
         """Convert html/latex source to strings delimited by open/close latex/html and text.
@@ -544,13 +572,13 @@ class WordSourceDocument(object):
         Input strings containing a '\' replace the backslash with a BEL
         Processing of the results of matches should remove all BEL's, but any left are converted back to
               backslashes after processing."""
-        latex_open = r'(?P<LOpen>@[\w ]+{)'.replace('@', '\a')              # \xxxx{
-        latex_multiple = r'(?P<LMult>}\s*{)'                                # }{
-        latex_close = r'(?P<LClose>})'                                      # }
-        html_open = r'(?P<HOpen><[^><&@/]+>)'.replace('@', '\a')          # <tag attributes>
-        html_close = r'(?P<HClose></[^><&@/]+>)'.replace('@', '\a')         # </tag>
-        html_self_close = r'(?P<HSelf><[^><&@/]+/>)'.replace('@', '\a')   # <tag attributes/>
-        free_text = r'(?P<Free>[^@<>{}]+)'.replace('@', '\a')               # text
+        latex_open = r'(?P<LOpen>@[\w ]+{)'.replace('@', '\a')  # \xxxx{
+        latex_multiple = r'(?P<LMult>}\s*{)'  # }{
+        latex_close = r'(?P<LClose>})'  # }
+        html_open = r'(?P<HOpen><[^><&@/]+>)'.replace('@', '\a')  # <tag attributes>
+        html_close = r'(?P<HClose></[^><&@/]+>)'.replace('@', '\a')  # </tag>
+        html_self_close = r'(?P<HSelf><[^><&@/]+/>)'.replace('@', '\a')  # <tag attributes/>
+        free_text = r'(?P<Free>[^@<>{}]+)'.replace('@', '\a')  # text
         tmp = ''.join(['(', latex_open, '|', latex_multiple, '|', latex_close, '|', html_close, '|', html_self_close,
                        '|', html_open, '|', free_text, ')'])
 
@@ -567,6 +595,7 @@ class WordSourceDocument(object):
             te = TopElement(txt_strings, self.db_session)
             te.parse()
             res = te.render()
+            self.content_features = te.get_content_features()
             return res
 
         except Exception as e:
@@ -576,7 +605,7 @@ class WordSourceDocument(object):
         all_text = ElementTree.tostring(self.html_etree).decode()
         try:
             res = self._parse_whole_text(all_text)
-            return res.replace('\a', '\\')           # Replace ASCII BEL with backslash (reverse earlier translation)
+            return res.replace('\a', '\\')  # Replace ASCII BEL with backslash (reverse earlier translation)
         except Exception as e:
             foo = 3
 
@@ -628,5 +657,3 @@ class WordSourceDocument(object):
     #
     # def _element_a(self, item):
     #     return f'<h2>Element "a" found: {item}</h2>'
-
-

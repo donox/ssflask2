@@ -69,23 +69,17 @@
                     </a>
 
                     <div class="navbar-dropdown">
-                        <a class="navbar-item" href="{{ url_for('admin_bp.sst_admin_edit') }}">
+                        <a class="navbar-item" href="{{ url_for('admin_bp.sst_import_page') }}">
                             Edit DB Page
                         </a>
                         <a class="navbar-item" href="{{ url_for('admin_bp.sst_admin_calendar') }}">
                             Manage Calendar
                         </a>
-                        <a class="navbar-item" href="{{ url_for('admin_bp.upload_form') }}">
-                            Upload DOCX File
+                        <a class="navbar-item" href="{{ url_for('admin_bp.sst_import_page') }}">
+                            Import MS Word Page
                         </a>
-                        <a class="navbar-item" href="{{ url_for('admin_bp.translate_to_html') }}">
-                            Translate DOCX and Add to DB
-                        </a>
-                        <a class="navbar-item" href="{{ url_for('admin_bp.translate_to_html') }}">
-                            Delete DOCX File
-                        </a>
-                        <a class="navbar-item" href="{{ url_for('admin_bp.translate_to_html') }}">
-                            Delete Page from DB
+                        <a class="navbar-item" href="{{ url_for('admin_bp.sst_miscellaneous') }}">
+                            Miscellaneous Functions
                         </a>
                         <a class="navbar-item" href="{{ url_for('admin_bp.manage_index_page') }}">
                             Manage Index Page
@@ -93,6 +87,9 @@
                         <a class="navbar-item"
                            href="{{ url_for('main.sst_get_menu_page', page='sunnyside-resident-maps') }}">
                             Maps
+                        </a>
+                         <a class="navbar-item" href="{{ url_for('admin_bp.upload_form') }}">
+                            Upload a File
                         </a>
                         <hr class="navbar-divider">
                         <a class="navbar-item">
