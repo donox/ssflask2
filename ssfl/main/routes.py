@@ -2,6 +2,7 @@ from flask import Flask, Blueprint, render_template, request
 from flask_login import login_required
 from db_mgt.setup import get_engine, create_session, close_session
 from ssfl.main.front_page import BuildFrontPage
+from ssfl.main.multi_story_page import MultiStoryPage
 from ssfl.main.build_page import BuildPage
 from ssfl.main.views.calendar_view import RandomCalendarAPI
 from db_mgt.index_page_tables import IndexPage, IndexPageItem
@@ -19,21 +20,33 @@ main_bp.add_url_rule('/cal/', defaults={'count': 10},
                  view_func=cal_view, methods=['GET'])
 
 
-@main_bp.route('/main/<string:page_name>/')
-def render_static(page_name):
-    return render_template('main/%s.html' % page_name)
-
+# @main_bp.route('/oldmain/<string:page_name>/')
+# def render_static(page_name):
+#     return render_template('main/%s.html' % page_name)
 
 @main_bp.route('/main', methods=['GET'])
 @login_required
 def sst_main():
     """Main page route."""
     db_session = create_session(get_engine())
-    fp = BuildFrontPage(db_session)
-    context = fp.make_front_page_context()
+    msp = MultiStoryPage(db_session)
+    msp.load_descriptor_from_database('front-page')
+    context = msp.make_front_page_context()
     context['APP_ROOT'] = request.base_url
     close_session(db_session)
     return render_template('main/main.html', **context)
+
+
+# @main_bp.route('/XXmain', methods=['GET'])
+# @login_required
+# def sst_main():
+#     """Main page route."""
+#     db_session = create_session(get_engine())
+#     fp = BuildFrontPage(db_session)
+#     context = fp.make_front_page_context()
+#     context['APP_ROOT'] = request.base_url
+#     close_session(db_session)
+#     return render_template('main/main.html', **context)
 
 
 @main_bp.route('/main/page/<string:page_ident>', methods=['GET'])
@@ -77,3 +90,14 @@ def sst_get_index_page(page):
     context['APP_ROOT'] = request.url_root
     close_session(db_session)
     return render_template('main/index_page_layout.html', **context)
+
+# @main_bp.route('/main/multi', methods=['GET'])
+# @login_required
+# def sst_multi():
+#     """Multi row/col collection of snippets route."""
+#     db_session = create_session(get_engine())
+#     fp = BuildFrontPage(db_session)
+#     context = fp.make_front_page_context()
+#     context['APP_ROOT'] = request.base_url
+#     close_session(db_session)
+#     return render_template('main/multi_row_col.html', **context)

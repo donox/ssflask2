@@ -3,44 +3,26 @@
 {% extends 'base/layout.html' %}
 
 {% block content %}
-
-{% for item1 in snips %} {# Each item corresponds to all stories horizontally across the page #}
-<div class="row">
-    {% for item in item1 %} {# Each item corresponds to all stories vertically in a cell #}
-    <div class="col">
-        <div class="container">
-
-            {% if item.cell_type=='story' %}
-            {% set item2 = item.story %}
-            <div class="col">
-                <div class="title">{{ item2.story['title'] | safe }}</div>
-                <figure>
-                    <img class="is-link"
-                         src="getimage/{{ item2.story['photo_url'] }}?w={{ item2.story['photo_shape'][0] }}&h={{ item2.story['photo_shape'][1] }}"
-                         width="{{ item2.story['photo_shape'][0] }}"
-                         height="{{ item2.story['photo_shape'][1] }}"
-                         align="{{ item2.story['photo_align'] }}">
-                    <figcaption>{{ item2.story['photo_caption'] }}</figcaption>
-                </figure>
-                <div class="message-body">{{ item2.story['snip'] | safe }}</div>
-                {% with button_type=item2.story['button_type'], target=item2.story['target'],
-                text_content=item2.story['text_content'],
-                extra_styling=item2.story['extra_styling'] %}
-                {% include 'base/button.html' %}
-                {% endwith %}
+<div class="container-fluid">
+    {% for row in rows %} {# Each item corresponds to all stories horizontally across the page #}
+    <div class="row">
+        {% for col in row.columns %}
+        <div class="col col-md-6 col-lg-4 col-xl-3">
+            <div class="container-fluid">
+                {% for cell in col.cells %}
+                    {% if cell.element_type == 'CalendarSnippet' %}
+                        {% set calendar = cell.element %}
+                        {% include 'main/snippet_calendar.html' %}
+                    {% endif %}
+                    {% if cell.element_type == 'StorySnippet' %}
+                        {% set story = cell.element %}
+                        {% include 'main/snippet_story.html' %}
+                    {% endif %}
+                {% endfor %}
             </div>
-            {% endif %}
-            {% if item.cell_type=='calendar' %}
-            {% set item2 = item.calendar.cal_data %}
-            <div class="col ">
-                {% include 'main/calendar_plugin.html' %}
-            </div>
-            {% endif %}
-
         </div>
+        {% endfor %}
     </div>
     {% endfor %}
 </div>
-{% endfor %}
-
 {% endblock %}

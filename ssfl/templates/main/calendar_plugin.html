@@ -6,12 +6,6 @@
         <div class="message-header">{{ event['title'] | safe }}</div>
         <div class="message-body">{{ event['venue'] | safe }}
         <br>{{ event['event_start'] | safe }} : {{ event['event_end'] | safe }}</div>
-        {#                <div class="message-body">{{ event['description'] | safe }}</div>#}
-        {#                {% with button_type=item2.story['button_type'], target=item2.story['target'],#}
-        {#                                text_content=item2.story['text_content'],#}
-        {#                                extra_styling=item2.story['extra_styling'] %}#}
-        {#                    {% include 'base/button.html' %}#}
-        {#                {% endwith %}#}
     </section>
 {% endfor %}
 

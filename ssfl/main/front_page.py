@@ -26,6 +26,7 @@ class BuildFrontPage(object):
             None
         """
         try:
+            raise ValueError("THIS FILE IS NOT SUPPOSED TO BE NEEDED")
             self.descriptor = dict()
             for row in layout:
                 cmd = row[0].lower()

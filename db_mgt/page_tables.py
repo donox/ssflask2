@@ -1,7 +1,7 @@
 from ssfl import db
 import datetime as dt
 from sqlalchemy.orm import defer
-
+from .json_tables import JSONStorageManager as jsm
 
 class PageManager(object):
     def __init__(self, db_session):
@@ -47,13 +47,24 @@ class Page(db.Model):
                 raise e
         return self
 
+    def get_json_descriptor(self):
+        # ['id', 'title', 'name', 'author', 'date', 'content', ]
+        res = jsm.make_json_descriptor('Story', jsm.descriptor_story_fields)
+        res['id'] = self.id
+        res['title'] = self.page_title
+        res['name'] = self.page_name
+        res['author'] = self.author
+        res['date'] = self.page_date
+        # res['content'] = self.page_date       # Can't pick up content for lack of a session
+        return res
+
     def fetch_content(self, session):
         """Get content from page allowing for possibility that it is cached."""
         if self.page_cached:
             tmp = self.page_cached_date
             if type(tmp) is dt.datetime:
-                tmp = tmp.date()
-            if tmp >= self.page_date:               # Is there a problem failing to deal with time?
+                tmp = tmp.date()            # looking only at the day
+            if tmp >= self.page_date:       # possibly updated after caching - then dump cache
                 return self.page_cached_content
             else:
                 self.page_cached = False

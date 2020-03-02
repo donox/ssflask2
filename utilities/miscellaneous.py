@@ -15,7 +15,10 @@ def get_temp_file_name(temp_type, extension):
     for path in os.listdir(Config.TEMP_FILE_LOC):
         full_path = Config.TEMP_FILE_LOC + path
         if full_path.find(chars) > -1:
-            os.remove(full_path)
+            try:
+                os.remove(full_path)
+            except Exception as e:
+                foo = 3
     fl = Config.TEMP_FILE_LOC + temp_type + '-' + chars + '.' + extension
     tmp = int(Config.TEMP_CURRENT) + 1
     if tmp > int(Config.TEMP_COUNT):

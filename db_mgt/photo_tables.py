@@ -1,8 +1,10 @@
 from sqlalchemy import UnicodeText
+from sqlalchemy.exc import InterfaceError
 from ssfl import db
 from config import Config
 from PIL import Image
 from utilities.miscellaneous import get_temp_file_name
+from .json_tables import JSONStorageManager as jsm
 
 
 class Photo(db.Model):
@@ -26,32 +28,59 @@ class Photo(db.Model):
 
     @staticmethod
     def get_photo_url(session, photo_id):      # TODO: replace to use current id
-        photo = session.query(Photo).filter(Photo.old_id == photo_id).first()
-        gallery_id = photo.old_gallery_id
-        gallery = session.query(PhotoGallery).filter(PhotoGallery.old_id == gallery_id).first()
-        # A url suitable for appending to the url_root of a request
-        url = gallery.path_name + photo.file_name
-        return url
+        try:
+            photo = session.query(Photo).filter(Photo.old_id == photo_id).first()
+            gallery_id = photo.old_gallery_id
+            gallery = session.query(PhotoGallery).filter(PhotoGallery.old_id == gallery_id).first()
+            # A url suitable for appending to the url_root of a request
+            url = gallery.path_name + photo.file_name
+            return url
+        except InterfaceError as e:
+            return None
+        except Exception as e:
+            foo = 3
+            raise e
 
     def get_resized_photo(self, session, width=None, height=None):
         """Get  resized copy of self photo into temporary file.
         """
-        file = Config.USER_DIRECTORY_IMAGES + Photo.get_photo_url(session, self.old_id)
-        image = Image.open(file)
-        print(f'Image Size {image.size}')
-        image.thumbnail((width, height))
+        try:
+            file = Config.USER_DIRECTORY_IMAGES + Photo.get_photo_url(session, self.old_id)
+        except Exception as e:
+            foo = 3
+        try:
+            image = Image.open(file)
+            print(f'Image Size {image.size}')
+            image.thumbnail((width, height))
+        except Exception as e:
+            foo = 3
         fl = get_temp_file_name('photo', 'jpg')
-        image.save(fl)
+        try:
+            image.save(fl)
+        except Exception as e:
+            foo = 3
         return fl
 
     @staticmethod
     def get_photo_from_path(session, path):
         photo_path = path.split('/')[-1]
-        try:
-            photo = session.query(Photo).filter(Photo.file_name == photo_path).first()
-            return photo
-        except:
-            return None
+        multi_try = 3               # May be a race condition - trying multiple times before failure
+        while multi_try > 0:
+            try:
+                photo = session.query(Photo).filter(Photo.file_name == photo_path).first()
+                return photo
+            except Exception as e:
+                multi_try -= 1
+                if not multi_try:
+                    raise ValueError(f'Multiple Failures retrieving photo {photo_path}')
+
+    def get_json_descriptor(self):
+        res = jsm.make_json_descriptor('Photo', jsm.descriptor_photo_fields)
+        res['id'] = self.id
+        res['url'] = self.get_photo_url(self.id)
+        res['caption'] = self.caption
+        res['alt_text'] = self.alt_text
+        return res
 
     def __repr__(self):
         return '<Flask PhotoGallery {}>'.format(self.__tablename__)

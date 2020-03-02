@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+
+{% extends 'base/layout.html' %}
+
+{% block content %}
+
+{% for item1 in snips %} {# Each item corresponds to all stories horizontally across the page #}
+<div class="row">
+    {% for item in item1 %} {# Each item corresponds to all stories vertically in a cell #}
+    <div class="col col-md-6 col-lg-4 col-xl-3">
+        <div class="container-fluid">
+            {% if item.cell_type=='story' %}
+            {% set item2 = item.story %}
+            <div class="col">
+               {% include 'main/snippet_story.html' %}
+            </div>
+            {% endif %}
+            {% if item.cell_type=='calendar' %}
+            {% set item2 = item.calendar.cal_data %}
+            <div class="col ">
+                {% include 'main/calendar_plugin.html' %}
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endfor %}
+
+{% endblock %}

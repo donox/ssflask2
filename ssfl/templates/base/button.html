@@ -1,5 +1,6 @@
-<a class="button {{ button_type }}"
-        {% if extra_styling %}
-                style="{{ extra_styling }}"
+<a class="button {{ button.button_type }}"
+        {% if button.extra_styling %}
+                style="{{ button.extra_styling }}"
         {% endif %}
-   href="{{ target }}">{{ text_content }}</a>
+   href="{{ button.target }}">{{ button.text_content }}</a>
+

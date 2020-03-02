@@ -1,16 +1,10 @@
-<!-- XXXlayout.html -->
-<!doctype html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+<!DOCTYPE html>
+{% extends 'base/layout.html' %}
 
+{% block content %}
 
-</head>
-<body class="   ">
 <h1>TEST.HTML</h1>
 {% assets output="foo", "*" %}
 <h3>Asset URL: {{ ASSET_URL }}</h3>
 {% endassets %}
-</body>
-</html>
+{% endblock %}

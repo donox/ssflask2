@@ -40,7 +40,7 @@ class Shortcode(object):
                 res['shortcode'] = match.title().lower()
             if match:
                 try:
-                    print("n: {}, {}".format(n, match.title()))
+                    # print("n: {}, {}".format(n, match.title()))
                     if n > 0:
                         arg_list = match.title()
                         while len(arg_list) > 0:
@@ -161,8 +161,7 @@ class Shortcode(object):
         photo_styling = "is-link"
         caption_styling = None
         title_styling = None
-        # TODO:  Convert to https
-        target = 'http://' + Config.SERVER_NAME + "/static/gallery/" + file_path
+        target = file_path
         res = Shortcode.format_single_pic(photo_title=photo_title, photo_caption=photo_caption,
                                           photo_position=photo_position, photo_height=photo_height,
                                           photo_width=photo_width,
@@ -257,20 +256,31 @@ class Shortcode(object):
 
     @staticmethod
     def format_single_pic(**kwargs):
-        tmp = Shortcode.run_jinja_template('base/picture.html', kwargs)
+        # Need to convert args to format for revised picture template
+        photo_args = dict()
+        photo_args['css_class'] = kwargs['photo_styling']
+        photo_args['url'] = kwargs['target']
+        photo_args['alignment'] = kwargs['photo_position']
+        photo_args['title_class'] = kwargs['title_styling']
+        photo_args['title'] = kwargs['photo_title']
+        photo_args['height'] = kwargs['photo_height']
+        photo_args['width'] = kwargs['photo_width']
+        photo_args['alt_text'] = kwargs['alt_text']
+        photo_args['caption_class'] = kwargs['caption_styling']
+        photo_desc = {'photo': photo_args}
+        tmp = Shortcode.run_jinja_template('base/picture.html', photo_desc)
         return tmp
 
     @staticmethod
     def run_jinja_template(template, context):
         try:
-            env = Environment(loader=PackageLoader('ssfl', 'templates'),
-                              autoescape=(['html']))
+            env = Environment(loader=PackageLoader('ssfl', 'templates'), autoescape=(['html']))
             template = env.get_template(template)
             results = template.render(context)
             return results
         except Exception as e:
             print(e.args)
-            foo = 3
+            raise e
 
     def _process_include_me(self):
         """Process 'includeme' shortcode.

@@ -1,0 +1,13 @@
+{% block snippet_story %}
+{% if story.title %}
+    <div class="title">{{ story.title | safe }}</div>
+{% endif %}
+<div style="max-width:{{ story.photo.width }}px; float:{{ story.photo.alignment }}">
+    {% set photo = story.photo %}
+    {% include 'base/picture.html' %}
+</div>
+<div class="message-body">{{ story.snippet| safe }}</div>
+{% with button=story.read_more %}
+    {% include 'base/button.html' %}
+{% endwith %}
+{% endblock %}

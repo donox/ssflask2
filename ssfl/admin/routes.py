@@ -13,11 +13,13 @@ from config import Config
 from db_mgt.photo_tables import Photo
 from db_mgt.setup import get_engine, create_session, close_session
 from .edit_local_file import edit_database_file
+from .edit_json_file import edit_json_file
 from .forms.edit_db_content_form import DBContentEditForm
 from .forms.manage_calendar_form import ManageCalendarForm
 from .forms.miscellaneous_functions_form import MiscellaneousFunctionsForm
 from .forms.index_pages_form import ManageIndexPagesForm
 from .forms.import_word_doc_form import ImportMSWordDocForm
+from .forms.edit_db_json_content_form import DBJSONEditForm
 from .manage_events.manage_calendar import manage_calendar
 from .manage_events.event_retrieval_support import EventsInPeriod
 from .miscellaneous_functions import miscellaneous_functions, import_docx_and_add_to_db
@@ -34,7 +36,6 @@ def flash_errors(form):
     for field, errors in form.errors.items():
         for error in errors:
             flash(u"routes - Error in the %s field - %s" % (getattr(form, field).label.text,  error), 'error')
-
 
 @admin_bp.route('/downloads/<string:file_path>', methods=['GET'])
 @login_required
@@ -78,13 +79,25 @@ def get_image(image_path):
     sst_admin_access_log.make_info_entry(f"Route: /admin/get_image/{image_path}")
     path = Config.USER_DIRECTORY_IMAGES + image_path
     args = request.args
-    width = int(args['w'])
+    width = int(args['w'])          # TODO: Change to width/height and in picture.html
     height = int(args['h'])
     db_session = create_session(get_engine())
-    photo = Photo.get_photo_from_path(db_session, path)
-    fl = photo.get_resized_photo(db_session, width=width, height=height)
-    close_session(db_session)
-    return send_file(fl, mimetype='image/jpeg')
+    fl = f'Photo {path} not available'
+    try:
+        photo = Photo.get_photo_from_path(db_session, path)
+        if photo:
+            fl = photo.get_resized_photo(db_session, width=width, height=height)
+            close_session(db_session)
+            return send_file(fl, mimetype='image/jpeg')
+        else:
+            close_session(db_session)
+            return abort(404, fl)
+    except AttributeError as e:
+        close_session(db_session)
+        return abort(404, fl)
+    except Exception as e:
+        close_session(db_session)
+        raise e
 
 
 @admin_bp.route('/admin/test', methods=['GET'])
@@ -297,6 +310,29 @@ def sst_import_page():
             close_session(db_session)
         flash_errors(form)
         return render_template('admin/import_docx.html', **context)
+    else:
+        raise RequestInvalidMethodError('Invalid method type: {}'.format(request.method))
+
+@admin_bp.route('/json', methods=['GET', 'POST'])
+@login_required
+def add_json_template():
+    sst_admin_access_log.make_info_entry(f"Route: /admin/json/")
+    # path = Config.USER_DIRECTORY_BASE + file_path
+    if request.method == 'GET':
+        context = dict()
+        context['form'] = DBJSONEditForm()
+        return render_template('admin/json_edit.html', **context)
+    elif request.method == 'POST':
+        form = DBJSONEditForm()
+        context = dict()
+        context['form'] = form
+        if form.validate_on_submit():
+            db_session = create_session(get_engine())
+            res = edit_json_file(db_session, form)
+            close_session(db_session)
+            if res:
+                return render_template('admin/json_edit.html', **context)  # redirect to success url
+        return render_template('admin/json_edit.html', **context)
     else:
         raise RequestInvalidMethodError('Invalid method type: {}'.format(request.method))
 

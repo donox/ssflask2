@@ -19,9 +19,9 @@ def edit_database_file(session, form):
         else:
             page_name = form.page_name.data.lower()
             page = session.query(Page).filter(Page.page_name == page_name).first()
-            if page is None:
-                form.errors['Page Not Found'] = ['There was no page with that name.']
-                return False
+        if page is None:
+            form.errors['Page Not Found'] = ['There was no page with that name.']
+            return False
         if direction:
             if page.page_content != '' and page.page_content is not None:
                 with open(direct + '/' + file, 'w') as fl:

@@ -1,12 +1,12 @@
-<div class="imagecaption">
+<div class="{{ photo.css_class }}">
     <figure>
-        <figcaption class="{{ title_styling }}">{{ photo_title }}</figcaption>
-        <img class="{{ photo_styling }}"
-             src="{{ target }}"
-             align="{{ photo_position }}"
-             height="{{ photo_height }}"
-             width="{{ photo_width }}"
-             alt="{{ alt_text }}"/>
-        <figcaption class="{{ caption_styling }}">{{ caption }}</figcaption>
+        <figcaption class="{{ photo.title_class }}">{{ photo.title }}</figcaption>
+        <img class="{{ photo.image_class }}"
+             src="getimage/{{ photo.url }}?h={{ photo.height }}&w={{ photo.width }}"
+             align="{{ photo.alignment }}"
+             height="{{ photo.height }}"
+             width="{{ photo.width }}"
+             alt="{{ photo.alt_text }}"/>
+        <figcaption class="{{ photo.caption_class }}">{{ photo.caption }}</figcaption>
     </figure>
 </div>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+{% extends 'base/layout.html' %}
+
+{% block content %}
+<section class="container">
+    <div class="columns">
+        <form action="{{ url_for('admin_bp.add_json_template') }}" method="post">
+            <div class="input">
+                {{ form.json_id.label }}
+                {{ form.json_id(placeholder='0000') }}
+                {% if form.json_id.errors %}
+                <ul class="errors">
+                    {% for error in form.json_id.errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+            <div class="input">
+                {{ form.json_name.label }}
+                {{ form.json_name(placeholder='JSON template name(e.g., foo-bar-xx)') }}
+                {% if form.json_name.errors %}
+                <ul class="errors">
+                    {% for error in form.json_name.errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+            <div class="file">
+                {{ form.directory.label }}
+                {{ form.directory(placeholder=form.default_directory) }}
+                {% if form.directory.errors %}
+                <ul class="errors">
+                    {% for error in form.file_name.errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+            <div class="file">
+                {{ form.file_name.label }}
+                {{ form.file_name(placeholder='Path name to store data') }}
+                {% if form.file_name.errors %}
+                <ul class="errors">
+                    {% for error in form.file_name.errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+            <div class="file">
+                {{ form.file_type.label }}
+                {{ form.file_type(placeholder='Path name to store data') }}
+                {% if form.file_type.errors %}
+                <ul class="errors">
+                    {% for error in form.file_type.errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+            <div class="checkbox">
+                {{ form.direction.label }}
+                {{ form.direction(placeholder='Transfer from DB to File') }}
+                {% if form.direction.errors %}
+                <ul class="errors">
+                    {% for error in form.direction.errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+            <div class="button">
+                <input id="submit" type="submit" value="Submit">
+            </div>
+            {% if form.errors %}
+            <ul class="errors">
+                {% for error in form.errors.keys() %}
+                {% for specific in form.errors[error] %}
+                <li>{{ error }} : {{ specific }}</li>
+                {% endfor %}
+                {% endfor %}
+            </ul>
+            {% endif %}
+            {{ form.csrf_token }}
+        </form>
+
+    </div>
+</section>
+{% endblock %}

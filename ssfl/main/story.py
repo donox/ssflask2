@@ -3,6 +3,7 @@ from utilities.html_mgt import PageBody
 from utilities.shortcodes import Shortcode
 from lxml.html import html5parser as hp
 import lxml
+from db_mgt.json_tables import JSONStorageManager as jsm
 from flask import render_template
 from config import Config
 
@@ -49,8 +50,7 @@ class Story(object):
         Returns:
             A story title and first paragraph as html elements
         """
-        self.story['snip'] = self._create_snippet_text(max_length=max_length)
-        return self.story
+        return self._create_snippet_text(max_length=max_length)
 
     def _create_snippet_text(self, max_length=250):
         remain_len = max_length
@@ -68,10 +68,13 @@ class Story(object):
 
     def _create_read_more(self):
         """Create parameters for a button to go in a button transferring to this page"""
-        self.add_to_context('button_type','is-link')
-        self.add_to_context('extra_styling', 'margin:4px; color:red')
-        self.add_to_context('target', '/main/page/{}'.format(self.pb.page_in_db.id))
-        self.add_to_context('text_content', 'Read More')
+        button = jsm.make_json_descriptor('Button', jsm.descriptor_button_fields)
+        button['button_type'] = 'is-link'
+        button['styling'] = 'margin:4px; color:red'
+        button['target'] = f'/main/page/{self.pb.page_in_db.id}'
+        button['text_content'] = 'Read More'
+        self.read_more = button
+        return button
 
     def get_read_more(self):
         return self.read_more
@@ -117,7 +120,7 @@ class Story(object):
         title, tab_title, story = self.pb.get_title_body()
         self.story['title'] = title
         self.story['tab_title'] = tab_title
-        self._create_read_more()
+        self.story['read_more'] = self._create_read_more()      # TODO: Not incorporated properly
         try:
             body = lxml.html.tostring(story, method='html').decode('utf-8')
         except Exception as e:
@@ -127,4 +130,10 @@ class Story(object):
 
     def add_to_context(self, item, value):
         self.story[item] = value
+
+    def get_body(self):
+        return self.story['body']
+
+    def get_title(self):
+        return self.story['title']
 
