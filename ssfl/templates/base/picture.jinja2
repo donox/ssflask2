@@ -2,7 +2,7 @@
     <figure>
         <figcaption class="{{ photo.title_class }}">{{ photo.title }}</figcaption>
         <img class="{{ photo.image_class }}"
-             src="getimage/{{ photo.url }}?h={{ photo.height }}&w={{ photo.width }}"
+             src="{{ photo.url }}?h={{ photo.height }}&w={{ photo.width }}"
              align="{{ photo.alignment }}"
              height="{{ photo.height }}"
              width="{{ photo.width }}"

@@ -133,7 +133,7 @@ class PageBody(object):
         tsl = ts3.split('\n')
         res = []
         for segment in tsl:
-            el = etree.Element(XHTML + 'span', nsmap=NSMAP)
+            el = etree.Element(XHTML + 'p', nsmap=NSMAP)
             el.text = segment
             res.append(el)
         return res

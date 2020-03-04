@@ -4,10 +4,10 @@
 {% endif %}
 <div style="max-width:{{ story.photo.width }}px; float:{{ story.photo.alignment }}">
     {% set photo = story.photo %}
-    {% include 'base/picture.html' %}
+    {% include 'base/picture.jinja2' %}
 </div>
 <div class="message-body">{{ story.snippet| safe }}</div>
 {% with button=story.read_more %}
-    {% include 'base/button.html' %}
+    {% include 'base/button.jinja2' %}
 {% endwith %}
 {% endblock %}

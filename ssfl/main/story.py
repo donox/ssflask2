@@ -105,12 +105,12 @@ class Story(object):
             res1 = res.find('body/*')
             txt = elem.text
             elem.text = ''
-            el = PageBody.create_empty_element('scan')
+            el = PageBody.create_empty_element('p')
             el.text = txt[0:start]
             if el.text is not '':
                 elem.append(el)
             elem.append(res1)
-            el = PageBody.create_empty_element('scan')
+            el = PageBody.create_empty_element('p')
             el.text = txt[end:]
             if el.text is not '':
                 elem.append(el)

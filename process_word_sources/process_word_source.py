@@ -54,7 +54,7 @@ class ParsedElement(object):
         (2) It is initiated immediately after creation and calls subordinate nodes to parse themselves
             as it creates them.  That call returns the number of nodes consumed.
         (3) max_ndx exists to prevent indexing errors on ill-formed (no close) input.
-        (4) Output is self.parsed_result as a list of nodes in directly a part of this node and objects
+        (4) Output is self.parsed_result as a list of nodes is directly a part of this node and objects
             representing each node subordinate to it.
 
         :return: None.  self.parsed_result properly formed.
@@ -537,8 +537,6 @@ class WordSourceDocument(object):
 
     def _find_last_element_in_nested_list(self, res):
         if type(res) == list:
-            if not res:
-                foo = 3
             return self._find_last_element_in_nested_list(res[-1])
         else:
             return res

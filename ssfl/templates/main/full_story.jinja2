@@ -1,0 +1,6 @@
+{% block full_story %}
+{% if story.title %}
+    <div class="title">{{ story.title | safe }}</div>
+{% endif %}
+<div class="message-body">{{ story.content| safe }}</div>
+{% endblock %}

@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 
-{% extends 'base/layout.html' %}
+{% extends 'base/layout.jinja2' %}
 
 {% block content %}
 <div class="container-fluid">
@@ -12,11 +12,15 @@
                 {% for cell in col.cells %}
                     {% if cell.element_type == 'CalendarSnippet' %}
                         {% set calendar = cell.element %}
-                        {% include 'main/snippet_calendar.html' %}
+                        {% include 'main/snippet_calendar.jinja2' %}
                     {% endif %}
                     {% if cell.element_type == 'StorySnippet' %}
                         {% set story = cell.element %}
-                        {% include 'main/snippet_story.html' %}
+                        {% include 'main/snippet_story.jinja2' %}
+                    {% endif %}
+                    {% if cell.element_type == 'FullStory' %}
+                        {% set story = cell.element %}
+                        {% include 'main/full_story.jinja2' %}
                     {% endif %}
                 {% endfor %}
             </div>

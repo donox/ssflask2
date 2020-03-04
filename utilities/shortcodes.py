@@ -111,11 +111,12 @@ class Shortcode(object):
                    'extra_styling': 'margin:3px;',
                    'target': target,
                    'text_content': text_content}
-        res = Shortcode.run_jinja_template('base/button.html', context=context).replace('\n','')
+        res = Shortcode.run_jinja_template('base/button.jinja2', context=context).replace('\n','')
         self.content_dict['result'] = res
 
     def _get_photo_by_id(self, photo_id, old_id=True):
         # TODO: change to current id's and update singlepic reference
+        # TODO: change to use same photo url build as in multi_story_page
         if old_id:
             photo_rec = self.session.query(Photo).filter(Photo.old_id == photo_id).first()
         else:
@@ -268,7 +269,7 @@ class Shortcode(object):
         photo_args['alt_text'] = kwargs['alt_text']
         photo_args['caption_class'] = kwargs['caption_styling']
         photo_desc = {'photo': photo_args}
-        tmp = Shortcode.run_jinja_template('base/picture.html', photo_desc)
+        tmp = Shortcode.run_jinja_template('base/picture.jinja2', photo_desc)
         return tmp
 
     @staticmethod

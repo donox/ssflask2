@@ -79,7 +79,7 @@ def get_image(image_path):
     sst_admin_access_log.make_info_entry(f"Route: /admin/get_image/{image_path}")
     path = Config.USER_DIRECTORY_IMAGES + image_path
     args = request.args
-    width = int(args['w'])          # TODO: Change to width/height and in picture.html
+    width = int(args['w'])          # TODO: Change to width/height and in picture.jinja2
     height = int(args['h'])
     db_session = create_session(get_engine())
     fl = f'Photo {path} not available'

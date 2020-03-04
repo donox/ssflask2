@@ -24,13 +24,13 @@
 </head>
 <body>
 <div class="container-fluid">
-    {% include 'base/nav.html' %}
+    {% include 'base/nav.jinja2' %}
     {% set flash_message_type = 'error' %}
     {% include 'base/flashed_messages.html' %}
     {% block content %}{% endblock %}
     {% set flash_message_type = 'success' %}
     {% include 'base/flashed_messages.html' %}
-    {% include 'base/footer.html' %}
+    {% include 'base/footer.jinja2' %}
 </div>
 <script src="https://code.jquery.com/jquery-3.4.1.min.js"
         integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="

@@ -34,8 +34,7 @@ def sst_main():
     context = msp.make_front_page_context()
     context['APP_ROOT'] = request.base_url
     close_session(db_session)
-    return render_template('main/main.html', **context)
-
+    return render_template('main/main.jinja2', **context)
 
 # @main_bp.route('/XXmain', methods=['GET'])
 # @login_required
@@ -46,7 +45,7 @@ def sst_main():
 #     context = fp.make_front_page_context()
 #     context['APP_ROOT'] = request.base_url
 #     close_session(db_session)
-#     return render_template('main/main.html', **context)
+#     return render_template('main/main.jinja2', **context)
 
 
 @main_bp.route('/main/page/<string:page_ident>', methods=['GET'])
@@ -58,6 +57,17 @@ def sst_get_specific_page(page_ident):
     context['APP_ROOT'] = request.base_url
     close_session(db_session)
     return render_template('main/specific_page.html', **context)
+
+@main_bp.route('/main/single/<string:page_ident>', methods=['GET'])
+@login_required
+def sst_get_single_page(page_ident):
+    db_session = create_session(get_engine())
+    msp = MultiStoryPage(db_session)
+    msp.make_descriptor_from_story_id(page_ident, 12)
+    context = msp.make_front_page_context()
+    context['APP_ROOT'] = request.base_url
+    close_session(db_session)
+    return render_template('main/main.jinja2', **context)
 
 
 @main_bp.route('/hello')                        # DELETE WHEN THINGS ARE GENERALLY WORKING
@@ -100,4 +110,4 @@ def sst_get_index_page(page):
 #     context = fp.make_front_page_context()
 #     context['APP_ROOT'] = request.base_url
 #     close_session(db_session)
-#     return render_template('main/multi_row_col.html', **context)
+#     return render_template('main/multi_row_col.jinja2', **context)

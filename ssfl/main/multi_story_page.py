@@ -7,6 +7,7 @@ from .views.calendar_view import RandomCalendarAPI, get_random_events
 from flask import render_template
 from .calendar_snippet import Calendar
 from json import dumps
+from flask import url_for
 
 
 class MultiStoryPage(object):
@@ -21,6 +22,23 @@ class MultiStoryPage(object):
         with open(Config.USER_DEFINITION_FILES + 'front_page_layout.csv', 'r') as fl:
             layout = csv.reader(fl)
             self._set_descriptor_from_csv(layout)
+
+    def make_descriptor_from_story_id(self, page_id, width):
+        self.descriptor = jsm.make_json_descriptor('Page', jsm.descriptor_page_layout)
+        row_descriptor = jsm.make_json_descriptor('Row', jsm.descriptor_row_layout)
+        self.descriptor['rows'] = [row_descriptor]
+        column_descriptor = jsm.make_json_descriptor('Column', jsm.descriptor_column_layout)
+        row_descriptor['columns'] = [column_descriptor]
+        cell_descriptor = jsm.make_json_descriptor('Cell', jsm.descriptor_cell_layout)
+        column_descriptor['cells'] = [cell_descriptor]
+        self.descriptor['cells'] = [cell_descriptor]
+        cell_descriptor['width'] = width
+        cell_descriptor['element_type'] = 'FullStory'
+        story_descriptor = jsm.make_json_descriptor('Story', jsm.descriptor_story_fields)
+        cell_descriptor['element'] = story_descriptor
+        story_descriptor['page_id'] = page_id
+        return story_descriptor
+
 
     def load_descriptor_from_database(self, name):
         self.descriptor = self.storage_manager.get_json_from_name(name)
@@ -108,10 +126,21 @@ class MultiStoryPage(object):
         res = dumps(self.descriptor)
         return res
 
-    # descriptor_photo_fields = ['id', 'url', 'title', 'caption', 'width', 'height', 'alignment', 'alt_text', 'css_style',
-    #                            'css_class', 'title_class', 'caption_class', 'image_class']
+    # descriptor_photo_fields = ['id', 'url', 'title', 'caption', 'width', 'height', 'alignment', 'alt_text',
+    #                            'css_style', 'css_class', 'title_class', 'caption_class', 'image_class']
     # descriptor_story_fields = ['id', 'title', 'name', 'author', 'date', 'content', 'snippet']
     # descriptor_page_layout = ['name', 'row_count', 'column_count', 'rows', 'cells']
+
+    def _fill_full_story(self, elem):
+        # descriptor_story_fields = ['id', 'title', 'name', 'author', 'date', 'snippet',
+        # 'photo', 'story_url', 'content', 'read_more']
+        width = 12  # TODO: determine correct input
+        page_name = elem['name']       # will use which ever is set
+        page_id = elem['page_id']
+        story = Story(self.session, width)
+        story.create_story_from_db(page_id= page_id, page_name=page_name)
+        elem['title'] = story.get_title()
+        elem['content'] = story.get_body()
 
     def _fill_photo_descriptor(self, elem):
         # descriptor_photo_fields = ['id', 'url', 'title', 'caption', 'width', 'height', 'alignment',
@@ -124,9 +153,9 @@ class MultiStoryPage(object):
             raise ValueError(f'No photo with id: {photo_id}')
         if not elem['caption']:
             elem['caption'] = photo.caption
-        elem['url'] = photo.get_photo_url(self.session, photo_id)
+        temp = photo.get_photo_url(self.session, photo_id)
+        elem['url'] = url_for('admin_bp.get_image', image_path=temp)
         elem['alt_text'] = photo.alt_text
-
 
     def _fill_story_snippet(self, elem):
         # descriptor_story_snippet_fields = ['id', 'title', 'name', 'author', 'date', 'snippet',
@@ -144,7 +173,6 @@ class MultiStoryPage(object):
         elem['content'] = story.get_body()
         self._fill_photo_descriptor(elem['photo'])
         elem['read_more'] = story.get_read_more()
-
 
     def _fill_calendar_snippet(self, elem):
         # descriptor_calendar_snippet_fields = ['events', 'event_count']
@@ -170,6 +198,8 @@ class MultiStoryPage(object):
                     width = cell['width']
                     if el_type == 'StorySnippet':
                         self._fill_story_snippet(elem)
+                    elif el_type == 'FullStory':
+                        self._fill_full_story(elem)
                     elif el_type == 'CalendarSnippet':
                         self._fill_calendar_snippet(elem)
         return self.descriptor
