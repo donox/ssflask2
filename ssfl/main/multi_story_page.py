@@ -146,6 +146,10 @@ class MultiStoryPage(object):
         # descriptor_photo_fields = ['id', 'url', 'title', 'caption', 'width', 'height', 'alignment',
         #                   'alt_text', 'css_style', 'css_class', 'title_class', 'caption_class', 'image_class']
         # already defined:  'id', 'caption' (unless overridden), 'alignment', 'width', 'height'
+        #
+        # Note:  This photo_descriptor implicitly assumes that the ID was created in the descriptor such as a page
+        #        loaded from the DB. This is equivalent to creating a Photo object and then calling
+        #        the get_json_descriptor on it.
         photo_id = elem['id']
         # TODO: Needs to become Photo.id when photo tables are fully converted (or Story sets current id in descriptor)
         photo = self.session.query(Photo).filter(Photo.old_id == photo_id).first()
@@ -153,9 +157,9 @@ class MultiStoryPage(object):
             raise ValueError(f'No photo with id: {photo_id}')
         if not elem['caption']:
             elem['caption'] = photo.caption
-        temp = photo.get_photo_url(self.session, photo_id)
-        elem['url'] = url_for('admin_bp.get_image', image_path=temp)
+        elem['url'] = photo.get_photo_url(self.session, photo_id)
         elem['alt_text'] = photo.alt_text
+
 
     def _fill_story_snippet(self, elem):
         # descriptor_story_snippet_fields = ['id', 'title', 'name', 'author', 'date', 'snippet',
@@ -199,7 +203,7 @@ class MultiStoryPage(object):
                     if el_type == 'StorySnippet':
                         self._fill_story_snippet(elem)
                     elif el_type == 'FullStory':
-                        self._fill_full_story(elem)
+                        self._fill_story_snippet(elem)
                     elif el_type == 'CalendarSnippet':
                         self._fill_calendar_snippet(elem)
         return self.descriptor

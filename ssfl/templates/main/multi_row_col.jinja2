@@ -12,13 +12,13 @@
             {% if item.cell_type=='story' %}
             {% set item2 = item.story %}
             <div class="col">
-               {% include 'main/snippet_story.html' %}
+               {% include 'main/snippet_story.jinja2' %}
             </div>
             {% endif %}
             {% if item.cell_type=='calendar' %}
             {% set item2 = item.calendar.cal_data %}
             <div class="col ">
-                {% include 'main/calendar_plugin.html' %}
+                {% include 'main/calendar_plugin.jinja2' %}
             </div>
             {% endif %}
 

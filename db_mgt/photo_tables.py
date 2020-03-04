@@ -3,8 +3,9 @@ from sqlalchemy.exc import InterfaceError
 from ssfl import db
 from config import Config
 from PIL import Image
-from utilities.miscellaneous import get_temp_file_name
+from utilities.miscellaneous import get_temp_file_name, run_jinja_template
 from .json_tables import JSONStorageManager as jsm
+from flask import url_for
 
 
 class Photo(db.Model):
@@ -27,14 +28,24 @@ class Photo(db.Model):
         return self
 
     @staticmethod
-    def get_photo_url(session, photo_id):      # TODO: replace to use current id
+    def get_photo_url(session, old_photo_id):      # TODO: replace to use current id
         try:
-            photo = session.query(Photo).filter(Photo.old_id == photo_id).first()
+            temp = Photo.get_photo_file_path(session, old_photo_id)
+            url = url_for('admin_bp.get_image', image_path=temp)
+            return url
+        except Exception as e:
+            foo = 3
+            raise e
+
+    @staticmethod
+    def get_photo_file_path(session, old_photo_id):  # TODO: replace to use current id
+        try:
+            photo = session.query(Photo).filter(Photo.old_id == old_photo_id).first()
             gallery_id = photo.old_gallery_id
             gallery = session.query(PhotoGallery).filter(PhotoGallery.old_id == gallery_id).first()
             # A url suitable for appending to the url_root of a request
-            url = gallery.path_name + photo.file_name
-            return url
+            temp = gallery.path_name + photo.file_name
+            return temp
         except InterfaceError as e:
             return None
         except Exception as e:
@@ -45,17 +56,11 @@ class Photo(db.Model):
         """Get  resized copy of self photo into temporary file.
         """
         try:
-            file = Config.USER_DIRECTORY_IMAGES + Photo.get_photo_url(session, self.old_id)
-        except Exception as e:
-            foo = 3
-        try:
+            file = Config.USER_DIRECTORY_IMAGES + Photo.get_photo_file_path(session, self.old_id)
             image = Image.open(file)
-            print(f'Image Size {image.size}')
+            # print(f'Image Size {image.size}')
             image.thumbnail((width, height))
-        except Exception as e:
-            foo = 3
-        fl = get_temp_file_name('photo', 'jpg')
-        try:
+            fl = get_temp_file_name('photo', 'jpg')
             image.save(fl)
         except Exception as e:
             foo = 3
@@ -64,7 +69,7 @@ class Photo(db.Model):
     @staticmethod
     def get_photo_from_path(session, path):
         photo_path = path.split('/')[-1]
-        multi_try = 3               # May be a race condition - trying multiple times before failure
+        multi_try = 3               # Acts as if there may be a race condition - trying multiple times before failure
         while multi_try > 0:
             try:
                 photo = session.query(Photo).filter(Photo.file_name == photo_path).first()
@@ -80,6 +85,10 @@ class Photo(db.Model):
         res['url'] = self.get_photo_url(self.id)
         res['caption'] = self.caption
         res['alt_text'] = self.alt_text
+        return res
+
+    def get_html(self):
+        res = run_jinja_template('base/picture.jinja2', context=self.get_json_descriptor())
         return res
 
     def __repr__(self):

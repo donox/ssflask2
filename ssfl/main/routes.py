@@ -20,10 +20,6 @@ main_bp.add_url_rule('/cal/', defaults={'count': 10},
                  view_func=cal_view, methods=['GET'])
 
 
-# @main_bp.route('/oldmain/<string:page_name>/')
-# def render_static(page_name):
-#     return render_template('main/%s.html' % page_name)
-
 @main_bp.route('/main', methods=['GET'])
 @login_required
 def sst_main():
@@ -56,24 +52,15 @@ def sst_get_specific_page(page_ident):
     context = bp.display_page()
     context['APP_ROOT'] = request.base_url
     close_session(db_session)
-    return render_template('main/specific_page.html', **context)
+    return render_template('main/specific_page.jinja2', **context)
 
-@main_bp.route('/main/single/<string:page_ident>', methods=['GET'])
-@login_required
-def sst_get_single_page(page_ident):
-    db_session = create_session(get_engine())
-    msp = MultiStoryPage(db_session)
-    msp.make_descriptor_from_story_id(page_ident, 12)
-    context = msp.make_front_page_context()
-    context['APP_ROOT'] = request.base_url
-    close_session(db_session)
-    return render_template('main/main.jinja2', **context)
+
 
 
 @main_bp.route('/hello')                        # DELETE WHEN THINGS ARE GENERALLY WORKING
 def hello_world():
     context = dict()
-    return render_template('main/index.html', **context)
+    return render_template('main/index.jinja2', **context)
 
 
 @main_bp.route('/menu/<string:page>', methods=['GET'])
@@ -84,7 +71,7 @@ def sst_get_menu_page(page):
     context = bp.display_menu_page(page)
     context['APP_ROOT'] = request.url_root
     close_session(db_session)
-    return render_template('main/specific_page.html', **context)
+    return render_template('main/specific_page.jinja2', **context)
 
 
 @main_bp.route('/index/<string:page>', methods=['GET'])
@@ -99,7 +86,7 @@ def sst_get_index_page(page):
     context = build_index_page_context(db_session, index_page)
     context['APP_ROOT'] = request.url_root
     close_session(db_session)
-    return render_template('main/index_page_layout.html', **context)
+    return render_template('main/index_page_layout.jinja2', **context)
 
 # @main_bp.route('/main/multi', methods=['GET'])
 # @login_required

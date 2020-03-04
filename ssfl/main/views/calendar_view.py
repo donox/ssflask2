@@ -22,7 +22,7 @@ class RandomCalendarAPI(MethodView):
             this_event['description'] = event.event_description
             context['events'].append(this_event)
         close_session(db_session)
-        res = render_template('main/calendar_plugin.html', **context)
+        res = render_template('main/calendar_plugin.jinja2', **context)
         return res
 
     def post(self):

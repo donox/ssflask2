@@ -164,7 +164,7 @@ def sst_admin_calendar():
     if request.method == 'GET':
         context = dict()
         context['form'] = ManageCalendarForm()
-        return render_template('admin/calendar.html', **context)
+        return render_template('admin/calendar.jinja2', **context)
     elif request.method == 'POST':
         form = ManageCalendarForm()
         context = dict()
@@ -174,8 +174,8 @@ def sst_admin_calendar():
             res = manage_calendar(db_session, form)
             close_session(db_session)
             if res:
-                return render_template('admin/calendar.html', **context)  # redirect to success url
-        return render_template('admin/calendar.html', **context)
+                return render_template('admin/calendar.jinja2', **context)  # redirect to success url
+        return render_template('admin/calendar.jinja2', **context)
     else:
         raise RequestInvalidMethodError('Invalid method type: {}'.format(request.method))
 

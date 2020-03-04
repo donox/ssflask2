@@ -78,7 +78,7 @@ class BuildFrontPage(object):
                         this_event['description'] = event.event_description
                         context['events'].append(this_event)
                     calendar['events'] = context
-                    # res = render_template('main/calendar_plugin.html', **context)
+                    # res = render_template('main/calendar_plugin.jinja2', **context)
                 else:
                     raise ValueError('Unrecognized Command: {}'.format(cmd))
             raise ValueError('Fell off end of loop')

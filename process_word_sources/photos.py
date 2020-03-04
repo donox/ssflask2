@@ -40,7 +40,7 @@ class PagePhotoFrame(object):
             html = self._get_single_picture_html(self.photo_list[0], False, '0', True)
             html = html.replace('&w&', str(self.width)).replace('&h&', str(self.height))
         else:
-            html = '<div clas="slideshow">'
+            html = '<div class="slideshow">'
             first = True
             for pl in self.photo_list:
                 html += self._get_single_picture_html(pl, True, str(self.rotation_speed), first)
@@ -84,9 +84,12 @@ class Photo(object):
         self.caption = ''
         self.alt_text = ''
         self.url = 'Not Done Yet'
-        res = db_session.query(DBPhoto).filter(DBPhoto.id == photo_id)
+        res = db_session.query(DBPhoto).filter(DBPhoto.id == photo_id).first()
+        if not res:
+            # TODO:  REMOVE THIS WHEN ALL PHOTOS ARE USING NEW ID
+            res = db_session.query(DBPhoto).filter(DBPhoto.old_id == photo_id).first()
         if res:
-            db_photo = res.first()
+            db_photo = res
             gallery_id = db_photo.old_gallery_id
             file_name = db_photo.file_name
             self.alt_text = db_photo.alt_text

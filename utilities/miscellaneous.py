@@ -1,5 +1,6 @@
 from config import Config
 import os, sys
+from jinja2 import Environment, PackageLoader, select_autoescape
 
 
 def get_temp_file_name(temp_type, extension):
@@ -26,3 +27,14 @@ def get_temp_file_name(temp_type, extension):
         tmp = 1
     Config.TEMP_CURRENT = tmp
     return fl
+
+
+def run_jinja_template(template, context):
+    try:
+        env = Environment(loader=PackageLoader('ssfl', 'templates'), autoescape=(['html']))
+        template = env.get_template(template)
+        results = template.render(context)
+        return results
+    except Exception as e:
+        print(e.args)
+        raise e

@@ -1,8 +1,10 @@
 import re
 from utilities.process_urls import find_page_from_url, find_download_from_url
 from config import Config
-from db_mgt.photo_tables import Photo, PhotoGallery
-from jinja2 import Environment, PackageLoader, select_autoescape
+from process_word_sources.photos import Photo, PagePhotoFrame
+from db_mgt.photo_tables import PhotoGallery
+from db_mgt.photo_tables import Photo as DBPhoto
+from utilities.miscellaneous import run_jinja_template
 from utilities.sst_exceptions import ShortcodeError, ShortcodeParameterError, ShortcodeSystemError
 
 
@@ -118,9 +120,9 @@ class Shortcode(object):
         # TODO: change to current id's and update singlepic reference
         # TODO: change to use same photo url build as in multi_story_page
         if old_id:
-            photo_rec = self.session.query(Photo).filter(Photo.old_id == photo_id).first()
+            photo_rec = self.session.query(DBPhoto).filter(DBPhoto.old_id == photo_id).first()
         else:
-            photo_rec = self.session.query(Photo).filter(Photo.id == photo_id).first()
+            photo_rec = self.session.query(DBPhoto).filter(DBPhoto.id == photo_id).first()
         gallery_id = photo_rec.old_gallery_id
         photo_file = photo_rec.file_name
         alt_text = photo_rec.alt_text
@@ -131,44 +133,30 @@ class Shortcode(object):
 
     def _get_photo_list_by_gallery_id(self, gallery_id, old_id=True):
         gallery_rec = self.session.query(PhotoGallery).filter(PhotoGallery.old_id == gallery_id).first()
-        photo_ids = [x.id for x in self.session.query(Photo).filter(Photo.old_gallery_id == gallery_rec.old_id).all()]
+        photo_ids = [x.id for x in self.session.query(DBPhoto).filter(DBPhoto.old_gallery_id == gallery_rec.old_id).all()]
         return photo_ids
 
     def _process_singlepic(self):
         try:
             keys = self.content_dict.keys()
-            photo_id = self.content_dict['id']
-            photo_height = 0
+            photo_id = int(self.content_dict['id'])
+            photoframe = PagePhotoFrame('NEED PHOTO NAME', db_session=self.session)
+            photoframe.add_photo(photo_id)
             if 'h' in keys:
-                photo_height = self.content_dict['h']
-            photo_width = 0
+                photoframe.set_dimension('height',  self.content_dict['h'])
             if 'w' in keys:
-                photo_width = self.content_dict['w']
-            photo_title = ''
-            if 'title' in keys:  # TODO: Allow title to be provided in spreadsheet
-                photo_title = self.content_dict['title']
-            photo_position = ''
+                photoframe.set_dimension('width', self.content_dict['w'])
+            if 'title' in keys:
+                photoframe.add_title(self.content_dict['title'])
             if 'align' in keys:
                 photo_position = self.content_dict['align']
                 if photo_position not in ['left', 'middle', 'right', 'top', 'bottom']:
-                    raise ValueError(
-                        'Unknown photo position: {}'.format(photo_position))  # TODO: return error to script
-            photo_rec, gallery_rec, gallery_id, photo_file, photo_caption, alt_text, \
-                file_path = self._get_photo_by_id(photo_id, old_id=True)
-        except KeyError as e:
-            print("Singlepic Key Error in dict: {}".format(self.content_dict))
+                    raise ValueError('Unknown photo position: {}'.format(photo_position))  # TODO: return error to script
+                photoframe.set_position(photo_position)
+            res = photoframe.get_html()
+            self.content_dict['result'] = res
+        except Exception as e:
             raise e
-
-        photo_styling = "is-link"
-        caption_styling = None
-        title_styling = None
-        target = file_path
-        res = Shortcode.format_single_pic(photo_title=photo_title, photo_caption=photo_caption,
-                                          photo_position=photo_position, photo_height=photo_height,
-                                          photo_width=photo_width,
-                                          photo_styling=photo_styling, caption_styling=caption_styling,
-                                          title_styling=title_styling, target=target, alt_text=alt_text)
-        self.content_dict['result'] = res
 
 
     def _process_ngg_images(self):
@@ -220,67 +208,31 @@ class Shortcode(object):
                 width = int(self.content_dict['width'])
             if len(photo_ids) == 0:
                 raise ShortcodeParameterError("No photo ids detected in shortcode")
-            photo_title = ''
-            photo_styling = ''
-            caption_styling = ''
-            title_styling = ''
             self.content_dict['photo_list'] = {}
-            photo_dict = self.content_dict['photo_list']
-            # TODO: if list is of length one, just do singlepic
             if len(photo_ids) == 1:
-                for photo_id in photo_ids:              # retrieve single element from either list or set
+                for photo_id in photo_ids:  # retrieve single element from either list or set
                     break
-                photo_rec, gallery_rec, gallery_id, photo_file, photo_caption, alt_text, \
-                    file_path = self._get_photo_by_id(photo_id, old_id=True)
-                target = 'http://' + Config.SERVER_NAME + "/static/gallery/" + file_path
-                res = Shortcode.format_single_pic(photo_title=photo_title, photo_caption=photo_caption,
-                                                  photo_width=width,
-                                                  photo_styling=photo_styling, caption_styling=caption_styling,
-                                                  title_styling=title_styling, target=target, alt_text=alt_text)
-            else:
-                for p_id in photo_ids:
-                    photo_rec, gallery_rec, gallery_id, photo_file, photo_caption, alt_text, \
-                        file_path = self._get_photo_by_id(p_id, old_id=False)
-                    # TODO:  use https - doesn't work locally for some reason
-                    target = 'http://' + Config.SERVER_NAME + "/static/gallery/" + file_path
-                    photo_dict['photo_' + str(p_id)] = {'photo_title': photo_title, 'photo_caption': photo_caption,
-                                                        'photo_width': width,
-                                                        'photo_styling': photo_styling,
-                                                        'caption_styling': caption_styling,
-                                                        'title_styling': title_styling, 'target': target,
-                                                        'alt_text': alt_text}
-                res = Shortcode.run_jinja_template('base/slideshow.html', self.content_dict)
+                photo = Photo(photo_id)
+                res = photo.get_html()
+            photoframe = PagePhotoFrame('NEED PHOTO NAME', db_session=self.session)
+            for p_id in photo_ids:
+                photoframe.add_photo(p_id)
+            if 'h' in keys:
+                photoframe.set_dimension('height', self.content_dict['h'])
+            if 'w' in keys:
+                photoframe.set_dimension('width', self.content_dict['w'])
+            if 'title' in keys:
+                photoframe.add_title(self.content_dict['title'])
+            if 'align' in keys:
+                photo_position = self.content_dict['align']
+                if photo_position not in ['left', 'middle', 'right', 'top', 'bottom']:
+                    raise ValueError(
+                        'Unknown photo position: {}'.format(photo_position))  # TODO: return error to script
+                photoframe.set_position(photo_position)
+            res = photoframe.get_html()
             self.content_dict['result'] = res
 
         except ShortcodeError as e:
-            raise e
-
-    @staticmethod
-    def format_single_pic(**kwargs):
-        # Need to convert args to format for revised picture template
-        photo_args = dict()
-        photo_args['css_class'] = kwargs['photo_styling']
-        photo_args['url'] = kwargs['target']
-        photo_args['alignment'] = kwargs['photo_position']
-        photo_args['title_class'] = kwargs['title_styling']
-        photo_args['title'] = kwargs['photo_title']
-        photo_args['height'] = kwargs['photo_height']
-        photo_args['width'] = kwargs['photo_width']
-        photo_args['alt_text'] = kwargs['alt_text']
-        photo_args['caption_class'] = kwargs['caption_styling']
-        photo_desc = {'photo': photo_args}
-        tmp = Shortcode.run_jinja_template('base/picture.jinja2', photo_desc)
-        return tmp
-
-    @staticmethod
-    def run_jinja_template(template, context):
-        try:
-            env = Environment(loader=PackageLoader('ssfl', 'templates'), autoescape=(['html']))
-            template = env.get_template(template)
-            results = template.render(context)
-            return results
-        except Exception as e:
-            print(e.args)
             raise e
 
     def _process_include_me(self):
