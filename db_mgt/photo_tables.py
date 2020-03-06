@@ -4,8 +4,11 @@ from ssfl import db
 from config import Config
 from PIL import Image
 from utilities.miscellaneous import get_temp_file_name, run_jinja_template
+from utilities.sst_exceptions import PhotoHandlingError
 from .json_tables import JSONStorageManager as jsm
-from flask import url_for
+from flask import url_for, render_template
+import os
+from io import BytesIO
 
 
 class Photo(db.Model):
@@ -56,15 +59,51 @@ class Photo(db.Model):
         """Get  resized copy of self photo into temporary file.
         """
         try:
-            file = Config.USER_DIRECTORY_IMAGES + Photo.get_photo_file_path(session, self.old_id)
-            image = Image.open(file)
+            try:
+                file = Config.USER_DIRECTORY_IMAGES + Photo.get_photo_file_path(session, self.old_id)
+            except Exception as e:
+                raise PhotoHandlingError(f'Failure retrieving photo from DB with old_id: {self.old_id}')
+
+            if os.path.exists(file):
+                image = Image.open(file)
+            else:
+                raise PhotoHandlingError(f'Photo file does not exist: {file}')
+
             # print(f'Image Size {image.size}')
             image.thumbnail((width, height))
-            fl = get_temp_file_name('photo', 'jpg')
-            image.save(fl)
+
+            # tmp_fl = get_temp_file_name('photo', 'jpg')
+            byte_io = BytesIO()
+            image.save(byte_io, 'JPEG')
+            return byte_io
+        except PhotoHandlingError as e:
+            foo = 3
         except Exception as e:
             foo = 3
-        return fl
+
+    def XXget_resized_photo(self, session, width=None, height=None):
+        """Get  resized copy of self photo into temporary file.
+        """
+        try:
+            try:
+                file = Config.USER_DIRECTORY_IMAGES + Photo.get_photo_file_path(session, self.old_id)
+            except Exception as e:
+                raise PhotoHandlingError(f'Failure retrieving photo from DB with old_id: {self.old_id}')
+
+            if os.path.exists(file):
+                image = Image.open(file)
+            else:
+                raise PhotoHandlingError(f'Photo file does not exist: {file}')
+
+            # print(f'Image Size {image.size}')
+            image.thumbnail((width, height))
+
+            tmp_fl = get_temp_file_name('photo', 'jpg')
+            image.save(tmp_fl, 'JPEG')
+            return tmp_fl
+        except FileNotFoundError as e:
+            raise PhotoHandlingError(f'File {tmp_fl} not found - failure in get_temp_file_name')
+
 
     @staticmethod
     def get_photo_from_path(session, path):
@@ -80,7 +119,7 @@ class Photo(db.Model):
                     raise ValueError(f'Multiple Failures retrieving photo {photo_path}')
 
     def get_json_descriptor(self):
-        res = jsm.make_json_descriptor('Photo', jsm.descriptor_photo_fields)
+        res = jsm.make_json_descriptor('Photo', jsm.descriptor_picture_fields)
         res['id'] = self.id
         res['url'] = self.get_photo_url(self.id)
         res['caption'] = self.caption
@@ -145,3 +184,83 @@ class PhotoGalleryMeta(db.Model):
 
     def __repr__(self):
         return '<Flask PhotoGalleryMeta {}>'.format(self.__tablename__)
+
+class SlideShow(object):
+    """
+    Collection of photos rendered by template to produce html for slideshow.
+    """
+    def __init__(self, name, db_session):
+        # ['SLIDESHOW', 'title', 'title_class', 'position', 'width', 'height', 'rotation', 'frame_title', 'pictures']
+        self.db_session = db_session
+        self.show_desc = jsm.make_json_descriptor('Slideshow', jsm.descriptor_slideshow_fields)
+        self.show_desc['title'] = name
+        self.show_desc['title_class'] = 'title_class'
+        self.show_desc['position'] = 'center'
+        self.show_desc['width'] = 300
+        self.show_desc['height'] = 250
+        self.show_desc['rotation'] = 3.0
+        self.show_desc['pictures'] = []
+        self.html = ''
+
+    def add_photo(self, photo_id):
+        new_photo = Picture(self.db_session, photo_id)
+        self.show_desc['pictures'].append(new_photo.get_picture_descriptor())
+
+    def add_title(self, title):
+        self.show_desc['title'] = title
+
+    def set_position(self, position):
+        self.show_desc['position'] = position
+
+    def set_rotation(self, rotation):
+        self.show_desc['rotation'] = rotation
+
+    def set_dimension(self, dimension, size):
+        if dimension == 'width':
+            self.show_desc['width'] = size
+        else:
+            self.show_desc['height'] = size
+
+    def get_html(self):
+        wt = self.show_desc['width']
+        ht = self.show_desc['height']
+        for photo in self.show_desc['pictures']:
+            photo['width'] = wt
+            photo['height'] = ht
+        context = {'slideshow': self.show_desc}
+        self.html = render_template('base/slideshow.jinja2', **context)
+        return self.html
+
+class Picture(object):
+    def __init__(self, db_session, photo_id):
+        # ['PICTURE', 'id', 'url', 'title', 'caption', 'width', 'height', 'alignment', 'alt_text',
+        #             'css_style', 'css_class', 'title_class', 'caption_class', 'image_class']
+        self.picture_desc = jsm.make_json_descriptor('Picture', jsm.descriptor_picture_fields)
+        self.db_session = db_session
+        self.picture_desc['id'] = photo_id
+        res = db_session.query(Photo).filter(Photo.id == photo_id).first()
+        if not res:
+            # TODO:  REMOVE THIS WHEN ALL PHOTOS ARE USING NEW ID
+            res = db_session.query(Photo).filter(Photo.old_id == photo_id).first()
+        if res:
+            db_photo = res
+            gallery_id = db_photo.old_gallery_id
+            file_name = db_photo.file_name
+            self.picture_desc[''] = db_photo.alt_text
+            self.picture_desc['caption'] = db_photo.caption
+            res_gal = db_session.query(PhotoGallery).filter(PhotoGallery.old_id == gallery_id)
+            if res_gal:
+                db_gallery = res_gal.first()
+                path = db_gallery.path_name
+                relative_path = '/static/gallery/' + path + file_name
+                self.picture_desc['url'] = relative_path
+            else:
+                raise ValueError(f'PhotoGalley {gallery_id} for photo {photo_id} does not exist in database.')
+        else:
+            raise ValueError(f'Photo {photo_id} does not exist in database.')
+
+    def get_picture_location(self):
+        return self.picture_desc['url']
+
+    def get_picture_descriptor(self):
+        return self.picture_desc

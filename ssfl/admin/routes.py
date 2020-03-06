@@ -1,6 +1,7 @@
 import os
+import sys
 from ssfl import sst_syslog, sst_admin_access_log
-from utilities.sst_exceptions import log_error, SiteObjectNotFoundError, RequestInvalidMethodError
+from utilities.sst_exceptions import log_sst_error, SiteObjectNotFoundError, RequestInvalidMethodError
 from utilities.miscellaneous import get_temp_file_name
 import dateutil.parser
 from flask import Blueprint, render_template, url_for, request, send_file, \
@@ -8,6 +9,7 @@ from flask import Blueprint, render_template, url_for, request, send_file, \
 from flask import current_app as app
 from flask_login import login_required
 from werkzeug.utils import secure_filename
+import tempfile
 
 from config import Config
 from db_mgt.photo_tables import Photo
@@ -24,6 +26,7 @@ from .manage_events.manage_calendar import manage_calendar
 from .manage_events.event_retrieval_support import EventsInPeriod
 from .miscellaneous_functions import miscellaneous_functions, import_docx_and_add_to_db
 from .manage_index_pages import DBManageIndexPages
+from utilities.sst_exceptions import log_sst_error
 
 # Set up a Blueprint
 admin_bp = Blueprint('admin_bp', __name__,
@@ -86,15 +89,13 @@ def get_image(image_path):
     try:
         photo = Photo.get_photo_from_path(db_session, path)
         if photo:
-            fl = photo.get_resized_photo(db_session, width=width, height=height)
+            photo_string = photo.get_resized_photo(db_session, width=width, height=height)
             close_session(db_session)
-            return send_file(fl, mimetype='image/jpeg')
-        else:
-            close_session(db_session)
-            return abort(404, fl)
+            photo_string.seek(0)
+            return send_file(photo_string, mimetype='image/jpeg')
     except AttributeError as e:
         close_session(db_session)
-        return abort(404, fl)
+        return abort(404, "Screwed up")
     except Exception as e:
         close_session(db_session)
         raise e
@@ -107,7 +108,7 @@ def admin():
     try:
         raise SiteObjectNotFoundError("Hi", "Boo", "baz")
     except SiteObjectNotFoundError as e:
-        log_error(e, "testing error processing")
+        log_sst_error(e, "testing error processing")
     return render_template('admin/test.html')
 
 
@@ -140,7 +141,7 @@ def sst_admin_edit():
     if request.method == 'GET':
         context = dict()
         context['form'] = DBContentEditForm()
-        return render_template('admin/edit.html', **context)
+        return render_template('admin/edit.jinja2', **context)
     elif request.method == 'POST':
         form = DBContentEditForm()
         context = dict()
@@ -150,8 +151,8 @@ def sst_admin_edit():
             res = edit_database_file(db_session, form)
             close_session(db_session)
             if res:
-                return render_template('admin/edit.html', **context)  # redirect to success url
-        return render_template('admin/edit.html', **context)
+                return render_template('admin/edit.jinja2', **context)  # redirect to success url
+        return render_template('admin/edit.jinja2', **context)
     else:
         raise RequestInvalidMethodError('Invalid method type: {}'.format(request.method))
 
@@ -230,7 +231,7 @@ def sst_miscellaneous():
     if request.method == 'GET':
         context = dict()
         context['form'] = MiscellaneousFunctionsForm()
-        return render_template('admin/miscellaneous_functions.html', **context)
+        return render_template('admin/miscellaneous_functions.jinja2', **context)
     elif request.method == 'POST':
         form = MiscellaneousFunctionsForm()
         context = dict()
@@ -241,11 +242,11 @@ def sst_miscellaneous():
             close_session(db_session)
             if func in ['dpdb', 'df'] and res:
                 flash('You were successful', 'success')
-                return render_template('admin/miscellaneous_functions.html', **context)  # redirect to success url
+                return render_template('admin/miscellaneous_functions.jinja2', **context)  # redirect to success url
             else:
                 return send_file(res, mimetype="text/csv", as_attachment=True)
         flash_errors(form)
-        return render_template('admin/miscellaneous_functions.html', **context)
+        return render_template('admin/miscellaneous_functions.jinja2', **context)
     else:
         raise RequestInvalidMethodError('Invalid method type: {}'.format(request.method))
 
@@ -258,7 +259,7 @@ def manage_index_page():
     if request.method == 'GET':
         context = dict()
         context['form'] = ManageIndexPagesForm()
-        return render_template('admin/manage_index_page.html', **context)
+        return render_template('admin/manage_index_page.jinja2', **context)
     elif request.method == 'POST':
         form = ManageIndexPagesForm()
         context = dict()
@@ -270,14 +271,14 @@ def manage_index_page():
                 res = mip.process_form(db_session, form)
                 close_session(db_session)
                 if res:
-                    return render_template('admin/manage_index_page.html', **context)  # redirect to success url
+                    return render_template('admin/manage_index_page.jinja2', **context)  # redirect to success url
                 else:
-                    return render_template('admin/manage_index_page.html', **context)  # redirect to failure url
+                    return render_template('admin/manage_index_page.jinja2', **context)  # redirect to failure url
             except Exception as e:
                 db_session.rollback()
                 close_session(db_session)
                 raise e
-        return render_template('admin/manage_index_page.html', **context)
+        return render_template('admin/manage_index_page.jinja2', **context)
     else:
         raise RequestInvalidMethodError('Invalid method type: {}'.format(request.method))
 
@@ -286,32 +287,39 @@ def manage_index_page():
 @login_required
 def sst_import_page():
     """Import Word Document, translate it and store in database."""
-    sst_admin_access_log.make_info_entry(f"Route: /admin/sst_import_page")
-    if request.method == 'GET':
-        context = dict()
-        context['form'] = ImportMSWordDocForm()
-        return render_template('admin/import_docx.html', **context)
-    elif request.method == 'POST':
-        form = ImportMSWordDocForm()
-        context = dict()
-        context['form'] = form
-        db_session = create_session(get_engine())
-        if form.validate_on_submit(db_session):
-            file = form.file_name.data
-            secure_filename(file.filename)
-            file_path = get_temp_file_name('word', 'docx')
-            file.save(file_path)
-            res = import_docx_and_add_to_db(db_session, form, file_path)
-            close_session(db_session)
-            if res:
-                flash(f'You were successful in importing {file}', 'success')
-                return render_template('admin/import_docx.html', **context)  # redirect to success url
+    form = ImportMSWordDocForm()
+    context = dict()
+    try:
+        sst_admin_access_log.make_info_entry(f"Route: /admin/sst_import_page")
+        if request.method == 'GET':
+            context['form'] = ImportMSWordDocForm()
+            return render_template('admin/import_docx.jinja2', **context)
+        elif request.method == 'POST':
+            context['form'] = form
+            db_session = create_session(get_engine())
+            if form.validate_on_submit(db_session):
+                file = form.file_name.data
+                secure_filename(file.filename)
+                file_path = get_temp_file_name('word', 'docx')
+                file.save(file_path)
+                res = import_docx_and_add_to_db(db_session, form, file_path)
+                close_session(db_session)
+                if res:
+                    flash(f'You were successful in importing {file}', 'success')
+                    return render_template('admin/import_docx.jinja2', **context)  # redirect to success url
+            else:
+                close_session(db_session)
+            flash_errors(form)
+            return render_template('admin/import_docx.jinja2', **context)
         else:
-            close_session(db_session)
+            raise RequestInvalidMethodError('Invalid method type: {}'.format(request.method))
+    except Exception as e:
+        log_sst_error(sys.exc_info(), get_traceback=True)
+    finally:
+        form.errors['submit'] = 'Error processing sst_import_page'
         flash_errors(form)
-        return render_template('admin/import_docx.html', **context)
-    else:
-        raise RequestInvalidMethodError('Invalid method type: {}'.format(request.method))
+        return render_template('admin/import_docx.jinja2', **context)
+
 
 @admin_bp.route('/json', methods=['GET', 'POST'])
 @login_required
@@ -321,7 +329,7 @@ def add_json_template():
     if request.method == 'GET':
         context = dict()
         context['form'] = DBJSONEditForm()
-        return render_template('admin/json_edit.html', **context)
+        return render_template('admin/json_edit.jinja2', **context)
     elif request.method == 'POST':
         form = DBJSONEditForm()
         context = dict()
@@ -331,8 +339,8 @@ def add_json_template():
             res = edit_json_file(db_session, form)
             close_session(db_session)
             if res:
-                return render_template('admin/json_edit.html', **context)  # redirect to success url
-        return render_template('admin/json_edit.html', **context)
+                return render_template('admin/json_edit.jinja2', **context)  # redirect to success url
+        return render_template('admin/json_edit.jinja2', **context)
     else:
         raise RequestInvalidMethodError('Invalid method type: {}'.format(request.method))
 

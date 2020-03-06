@@ -1,8 +1,8 @@
 import re
 from utilities.process_urls import find_page_from_url, find_download_from_url
 from config import Config
-from process_word_sources.photos import Photo, PagePhotoFrame
-from db_mgt.photo_tables import PhotoGallery
+from process_word_sources.photos import Photo
+from db_mgt.photo_tables import PhotoGallery, SlideShow
 from db_mgt.photo_tables import Photo as DBPhoto
 from utilities.miscellaneous import run_jinja_template
 from utilities.sst_exceptions import ShortcodeError, ShortcodeParameterError, ShortcodeSystemError
@@ -35,7 +35,7 @@ class Shortcode(object):
             return None
         matches = re.search(Shortcode.sc_re, self.shortcode_string)
         if matches is None or matches.groups() is None:
-                raise ShortcodeSystemError('RE failed to match a shortcode.')
+            raise ShortcodeSystemError('RE failed to match a shortcode.')
         res = dict()
         for n, match in enumerate(matches.groups()):
             if not n:
@@ -105,18 +105,19 @@ class Shortcode(object):
                 target = find_download_from_url(url_content)
                 if not target:
                     return None  # TODO:  Is this really an error?  Displays as text content of shortcode
-        except Exception as e:      # some urls seem to be bad
+        except Exception as e:  # some urls seem to be bad
             print(f'Error in Maxbutton URL: {url_content}')
             return None
         button_type = "is-link"
-        context = {'button_type': button_type,
-                   'extra_styling': 'margin:3px;',
-                   'target': target,
-                   'text_content': text_content}
-        res = Shortcode.run_jinja_template('base/button.jinja2', context=context).replace('\n','')
+        context_dict = {'button_type': button_type,
+                        'extra_styling': 'margin:3px;',
+                        'target': target,
+                        'text_content': text_content}
+        context = {'button': context_dict}
+        res = run_jinja_template('base/button.jinja2', context=context).replace('\n', '')
         self.content_dict['result'] = res
 
-    def _get_photo_by_id(self, photo_id, old_id=True):
+    def XX_get_photo_by_id(self, photo_id, old_id=True):
         # TODO: change to current id's and update singlepic reference
         # TODO: change to use same photo url build as in multi_story_page
         if old_id:
@@ -133,17 +134,18 @@ class Shortcode(object):
 
     def _get_photo_list_by_gallery_id(self, gallery_id, old_id=True):
         gallery_rec = self.session.query(PhotoGallery).filter(PhotoGallery.old_id == gallery_id).first()
-        photo_ids = [x.id for x in self.session.query(DBPhoto).filter(DBPhoto.old_gallery_id == gallery_rec.old_id).all()]
+        photo_ids = [x.id for x in
+                     self.session.query(DBPhoto).filter(DBPhoto.old_gallery_id == gallery_rec.old_id).all()]
         return photo_ids
 
     def _process_singlepic(self):
         try:
             keys = self.content_dict.keys()
             photo_id = int(self.content_dict['id'])
-            photoframe = PagePhotoFrame('NEED PHOTO NAME', db_session=self.session)
+            photoframe = SlideShow('NEED PHOTO NAME', db_session=self.session)
             photoframe.add_photo(photo_id)
             if 'h' in keys:
-                photoframe.set_dimension('height',  self.content_dict['h'])
+                photoframe.set_dimension('height', self.content_dict['h'])
             if 'w' in keys:
                 photoframe.set_dimension('width', self.content_dict['w'])
             if 'title' in keys:
@@ -151,13 +153,13 @@ class Shortcode(object):
             if 'align' in keys:
                 photo_position = self.content_dict['align']
                 if photo_position not in ['left', 'middle', 'right', 'top', 'bottom']:
-                    raise ValueError('Unknown photo position: {}'.format(photo_position))  # TODO: return error to script
+                    raise ValueError(
+                        'Unknown photo position: {}'.format(photo_position))  # TODO: return error to script
                 photoframe.set_position(photo_position)
             res = photoframe.get_html()
             self.content_dict['result'] = res
         except Exception as e:
             raise e
-
 
     def _process_ngg_images(self):
         """Process Imagely shortcode ngg_images with relevant parameters."""
@@ -212,9 +214,7 @@ class Shortcode(object):
             if len(photo_ids) == 1:
                 for photo_id in photo_ids:  # retrieve single element from either list or set
                     break
-                photo = Photo(photo_id)
-                res = photo.get_html()
-            photoframe = PagePhotoFrame('NEED PHOTO NAME', db_session=self.session)
+            photoframe = SlideShow('NEED PHOTO NAME', db_session=self.session)
             for p_id in photo_ids:
                 photoframe.add_photo(p_id)
             if 'h' in keys:

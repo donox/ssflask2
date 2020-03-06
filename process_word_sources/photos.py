@@ -1,7 +1,8 @@
 from db_mgt.photo_tables import Photo as DBPhoto, PhotoGallery
 from config import Config
 
-class PagePhotoFrame(object):
+# TODO:  Move all photo processing to db_mgt.photo_tables, add slideshow object, use templates to render html
+class XXPagePhotoFrame(object):
     def __init__(self, name, db_session):
         self.db_session = db_session
         self.name = name
@@ -105,5 +106,5 @@ class Photo(object):
         else:
             raise ValueError(f'Photo {photo_id} does not exist in database.')
 
-    def get_photo_location(self):
+    def get_picture_location(self):
         return self.url

@@ -1,5 +1,5 @@
 from db_mgt.page_tables import Page
-from utilities.sst_exceptions import DataEditingSystemError,log_error
+from utilities.sst_exceptions import DataEditingSystemError,log_sst_error
 from wtforms import ValidationError
 
 
@@ -39,7 +39,7 @@ def edit_database_file(session, form):
                 session.commit()
                 return True
     except Exception as e:
-        log_error(e, 'Unexpected Error in edit_database_file')
+        log_sst_error(e, 'Unexpected Error in edit_database_file')
         # TODO: handle error/log, and return useful message to user
         form.errors['Exception'] = ['Exception occurred processing page']
         return False

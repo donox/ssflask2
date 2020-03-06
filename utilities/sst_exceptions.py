@@ -1,16 +1,17 @@
-from ssfl import sst_syslog, sst_admin_access_log, wsgi_logger
+from ssfl import sst_syslog
+import traceback
 
-def log_error(e, *args, **kwargs):
+
+def log_sst_error(exec_info, get_traceback=False):
     """This is a generalized logging function to handle all sst_exceptions."""
-    if issubclass(type(e), SSTException):
-        if len(args) > 0:
-            sst_syslog.make_error_entry(args[0])
-        else:
-            sst_syslog.make_error_entry(f'Error type: {type(e).__repr__}; no args provided')
+    cls, inst, trace = exec_info
+    if issubclass(cls, SSTException):
+        sst_syslog.make_error_entry(f'Exception of type: {cls} with message: {inst}')
+        if get_traceback:
+            sst_syslog.make_error_entry(f'Traceback: {traceback.print_tb(trace)}')
     else:
-        sst_syslog.make_error_entry(f'Unrecognized Exception Type: {type(e)}')
+        sst_syslog.make_error_entry(f'Unrecognized Exception Type: {cls}')
         sst_syslog.logging.exception("Unexpected Exception Type (this message in sst_exceptions")
-        raise e
 
 
 class SSTException(Exception):
@@ -37,97 +38,72 @@ class SsTDocParseError(SSTException):
     """Base Exception Class for errors associated with parsing Word Docs."""
     pass
 
+class SsTSystemError(SSTException):
+    """Base Exception Class for errors associated with unexpected system failures."""
+    pass
+
 
 # ######################################################
+class PhotoHandlingError(SsTSystemError):
+    """Error in resizing, removing temp files, loading photo from DB."""
+    pass
+
 class RequestInvalidMethodError(SsTFormError):
     """Error raised for invalid methods for web request."""
-
-    def __init__(self, obj_id, obj_type, msg):
-        self.object_id = obj_id
-        self.object_type = obj_type
-        self.error_message = msg
+    pass
 
 
 class SiteObjectNotFoundError(DataMgtModuleError):
     """Error raised when a page, photo, or other site specific object is not found in database"""
-
-    def __init__(self, obj_id, obj_type, msg):
-        self.object_id = obj_id
-        self.object_type = obj_type
-        self.error_message = msg
+    pass
 
 
 class SiteUpdateError(DataMgtModuleError):
     """Error raised when update fails"""
-
-    def __init__(self, obj_id, obj_type, sql_error_code, sql_error_msg):
-        self.obj_id = obj_id
-        self.object_type = obj_type
-        self.error_message = sql_error_msg
+    pass
 
 
 class SiteIdentifierError(DataMgtModuleError):
     """Error raised when an invalid object identifier is received"""
-
-    def __init__(self, obj_id, obj_type, msg):
-        self.obj_id = obj_id
-        self.object_type = obj_type
-        self.error_message = msg
+    pass
 
 
 class ShortcodeParameterError(ShortcodeError):
     """Error raised when a shortcode contains an invalid parameter"""
+    pass
 
-    def __init__(self, obj_id, obj_type, msg):
-        self.obj_id = obj_id
-        self.object_type = obj_type
-        self.error_message = msg
 
 class ShortcodeSystemError(ShortcodeError):
     """Error raised when a shortcode processing fails improperly"""
-
-    def __init__(self, obj_id, obj_type, msg):
-        self.obj_id = obj_id
-        self.object_type = obj_type
-        self.error_message = msg
+    pass
 
 
 class DataEditingSystemError(ShortcodeError):
     """Error raised when a database data editing support processing fails improperly"""
-
-    def __init__(self, obj_id, obj_type, msg):
-        self.obj_id = obj_id
-        self.object_type = obj_type
-        self.error_message = msg
+    pass
 
 
 class WordLatexExpressionError(SsTDocParseError):
     """Error raised a parsing error occurs parsing a Latex style expression in a Word Document."""
+    pass
 
-    def __init__(self, msg):
-        self.error_message = msg
 
 class WordHTMLExpressionError(SsTDocParseError):
     """Error raised a parsing error occurs parsing HTML in a Word Document."""
+    pass
 
-    def __init__(self, msg):
-        self.error_message = msg
 
 class WordInputError(SsTDocParseError):
     """Error raised when a parsing error occurs  in a Word Document."""
+    pass
 
-    def __init__(self, msg):
-        self.error_message = msg
 
 class WordRenderingError(SsTDocParseError):
     """Error raised when a error occurs rendering a parsed Word Document."""
+    pass
 
-    def __init__(self, msg):
-        self.error_message = msg
 
 class WordContentFeatureExists(SsTDocParseError):
     """Error raised when a specific content feature is added more than once as a single feature."""
-
-    def __init__(self, msg):
-        self.error_message = msg
+    pass
 

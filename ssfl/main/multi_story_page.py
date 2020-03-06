@@ -85,7 +85,7 @@ class MultiStoryPage(object):
                         this_cell_descriptor['width'] = width
                 elif cmd == 'story':
                     # Select row and column in row - this is the dictionary for a specific cell
-                    photo_descriptor = jsm.make_json_descriptor('Photo', jsm.descriptor_photo_fields)
+                    photo_descriptor = jsm.make_json_descriptor('Photo', jsm.descriptor_picture_fields)
                     snippet_descriptor = jsm.make_json_descriptor('StorySnippet', jsm.descriptor_story_snippet_fields)
                     snippet_descriptor['photo'] = photo_descriptor
                     rw = int(row[1]) - 1

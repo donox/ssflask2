@@ -1,5 +1,5 @@
 from db_mgt.json_tables import JSONStore, JSONStorageManager
-from utilities.sst_exceptions import DataEditingSystemError,log_error
+from utilities.sst_exceptions import DataEditingSystemError,log_sst_error
 from ssfl.main.multi_story_page import MultiStoryPage
 from wtforms import ValidationError
 
@@ -57,7 +57,7 @@ def edit_json_file(session, form):
                     session.commit()
                     return True
     except Exception as e:
-        log_error(e, 'Unexpected Error in edit_json_file')
+        log_sst_error(e, 'Unexpected Error in edit_json_file')
         # TODO: handle error/log, and return useful message to user
         form.errors['Exception'] = ['Exception occurred processing page']
         return False

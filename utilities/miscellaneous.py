@@ -14,13 +14,20 @@ def get_temp_file_name(temp_type, extension):
     """Get a name for a temporary file, deleting any prior file of 'similar' name."""
     chars = '-' + str(Config.TEMP_CURRENT) + '.'
     for path in os.listdir(Config.TEMP_FILE_LOC):
-        full_path = Config.TEMP_FILE_LOC + path
+        full_path = os.path.join(Config.TEMP_FILE_LOC, path)
         if full_path.find(chars) > -1:
-            try:
-                os.remove(full_path)
-            except Exception as e:
-                foo = 3
-                raise e
+            try_count = 5
+            while try_count:
+                try:
+                    if os.path.exists(full_path):
+                        os.remove(full_path)
+                except FileNotFoundError as e:
+                    try_count -= 1
+                    if not try_count:
+                        raise SystemError('os.remove fails trying to remove a file')
+                except Exception as e:
+                    foo = 3
+                    raise e
     fl = Config.TEMP_FILE_LOC + temp_type + chars + extension
     tmp = int(Config.TEMP_CURRENT) + 1
     if tmp > int(Config.TEMP_COUNT):

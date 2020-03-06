@@ -37,7 +37,7 @@ class DBManageIndexPages(object):
             except SiteObjectNotFoundError as e:
                 pass  # This is normal case
             self.create_new_index_page(db_session, page_title=form.page_title.data, page_name=form.page_name.data,
-                                       page_template='manage_index_page.html')
+                                       page_template='manage_index_page.jinja2')
             return True
         elif work_function == 'aii':
             btn_url = form.button_url_link.data

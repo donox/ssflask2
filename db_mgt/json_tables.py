@@ -8,19 +8,22 @@ import json as jsn
 # self.add_to_context('target', '/main/page/{}'.format(self.pb.page_in_db.id))
 # self.add_to_context('text_content', 'Read More')
 
+
 class JSONStorageManager(object):
-    descriptor_photo_fields = ['id', 'url', 'title', 'caption', 'width', 'height', 'alignment', 'alt_text', 'css_style',
-                               'css_class', 'title_class', 'caption_class', 'image_class']
-    descriptor_story_fields = ['id', 'title', 'name', 'author', 'date', 'content', 'snippet']
-    descriptor_button_fields = ['id', 'button_type', 'target', 'text_content']
-    descriptor_page_layout = ['name', 'row_count', 'column_count', 'rows', 'cells']
-    descriptor_row_layout = ['cells', 'column_width']
-    descriptor_column_layout = ['cells']
-    descriptor_cell_layout = ['element_type', 'element', 'width']
-    descriptor_story_snippet_fields = ['id', 'title', 'name', 'author', 'date', 'snippet', 'photo',
+    descriptor_picture_fields = ['PICTURE', 'id', 'url', 'title', 'caption', 'width', 'height', 'alignment', 'alt_text',
+                                 'css_style', 'css_class', 'title_class', 'caption_class', 'image_class']
+    descriptor_slideshow_fields = ['SLIDESHOW', 'title', 'title_class', 'position', 'width', 'height', 'rotation',
+                                   'frame_title', 'pictures']
+    descriptor_story_fields = ['STORY', 'id', 'title', 'name', 'author', 'date', 'content', 'snippet']
+    descriptor_button_fields = ['BUTTON', 'id', 'button_type', 'target', 'text_content']
+    descriptor_page_layout = ['PAGE', 'name', 'row_count', 'column_count', 'rows', 'cells']
+    descriptor_row_layout = ['ROW', 'cells', 'column_width']
+    descriptor_column_layout = ['COLUMN', 'cells']
+    descriptor_cell_layout = ['CELL', 'element_type', 'element', 'width']
+    descriptor_story_snippet_fields = ['STORY_SNIPPET', 'id', 'title', 'name', 'author', 'date', 'snippet', 'photo',
                                        'content', 'story_url', 'read_more']
-    descriptor_calendar_snippet_fields = ['events', 'event_count']
-    descriptor_event_snippet_fields = ['name', 'date', 'time', 'venue']
+    descriptor_calendar_snippet_fields = ['CALENDAR_SNIPPET', 'events', 'event_count']
+    descriptor_event_snippet_fields = ['EVENT_SNIPPET', 'name', 'date', 'time', 'venue']
 
     def __init__(self, db_session):
         self.db_session = db_session

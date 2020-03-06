@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" serverName="doxley@ssh.pythonanywhere.com">
+    <serverData>
+      <paths name="doxley@ssh.pythonanywhere.com">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/home/doxley/ssflask2/ssfl/static" local="$PROJECT_DIR$/ssfl/static/gallery" web="/" />
+            <mapping local="" />
+          </mappings>
+        </serverdata>
+      </paths>
+    </serverData>
+  </component>
+</project>

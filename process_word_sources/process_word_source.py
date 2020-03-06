@@ -2,8 +2,9 @@ from lxml import etree
 from xml.etree import ElementTree
 from utilities.sst_exceptions import WordHTMLExpressionError, WordLatexExpressionError, WordInputError, \
     WordRenderingError, WordContentFeatureExists
-from .photos import PagePhotoFrame, Photo
+from .photos import Photo
 from config import Config
+from db_mgt.photo_tables import SlideShow as sls
 
 import re
 import mammoth
@@ -154,7 +155,7 @@ class TopElement(ParsedElement):
     def add_photo_frame(self, name):
         if name in self.photo_frames.keys():
             raise WordLatexExpressionError(f'Photo Frame {name} exists.')
-        new_frame = PagePhotoFrame(name, self.db_session)
+        new_frame = sls.Slideshow(name, self.db_session)
         self.photo_frames[name] = new_frame
         self.current_photo_frame = new_frame
         return new_frame

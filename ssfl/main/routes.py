@@ -1,14 +1,12 @@
-from flask import Flask, Blueprint, render_template, request
+from flask import Blueprint, render_template, request
 from flask_login import login_required
+
+from db_mgt.index_page_tables import IndexPage
 from db_mgt.setup import get_engine, create_session, close_session
-from ssfl.main.front_page import BuildFrontPage
-from ssfl.main.multi_story_page import MultiStoryPage
-from ssfl.main.build_page import BuildPage
-from ssfl.main.views.calendar_view import RandomCalendarAPI
-from db_mgt.index_page_tables import IndexPage, IndexPageItem
 from ssfl.admin.manage_index_pages import build_index_page_context
-
-
+from ssfl.main.build_page import BuildPage
+from ssfl.main.multi_story_page import MultiStoryPage
+from ssfl.main.views.calendar_view import RandomCalendarAPI
 
 # Set up a Blueprint
 main_bp = Blueprint('main', __name__,
@@ -17,7 +15,7 @@ main_bp = Blueprint('main', __name__,
 
 cal_view = RandomCalendarAPI.as_view('cal_api')
 main_bp.add_url_rule('/cal/', defaults={'count': 10},
-                 view_func=cal_view, methods=['GET'])
+                     view_func=cal_view, methods=['GET'])
 
 
 @main_bp.route('/main', methods=['GET'])
@@ -32,21 +30,11 @@ def sst_main():
     close_session(db_session)
     return render_template('main/main.jinja2', **context)
 
-# @main_bp.route('/XXmain', methods=['GET'])
-# @login_required
-# def sst_main():
-#     """Main page route."""
-#     db_session = create_session(get_engine())
-#     fp = BuildFrontPage(db_session)
-#     context = fp.make_front_page_context()
-#     context['APP_ROOT'] = request.base_url
-#     close_session(db_session)
-#     return render_template('main/main.jinja2', **context)
-
 
 @main_bp.route('/main/page/<string:page_ident>', methods=['GET'])
 @login_required
 def sst_get_specific_page(page_ident):
+    """Get specific page by id."""
     db_session = create_session(get_engine())
     bp = BuildPage(db_session, page_ident)
     context = bp.display_page()
@@ -55,17 +43,23 @@ def sst_get_specific_page(page_ident):
     return render_template('main/specific_page.jinja2', **context)
 
 
-
-
-@main_bp.route('/hello')                        # DELETE WHEN THINGS ARE GENERALLY WORKING
-def hello_world():
-    context = dict()
-    return render_template('main/index.jinja2', **context)
+@main_bp.route('/main/single/<string:page_ident>', methods=['GET'])
+@login_required
+def sst_get_single_page(page_ident):
+    """TEMPORARY - step to using  common page rendering."""
+    db_session = create_session(get_engine())
+    msp = MultiStoryPage(db_session)
+    msp.make_descriptor_from_story_id(page_ident, 12)
+    context = msp.make_front_page_context()
+    context['APP_ROOT'] = request.base_url
+    close_session(db_session)
+    return render_template('main/main.jinja2', **context)
 
 
 @main_bp.route('/menu/<string:page>', methods=['GET'])
 @login_required
 def sst_get_menu_page(page):
+    """Load index page by name."""
     db_session = create_session(get_engine())
     bp = BuildPage(db_session, None)
     context = bp.display_menu_page(page)
@@ -87,14 +81,3 @@ def sst_get_index_page(page):
     context['APP_ROOT'] = request.url_root
     close_session(db_session)
     return render_template('main/index_page_layout.jinja2', **context)
-
-# @main_bp.route('/main/multi', methods=['GET'])
-# @login_required
-# def sst_multi():
-#     """Multi row/col collection of snippets route."""
-#     db_session = create_session(get_engine())
-#     fp = BuildFrontPage(db_session)
-#     context = fp.make_front_page_context()
-#     context['APP_ROOT'] = request.base_url
-#     close_session(db_session)
-#     return render_template('main/multi_row_col.jinja2', **context)

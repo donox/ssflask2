@@ -1,6 +1,8 @@
 <div class="{{ photo.css_class }}">
     <figure>
-        <figcaption class="{{ photo.title_class }}">{{ photo.title }}</figcaption>
+        {%  if photo.title %}
+            <figcaption class="{{ photo.title_class }}">{{ photo.title }}</figcaption>
+        {% endif %}
         <img class="{{ photo.image_class }}"
              src="{{ photo.url }}?h={{ photo.height }}&w={{ photo.width }}"
              align="{{ photo.alignment }}"
