@@ -187,7 +187,7 @@ def upload_form():
     return render_template('admin/upload.html')
 
 
-ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'docx'])
+ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'docx', 'csv'])
 
 
 def allowed_file(filename):
@@ -325,22 +325,28 @@ def sst_import_page():
 @login_required
 def add_json_template():
     sst_admin_access_log.make_info_entry(f"Route: /admin/json/")
-    # path = Config.USER_DIRECTORY_BASE + file_path
-    if request.method == 'GET':
-        context = dict()
-        context['form'] = DBJSONEditForm()
-        return render_template('admin/json_edit.jinja2', **context)
-    elif request.method == 'POST':
-        form = DBJSONEditForm()
-        context = dict()
-        context['form'] = form
-        if form.validate_on_submit():
-            db_session = create_session(get_engine())
-            res = edit_json_file(db_session, form)
-            close_session(db_session)
-            if res:
-                return render_template('admin/json_edit.jinja2', **context)  # redirect to success url
-        return render_template('admin/json_edit.jinja2', **context)
-    else:
-        raise RequestInvalidMethodError('Invalid method type: {}'.format(request.method))
+    form = DBJSONEditForm()
+    try:
+        if request.method == 'GET':
+            context = dict()
+            context['form'] = DBJSONEditForm()
+        elif request.method == 'POST':
+            context = dict()
+            context['form'] = form
+            if form.validate_on_submit():
+                db_session = create_session(get_engine())
+                res = edit_json_file(db_session, form)
+                close_session(db_session)
+                if res:
+                    flash(f'JSON edit succeeded', 'success')
+            form.errors['submit'] = 'Error processing json_edit_page'
+            flash_errors(form)
+        else:
+            raise RequestInvalidMethodError('Invalid method type: {}'.format(request.method))
+    except Exception as e:
+        log_sst_error(sys.exc_info(), get_traceback=True)
+        form.errors['submit'] = 'Error processing JSON_edit page'
+        flash_errors(form)
+    finally:
+        return render_template('admin/json_edit.jinja2', **context)    # Executed in all cases
 

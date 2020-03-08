@@ -1,23 +1,74 @@
 from db_mgt.event_tables import Event, EventTime, EventMeta
 from utilities.sst_exceptions import DataEditingSystemError
 from wtforms import ValidationError
+from werkzeug.utils import secure_filename
 from .event_retrieval_support import EventsInPeriod, Evt
-from .event_operations import CsvToDb, calendar_categories, calendar_audiences
+from .event_operations import CsvToDb, JSONToDb, calendar_categories, calendar_audiences
+import tempfile
+
+ALLOWED_EXTENSIONS = set(['csv', 'json'])
+
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 def manage_calendar(db_session, form):
     """Process calendar form as requested."""
+    work_function = form.work_function
+    input_file = form.file_name.data
     audiences = form.audiences.data
     categories = form.categories.data
-    work_function = form.work_function
     cal_start = form.start_datetime
     cal_end = form.end_datetime
-    direct = form.directory.data
-    file = form.file_name.data
+    out_file = form.file_name.data
     submit = form.submit.data
     try:
-        if work_function.data == 'pc':
+        if work_function.data == 'XXX':
+            pass
+
+        elif work_function.data == 'c_csv':
+            # Upload calendar from csv file
+            if not('.' in input_file.filename and input_file.filename.rsplit('.', 1)[1].lower() == 'csv'):
+                form.errors['file_name'].append(f'Input file: {input_file} not a valid calendar file.')
+                return False
+            else:
+                secure_filename(input_file.filename)
+                with tempfile.TemporaryFile(mode='w+b') as file_path:
+                    # file_path = tempfile.TemporaryFile()
+                    input_file.save(file_path)
+                    file_path.seek(0)
+                    file_content = file_path.read().decode(encoding='latin-1')
+                    build_calendar = CsvToDb(file_content)
+                    build_calendar.add_events()
+                    for evt in build_calendar.get_event_list():
+                        evt.add_to_db(db_session)
+
+        elif work_function.data == 'c_json':
+            # Upload calendar from JSON
+            if not ('.' in input_file.filename and input_file.filename.rsplit('.', 1)[1].lower() == 'json'):
+                form.errors['file_name'].append(f'Input file: {input_file} not a valid calendar file.')
+                return False
+            else:
+                secure_filename(input_file.filename)
+                with tempfile.TemporaryFile(mode='w+b') as file_path:
+                    # file_path = tempfile.TemporaryFile()
+                    input_file.save(file_path)
+                    file_path.seek(0)
+                    file_content = file_path.read().decode(encoding='latin-1')
+                    build_calendar = JSONToDb(file_content)
+                    build_calendar.add_events()
+                    for evt in build_calendar.get_event_list():
+                        try:
+                            evt.add_to_db(db_session)
+                        except Exception as e:
+                            foo = 3
+
+
+        elif work_function.data == 'c_pr':
             # Print Calendar to file
+            form.errors['Exception'] = ['Calendar Printing not yet implemented']
+            return False
             ev = EventsInPeriod(db_session, cal_start, cal_end, audiences, categories)
             events = ev.get_events()
             with open(direct + '/' + file, 'w') as fl:
@@ -45,13 +96,11 @@ def manage_calendar(db_session, form):
                     s = f'{event.id} :       : {p_cost} : {p_ec_pickup} : {p_hl_pickup}\n'
                     fl.write(s)
             fl.close()
-        elif work_function.data == 'uc':
-            build_calendar = CsvToDb(direct + '/' + file)
-            build_calendar.add_events()
-            for evt in build_calendar.get_event_list():
-                evt.add_to_db(db_session)
-        elif work_function.data == 'init':
+
+        elif work_function.data == 'c_new':
             # Clear all event tables and reinitialize Event_Meta
+            form.errors['Exception'] = ['Calendar clearing not yet tested']
+            return False
             db_session.query(EventTime).delete()
             db_session.query(Event).delete()
             db_session.query(EventMeta).delete()
@@ -62,6 +111,9 @@ def manage_calendar(db_session, form):
             for cat in calendar_categories:
                 evm = EventMeta(meta_key='category', meta_value=cat.lower())
                 evm.add_to_db(db_session, commit=True)
+
+        elif work_function.data == 'c_del':
+            pass
     except Exception as e:
         # TODO: handle error/log, and return useful message to user
         form.errors['Exception'] = ['Exception occurred processing page']

@@ -1,4 +1,4 @@
-from wtforms import Form, StringField, PasswordField, validators, SubmitField, IntegerField, BooleanField
+from wtforms import StringField, SubmitField, IntegerField, BooleanField, SelectField
 from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, Length, Optional
 import os
 from utilities.sst_exceptions import DataEditingSystemError
@@ -14,12 +14,17 @@ from flask_wtf import FlaskForm
 class DBJSONEditForm(FlaskForm):
     """Edit or import database content."""
 
+    supported_functions = [('jdown', 'Download JSON from Database'),
+                           ('jup', 'Upload JSON to Database'),
+                           ('jcsv', 'Create JSON descriptor for Story'),
+                           ]
+    work_function = SelectField(label='Select Function',
+                                choices=supported_functions)
     json_id = IntegerField('JSON DB ID', validators=[Optional()])
     json_name = StringField('JSON Template Name', validators=[Optional()])
     directory = StringField('Directory', validators=[DataRequired()], default=os.path.abspath(os.getcwd()))
     file_name = StringField('Save File Name', validators=[DataRequired()])
     file_type = StringField('File Type for Input', default='csv')
-    direction = BooleanField('Transfer to file', default=True)
     submit = SubmitField('Save to File')
 
     def validate_on_submit(self):

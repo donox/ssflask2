@@ -3,6 +3,8 @@ import csv
 import datetime as dt
 from ssfl import sst_syslog
 from unidecode import unidecode
+from io import StringIO
+import json
 
 # These are needed when running standalone
 from pathlib import Path
@@ -126,7 +128,20 @@ class CalendarEvent(object):
             db_event_id = already_there['event']
 
         for time in self.occurs:
-            if self.all_day > '0':
+            val = self.all_day
+            if type(val) is bool:
+                pass
+            elif type(val) is str:
+                if val == '0':
+                    val = False
+                else:
+                    val = True
+            elif type(val) is int:
+                if val <= 0:
+                    val = False
+                else:
+                    val = True
+            if val:
                 ad = True
             else:
                 ad = False
@@ -215,20 +230,89 @@ class CalendarEvent(object):
             return dt.datetime.strftime(date, '%Y-%m-%d') + ' 00:00:00'
 
 
+class JSONToDb(object):
+    def __init__(self, json_file):
+        self.json_file = json_file
+        self.events = None
+
+    def read_file(self):
+        f = json.loads(self.json_file)
+        rdr = f["EVENTS"]
+        for row in rdr:
+            yield row
+
+    @staticmethod
+    def _try_parsing_time(text):
+        if not text:
+            return None
+        for fmt in ('%m/%d/%Y %H:%M:%S', '%H:%M', '%H:%M %p', '%H:%M%p', '%H:%M:%S', '%H:%M:%S %p'):
+            try:
+                return dt.datetime.strptime(text, fmt).time()
+            except ValueError:
+                pass
+        raise ValueError('No valid format found to parse {}'.format(text))
+
+
+    @staticmethod
+    def _try_parsing_date(text):
+        for fmt in ('%m/%d/%Y %H:%M:%S',):
+            try:
+                return dt.datetime.strptime(text, fmt).date()
+            except ValueError:
+                pass
+        raise ValueError('No valid format found to parse {}'.format(text))
+    # "month": "March",
+    # "days": "7",
+    # "location": "Fishersville",
+    # "desc"
+
+
+    def add_events(self):
+        """Create list of all events in JSON file."""
+        # TODO:  Need to complete when source file is updated (days, categories, audiences, name, ...)
+        event_list = []
+        try:
+            for row in self.read_file():
+                new_event = CalendarEvent()
+                new_event.name = "EVENT NAME"
+                new_event.venue = row['location']
+                # dl = [CsvToDb._try_parsing_date(x) for x in row[CAL_DATES_BEGIN:] if x]
+                dl = [dt.datetime.now().date()]
+                st = JSONToDb._try_parsing_time('7:30PM')
+                nd = JSONToDb._try_parsing_time('9:30PM')
+                new_event.occurs = [(st, nd, x) for x in dl]
+                new_event.all_day = False
+                new_event.description = row['desc']
+                cat_list = ['Event']
+                new_event.categories = cat_list
+                new_event.audience = ['IL']
+                new_event.cost = ''
+                new_event.sign_up = ''
+                new_event.ec_depart = ''
+                new_event.hl_depart = ''
+                event_list.append(new_event)
+            self.events = event_list
+        except Exception as e:
+            foo = 3
+            raise e
+
+    def get_event_list(self):
+        return self.events
+
 class CsvToDb(object):
     def __init__(self, csv_file):
         self.csv_file = csv_file
         self.events = None
 
     def read_file(self):
-        with open(self.csv_file, 'r', encoding='utf-8', errors='ignore') as fl:
-            rdr = csv.reader(fl)
-            for row in rdr:
-                valid, new_row = CsvToDb._sanitize_row(row)
-                if valid:
-                    yield new_row
-                # else:
-                #     raise ValueError(row)
+        f = StringIO(self.csv_file)
+        rdr = csv.reader(f)
+        for row in rdr:
+            valid, new_row = CsvToDb._sanitize_row(row)
+            if valid:
+                yield new_row
+            # else:
+            #     raise ValueError(row)
 
     @staticmethod
     def _sanitize_row(row):

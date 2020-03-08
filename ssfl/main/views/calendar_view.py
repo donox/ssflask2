@@ -9,6 +9,7 @@ from db_mgt.setup import get_engine, create_session, close_session
 
 
 class RandomCalendarAPI(MethodView):
+    """IS this useful for anything??????"""
     def get(self, count):
         db_session = create_session(get_engine())
         if count==None:

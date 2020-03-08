@@ -3,8 +3,8 @@
 
 {% block content %}
     <section class="container">
-        <div class="columns">
-            <form action="{{ url_for('admin_bp.sst_admin_calendar') }}" method="post">
+        <div class="">
+            <form action="{{ url_for('admin_bp.sst_admin_calendar') }}" method="post"  enctype="multipart/form-data">
                 <div class="input">
                     {{ form.work_function.label }}
                     {{ form.work_function() }}
@@ -15,17 +15,40 @@
                         </ul>
                     {% endif %}
                 </div>
-                <div class="input" style="margin-top: 25px;margin-bottom: 15px">
-                    {{ form.audiences.label }}
-                    {{ form.audiences }}
-                    {% if form.audiences.errors %}
-                        <ul class="errors">
-                            {% for error in form.audiences.errors %}
-                                <li>{{ error }}</li>{% endfor %}
-                        </ul>
-                    {% endif %}
+
+                <div class="input flex-column align-items-start" style="margin-bottom:90px">
+                    <p class="">Required for function:Get Events from CSV</p>
+                    <p>Select CSV file containing events to be added to the calendar database.</p>
+                    <p>
+                        {{ form.file_name.label }}
+                        {{ form.file_name }}
+                        {% if form.file_name.errors %}
+                            <ul class="errors">
+                                {% for error in form.file_name.errors %}
+                                    <li>{{ error }}</li>{% endfor %}
+                            </ul>
+                        {% endif %}
+                    </p>
                 </div>
+
+                <div class="input flex-column align-items-start" style="margin-bottom:90px">
+                    <p>Required for function: Print Calendar, Delete Events</p>
+                    <p>Select Audience(s) for events to be processed.</p>
+                    <p class="input" style="margin-top: 25px;margin-bottom: 15px">
+                        {{ form.audiences.label }}
+                        {{ form.audiences }}
+                        {% if form.audiences.errors %}
+                            <ul class="errors">
+                                {% for error in form.audiences.errors %}
+                                    <li>{{ error }}</li>{% endfor %}
+                            </ul>
+                        {% endif %}
+                    </p>
+                </div>
+
                 <div class="input" style="margin-top: 25px;margin-bottom: 25px">
+                    <p>Required for function: Print Calendar, Delete Events</p>
+                    <p>Select Categories(s) for events to be processed.</p>
                     {{ form.categories.label }}
                     {{ form.categories }}
                     {% if form.categories.errors %}
@@ -57,21 +80,11 @@
                     {% endif %}
                 </div>
                 <div class="file" style="margin-top: 10px;margin-bottom: 10px">
-                    {{ form.directory.label }}
-                    {{ form.directory(placeholder=form.default_directory) }}
-                    {% if form.directory.errors %}
+                    {{ form.save_file_name.label }}
+                    {{ form.save_file_name(placeholder='File name for downloaded file') }}
+                    {% if form.save_file_name.errors %}
                         <ul class="errors">
-                            {% for error in form.file_name.errors %}
-                                <li>{{ error }}</li>{% endfor %}
-                        </ul>
-                    {% endif %}
-                </div>
-                <div class="file" style="margin-top: 10px;margin-bottom: 10px">
-                    {{ form.file_name.label }}
-                    {{ form.file_name(placeholder='Path name to store data') }}
-                    {% if form.file_name.errors %}
-                        <ul class="errors">
-                            {% for error in form.file_name.errors %}
+                            {% for error in form.save_file_name.errors %}
                                 <li>{{ error }}</li>{% endfor %}
                         </ul>
                     {% endif %}

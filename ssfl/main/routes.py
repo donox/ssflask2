@@ -18,14 +18,22 @@ main_bp.add_url_rule('/cal/', defaults={'count': 10},
                      view_func=cal_view, methods=['GET'])
 
 
+@main_bp.route('/main/fullcalendar', methods=['GET'])
+@login_required
+def sst_main_calendar():
+    context = dict()
+    context['APP_ROOT'] = request.base_url
+    return render_template('main/calendar.jinja2', **context)
+
 @main_bp.route('/main', methods=['GET'])
 @login_required
 def sst_main():
     """Main page route."""
+
     db_session = create_session(get_engine())
     msp = MultiStoryPage(db_session)
     msp.load_descriptor_from_database('front-page')
-    context = msp.make_front_page_context()
+    context = msp.make_multi_element_page_context()
     context['APP_ROOT'] = request.base_url
     close_session(db_session)
     return render_template('main/main.jinja2', **context)
@@ -50,7 +58,7 @@ def sst_get_single_page(page_ident):
     db_session = create_session(get_engine())
     msp = MultiStoryPage(db_session)
     msp.make_descriptor_from_story_id(page_ident, 12)
-    context = msp.make_front_page_context()
+    context = msp.make_multi_element_page_context()
     context['APP_ROOT'] = request.base_url
     close_session(db_session)
     return render_template('main/main.jinja2', **context)

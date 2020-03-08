@@ -81,30 +81,6 @@ class Photo(db.Model):
         except Exception as e:
             foo = 3
 
-    def XXget_resized_photo(self, session, width=None, height=None):
-        """Get  resized copy of self photo into temporary file.
-        """
-        try:
-            try:
-                file = Config.USER_DIRECTORY_IMAGES + Photo.get_photo_file_path(session, self.old_id)
-            except Exception as e:
-                raise PhotoHandlingError(f'Failure retrieving photo from DB with old_id: {self.old_id}')
-
-            if os.path.exists(file):
-                image = Image.open(file)
-            else:
-                raise PhotoHandlingError(f'Photo file does not exist: {file}')
-
-            # print(f'Image Size {image.size}')
-            image.thumbnail((width, height))
-
-            tmp_fl = get_temp_file_name('photo', 'jpg')
-            image.save(tmp_fl, 'JPEG')
-            return tmp_fl
-        except FileNotFoundError as e:
-            raise PhotoHandlingError(f'File {tmp_fl} not found - failure in get_temp_file_name')
-
-
     @staticmethod
     def get_photo_from_path(session, path):
         photo_path = path.split('/')[-1]
