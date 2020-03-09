@@ -174,6 +174,8 @@ def sst_admin_calendar():
             db_session = create_session(get_engine())
             res = manage_calendar(db_session, form)
             close_session(db_session)
+            if type(res) != bool:
+                return res
             if res:
                 return render_template('admin/calendar.jinja2', **context)  # redirect to success url
         return render_template('admin/calendar.jinja2', **context)

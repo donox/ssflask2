@@ -1,10 +1,12 @@
 from db_mgt.event_tables import Event, EventTime, EventMeta
-from utilities.sst_exceptions import DataEditingSystemError
-from wtforms import ValidationError
 from werkzeug.utils import secure_filename
 from .event_retrieval_support import EventsInPeriod, Evt
 from .event_operations import CsvToDb, JSONToDb, calendar_categories, calendar_audiences
 import tempfile
+from flask import send_file
+from io import BytesIO
+from utilities.sst_exceptions import log_sst_error
+import sys
 
 ALLOWED_EXTENSIONS = set(['csv', 'json'])
 
@@ -21,7 +23,7 @@ def manage_calendar(db_session, form):
     categories = form.categories.data
     cal_start = form.start_datetime
     cal_end = form.end_datetime
-    out_file = form.file_name.data
+    out_file = form.save_file_name.data
     submit = form.submit.data
     try:
         if work_function.data == 'XXX':
@@ -43,6 +45,7 @@ def manage_calendar(db_session, form):
                     build_calendar.add_events()
                     for evt in build_calendar.get_event_list():
                         evt.add_to_db(db_session)
+            return True
 
         elif work_function.data == 'c_json':
             # Upload calendar from JSON
@@ -62,25 +65,22 @@ def manage_calendar(db_session, form):
                         try:
                             evt.add_to_db(db_session)
                         except Exception as e:
-                            foo = 3
+                            log_sst_error(sys.exc_info(), get_traceback=True)
+            return True
 
 
         elif work_function.data == 'c_pr':
             # Print Calendar to file
-            form.errors['Exception'] = ['Calendar Printing not yet implemented']
-            return False
             ev = EventsInPeriod(db_session, cal_start, cal_end, audiences, categories)
             events = ev.get_events()
-            with open(direct + '/' + file, 'w') as fl:
-                s = f'{len(events)} : {ev.start} : {ev.end} : {ev.audiences} : {ev.categories}\n'
-                fl.write(s)
+            with tempfile.TemporaryFile(mode='w+b') as fl:
+                s = f'No events - {len(events)} : Start - {ev.start} : End - {ev.end}\n'
+                s += f'   Audiences -  {ev.audiences} : Categories -  {ev.categories}\n\n'
+                fl.write(s.encode('utf-8'))
                 for event in events:
                     s = f'{event.id} : {event.event_name} : {event.event_location}\n'
-                    fl.write(s)
-                    s = f'{event.id} :       : {event.event_start} : {event.event_end} : {event.all_day}\n'
-                    fl.write(s)
-                    s = f'{event.id} :       : {event.event_audiences} : {event.event_categories} \n'
-                    fl.write(s)
+                    s += f'{event.id} :    : {event.event_start} : {event.event_end} : {event.all_day}\n'
+                    s += f'{event.id} :    : {event.event_audiences} : {event.event_categories} \n'
                     if hasattr(event, 'cost'):
                         p_cost = event.cost
                     else:
@@ -93,9 +93,11 @@ def manage_calendar(db_session, form):
                         p_hl_pickup = event.hl_pickup
                     else:
                         p_hl_pickup = 'No hl_pickup given'
-                    s = f'{event.id} :       : {p_cost} : {p_ec_pickup} : {p_hl_pickup}\n'
-                    fl.write(s)
-            fl.close()
+                    s += f'{event.id} :    : {p_cost} : {p_ec_pickup} : {p_hl_pickup}\n\n'
+                    fl.write(s.encode('utf-8'))
+                fl.seek(0)
+                return send_file(BytesIO(fl.read()),  mimetype="text/plain", as_attachment=True,
+                                 attachment_filename=out_file + '.txt')
 
         elif work_function.data == 'c_new':
             # Clear all event tables and reinitialize Event_Meta
@@ -111,11 +113,13 @@ def manage_calendar(db_session, form):
             for cat in calendar_categories:
                 evm = EventMeta(meta_key='category', meta_value=cat.lower())
                 evm.add_to_db(db_session, commit=True)
+            return True
 
         elif work_function.data == 'c_del':
-            pass
+            form.errors['Exception'] = ['Calendar event deletng not yet implemented']
+            return False
     except Exception as e:
-        # TODO: handle error/log, and return useful message to user
+        log_sst_error(sys.exc_info(), get_traceback=True)
         form.errors['Exception'] = ['Exception occurred processing page']
         return False
 
