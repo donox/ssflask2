@@ -341,8 +341,9 @@ def add_json_template():
                 close_session(db_session)
                 if res:
                     flash(f'JSON edit succeeded', 'success')
-            form.errors['submit'] = 'Error processing json_edit_page'
-            flash_errors(form)
+                else:
+                    form.errors['submit'] = 'Error processing json_edit_page'
+                    flash_errors(form)
         else:
             raise RequestInvalidMethodError('Invalid method type: {}'.format(request.method))
     except Exception as e:
