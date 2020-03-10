@@ -3,7 +3,7 @@ from lxml.html import html5parser as hp
 import lxml
 from db_mgt.event_tables import Event, EventMeta, EventTime
 from flask import render_template
-from ssfl.admin.manage_events.event_retrieval_support import get_random_events, EventsInPeriod, Evt
+from ssfl.admin.manage_events.event_retrieval_support import get_random_events, SelectedEvents, Evt
 from flask.views import MethodView
 from db_mgt.setup import get_engine, create_session, close_session
 import datetime as dt
@@ -29,7 +29,7 @@ class Calendar(object):
         end = dt.datetime.now() + dt.timedelta(hours=96)
         audience = ['IL', 'AL']
         categories = ['resident clubs', 'event', 'wellness']
-        events = EventsInPeriod(self.session, start, end, audience, categories)
+        events = SelectedEvents(self.session, start, end, audience, categories)
         events = events.all_events[0:6]
         res = []
         for event in events:

@@ -31,9 +31,9 @@ class Evt(object):
     """Intermediate Event object to handle SQL result that is not proper SQLAlchemy object"""
 
     # TODO: Add Location
-    def __init__(self, id, event_name, event_description, event_cost, event_sign_up, hl_pick_up, ec_pickup,
+    def __init__(self, event_id, event_name, event_description, event_cost, event_sign_up, hl_pick_up, ec_pickup,
                  all_day, event_start, event_end, event_location, event_audiences, event_categories):
-        self.id = id
+        self.id = event_id
         self.event_name = event_name
         self.event_description = event_description
         self.event_cost = event_cost
@@ -47,8 +47,34 @@ class Evt(object):
         self.event_audiences = event_audiences
         self.event_categories = event_categories
 
+    def delete_specific_event(self, db_session, start_time, end_time):
+        """Delete event represented by this object.
 
-class EventsInPeriod(object):
+        Delete self, depend on cascade to handle keyed times, etc.
+
+        Args:
+        db_session:  sqlalchemy session
+        start_time: datetime
+        end_time:   datetime
+
+        Returns: bool - True => successful delete.
+
+        """
+        st_tm = start_time.strftime('%Y-%m-%d %H:%M:%S')
+        end_tm = end_time.strftime('%Y-%m-%d %H:%M:%S')
+        sql_time = f'delete from event_time where event_time.event_id={self.id} and event_time.start >= "{st_tm}" '
+        sql_time += f'and event_time.end <= "{end_tm}";'
+        res = db_session.execute(sql_time)
+        sql_any_left = f'select id from event_time where event_time.event_id={self.id};'
+        res = db_session.execute(sql_any_left)
+        if not res.rowcount:
+            sql = f'delete from event where event.id={self.id};'
+            res = db_session.execute(sql)
+        db_session.commit()
+        self.id = None
+        return True
+
+class SelectedEvents(object):
     """Retrieve a list of events that occur in a particular period/audience(s)/category(s)."""
     sql = 'select event.id, event.event_name as name, event.event_description as description, event.event_cost as cost,'
     sql += ' event.event_sign_up as sign_up, event.event_EC_pickup as ec_pickup, event.event_HL_pick_up as hl_pickup, '
@@ -84,7 +110,7 @@ class EventsInPeriod(object):
             self.end = end_time.data.strftime('%Y-%m-%d %H:%M:%S')
         self.audiences = ", ".join([quotify(x.upper()) for x in audiences])
         self.categories = ", ".join([quotify(x.lower()) for x in categories])
-        full_sql = EventsInPeriod.sql.format(self.start, self.end, self.audiences, self.categories)
+        full_sql = SelectedEvents.sql.format(self.start, self.end, self.audiences, self.categories)
         res = db_session.execute(full_sql)
         all_events = []
         last_id = None
@@ -145,16 +171,3 @@ class EventsInPeriod(object):
         return event_list
 
 
-if __name__ == '__main__':
-    class dummy(object):
-        def __init__(self, el):
-            self.data = el
-    df = '/home/don/devel/nightly-scripts/worktemp/calendars/JanuaryCalendar.csv'
-    engine = su.get_engine()
-    session = su.create_session(engine)
-    tables = su.create_tables(engine)
-    st = dummy(dt.datetime(2020, 1, 15, 8))
-    end = dummy(dt.datetime(2020, 1, 17, 8))
-    out = EventsInPeriod(session, st, end, ['IL', 'al'], ['wellness', 'event'])
-    # res = get_random_events(session, 10)
-    foo = 3

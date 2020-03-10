@@ -1,6 +1,6 @@
 from db_mgt.event_tables import Event, EventTime, EventMeta
 from werkzeug.utils import secure_filename
-from .event_retrieval_support import EventsInPeriod, Evt
+from .event_retrieval_support import SelectedEvents, Evt
 from .event_operations import CsvToDb, JSONToDb, calendar_categories, calendar_audiences
 import tempfile
 from flask import send_file
@@ -71,7 +71,7 @@ def manage_calendar(db_session, form):
 
         elif work_function.data == 'c_pr':
             # Print Calendar to file
-            ev = EventsInPeriod(db_session, cal_start, cal_end, audiences, categories)
+            ev = SelectedEvents(db_session, cal_start, cal_end, audiences, categories)
             events = ev.get_events()
             with tempfile.TemporaryFile(mode='w+b') as fl:
                 s = f'No events - {len(events)} : Start - {ev.start} : End - {ev.end}\n'
@@ -116,8 +116,16 @@ def manage_calendar(db_session, form):
             return True
 
         elif work_function.data == 'c_del':
-            form.errors['Exception'] = ['Calendar event deletng not yet implemented']
-            return False
+            try:
+                ev = SelectedEvents(db_session, cal_start, cal_end, audiences, categories)
+                events = ev.get_events()
+                for event in events:
+                    event.delete_specific_event(db_session, cal_start.data, cal_end.data)
+            except Exception as e:
+                log_sst_error(sys.exc_info(), get_traceback=True)
+                form.errors['Exception'] = [f'Error deleting event: {e.args}']
+                return False
+            return True
     except Exception as e:
         log_sst_error(sys.exc_info(), get_traceback=True)
         form.errors['Exception'] = ['Exception occurred processing page']

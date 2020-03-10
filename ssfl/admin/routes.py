@@ -23,7 +23,7 @@ from .forms.index_pages_form import ManageIndexPagesForm
 from .forms.import_word_doc_form import ImportMSWordDocForm
 from .forms.edit_db_json_content_form import DBJSONEditForm
 from .manage_events.manage_calendar import manage_calendar
-from .manage_events.event_retrieval_support import EventsInPeriod
+from .manage_events.event_retrieval_support import SelectedEvents
 from .miscellaneous_functions import miscellaneous_functions, import_docx_and_add_to_db
 from .manage_index_pages import DBManageIndexPages
 from utilities.sst_exceptions import log_sst_error
@@ -68,7 +68,7 @@ def get_events():
         db_session = create_session(get_engine())
         audiences = [args['audience']]
         categories = [args['category']]
-        event_class = EventsInPeriod(db_session, start, end, audiences, categories)
+        event_class = SelectedEvents(db_session, start, end, audiences, categories)
         events = event_class.get_events_as_dict()
         close_session(db_session)
         return jsonify(events)
