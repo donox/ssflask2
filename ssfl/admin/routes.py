@@ -5,10 +5,11 @@ from utilities.sst_exceptions import log_sst_error, SiteObjectNotFoundError, Req
 from utilities.miscellaneous import get_temp_file_name
 import dateutil.parser
 from flask import Blueprint, render_template, url_for, request, send_file, \
-    abort, jsonify, redirect, flash
+    abort, jsonify, redirect, flash, Response
 from flask import current_app as app
 from flask_login import login_required
 from werkzeug.utils import secure_filename
+from werkzeug.wsgi import FileWrapper
 import tempfile
 
 from config import Config
@@ -92,7 +93,9 @@ def get_image(image_path):
             photo_string = photo.get_resized_photo(db_session, width=width, height=height)
             close_session(db_session)
             photo_string.seek(0)
-            return send_file(photo_string, mimetype='image/jpeg')
+            wrapped_string = FileWrapper(photo_string)
+            return Response(wrapped_string, mimetype='image/jpeg', direct_passthrough=True)
+            # return send_file(wrapped_string, mimetype='image/jpeg')
     except AttributeError as e:
         close_session(db_session)
         return abort(404, "Screwed up")

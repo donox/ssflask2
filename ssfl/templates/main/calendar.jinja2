@@ -2,16 +2,16 @@
 <html>
 <head>
 
-<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
           integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
           crossorigin="anonymous">
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/4.2.0/bootstrap/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/4.2.0/core/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/4.2.0/daygrid/main.css">
-     {% assets "css_bundle" %}
-         <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}"></link>
-     {% endassets %}
+    {% assets "css_bundle" %}
+        <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}"></link>
+    {% endassets %}
 
     <script src="https://code.jquery.com/jquery-3.4.1.min.js"
             integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
@@ -39,7 +39,7 @@
             let calendar = new FullCalendar.Calendar(calendarEl, {
                 plugins: ['dayGrid'],
                 header: {
-                    left: 'il_button, al_button, evt_button, well_button, rel_button, club_button',
+                    left: 'il_button, al_button evt_button, well_button, rel_button, club_button, community_button',
                     center: 'title, dayGridMonth, dayGridWeek, dayGridDay',
                     right: 'prev,next today '
                 },
@@ -96,6 +96,15 @@
                     },
                     club_button: {
                         text: 'Resident Clubs',
+                        click: function () {
+                            button_state.set_category(this.firstChild.valueOf());
+                            let src = calendar.getEventSources();
+                            src[0].refetch();
+                            calendar.render();
+                        },
+                    },
+                    community_button: {
+                        text: 'Community Events',
                         click: function () {
                             button_state.set_category(this.firstChild.valueOf());
                             let src = calendar.getEventSources();
@@ -191,6 +200,7 @@
         });
         //@ sourceURL=dynamicScript.js
 
+
     </script>
 </head>
 <body>
@@ -217,6 +227,11 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
             integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
             crossorigin="anonymous"></script>
+    <script>
+{#        var fcl = $('.fc-left');#}
+{#        var fcl_buttons = fcl.find("button");#}
+{#        alert("BUTTONS:" + fcl_buttons);#}
+    </script>
 </div>
 </body>
 </html>
