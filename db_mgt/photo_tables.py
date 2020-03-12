@@ -15,12 +15,12 @@ class Photo(db.Model):
     __tablename__ = 'photo'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     old_id = db.Column(db.Integer, nullable=False)
-    image_slug = db.Column(db.String(), nullable=False)    # Name used in urls
+    image_slug = db.Column(db.String(), nullable=False)  # Name used in urls
     gallery_id = db.Column(db.Integer, db.ForeignKey('photo_gallery.id'), nullable=True)
     old_gallery_id = db.Column(db.Integer)
     file_name = db.Column(db.String())
     caption = db.Column(db.String(512))
-    alt_text = db.Column(db.String(256))          # Use if picture does not exist
+    alt_text = db.Column(db.String(256))  # Use if picture does not exist
     image_date = db.Column(db.DateTime)
     meta_data = db.Column(UnicodeText)
 
@@ -31,7 +31,7 @@ class Photo(db.Model):
         return self
 
     @staticmethod
-    def get_photo_url(session, old_photo_id):      # TODO: replace to use current id
+    def get_photo_url(session, old_photo_id):  # TODO: replace to use current id
         try:
             temp = Photo.get_photo_file_path(session, old_photo_id)
             url = url_for('admin_bp.get_image', image_path=temp)
@@ -84,10 +84,28 @@ class Photo(db.Model):
     @staticmethod
     def get_photo_from_path(session, path):
         photo_path = path.split('/')[-1]
-        multi_try = 3               # Acts as if there may be a race condition - trying multiple times before failure
+        multi_try = 3  # Acts as if there may be a race condition - trying multiple times before failure
         while multi_try > 0:
             try:
-                photo = session.query(Photo).filter(Photo.file_name == photo_path).first()
+                # Note:  This is an attempt to avoid DB errors ************************************
+                # photo = session.query(Photo).filter(Photo.file_name == photo_path).first()
+                sql = 'SELECT id, old_id, image_slug, gallery_id, old_gallery_id, file_name, caption, '
+                sql += 'alt_text, image_date, meta_data FROM photo '
+                sql += f'WHERE file_name = "{photo_path}";'
+                photo = Photo()
+                res = session.execute(sql).first()
+                photo_id, old_id, image_slug, gallery_id, old_gallery_id, file_name, caption, \
+                    alt_text, image_date, meta_data = res
+                photo.id = photo_id
+                photo.old_id = old_id
+                photo.image_slug = image_slug
+                photo.gallery_id = gallery_id
+                photo.old_gallery_id = old_gallery_id
+                photo.file_name = file_name
+                photo.caption = caption
+                photo.alt_text = alt_text
+                photo.image_date = image_date
+                photo.meta_data = meta_data
                 return photo
             except Exception as e:
                 multi_try -= 1
@@ -131,9 +149,9 @@ class PhotoGallery(db.Model):
     __tablename__ = 'photo_gallery'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     old_id = db.Column(db.Integer)
-    name = db.Column(db.String(), nullable=False)         # Name of gallery
-    slug_name = db.Column(db.String(), nullable=False)    # Name used in urls
-    path_name = db.Column(db.String(), nullable=False)    # File location (ends with '/'), append to top-level location
+    name = db.Column(db.String(), nullable=False)  # Name of gallery
+    slug_name = db.Column(db.String(), nullable=False)  # Name used in urls
+    path_name = db.Column(db.String(), nullable=False)  # File location (ends with '/'), append to top-level location
 
     def add_to_db(self, session, commit=False):
         session.add(self)
@@ -161,10 +179,12 @@ class PhotoGalleryMeta(db.Model):
     def __repr__(self):
         return '<Flask PhotoGalleryMeta {}>'.format(self.__tablename__)
 
+
 class SlideShow(object):
     """
     Collection of photos rendered by template to produce html for slideshow.
     """
+
     def __init__(self, name, db_session):
         # ['SLIDESHOW', 'title', 'title_class', 'position', 'width', 'height', 'rotation', 'frame_title', 'pictures']
         self.db_session = db_session
@@ -206,6 +226,7 @@ class SlideShow(object):
         context = {'slideshow': self.show_desc}
         self.html = render_template('base/slideshow.jinja2', **context)
         return self.html
+
 
 class Picture(object):
     def __init__(self, db_session, photo_id):
