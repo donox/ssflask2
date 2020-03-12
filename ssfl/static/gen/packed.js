@@ -36,8 +36,9 @@ var button_state = (function () {
     let audience_names = ['AL', 'IL'];
     let audience_classes = ['fc-al_button-button', 'fc-il_button-button'];
     let categories = [event_state, wellness_state, religion_state, club_state];
-    let category_names = ['Event', 'Wellness', 'Religion', 'Resident Clubs'];
-    let category_classes = ['fc-evt_button-button', 'fc-well_button-button', 'fc-rel_button-button', 'fc-club_button-button'];
+    let category_names = ['Event', 'Wellness', 'Religion', 'Resident Clubs', 'Community'];
+    let category_classes = ['fc-evt_button-button', 'fc-well_button-button', 'fc-rel_button-button',
+    'fc-club_button-button', 'fc-community_button-button'];
     return {
         initialize: function () {
             //Do anything needed here

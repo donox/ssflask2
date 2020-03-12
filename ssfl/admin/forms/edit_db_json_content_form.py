@@ -17,6 +17,7 @@ class DBJSONEditForm(FlaskForm):
     supported_functions = [('jdown', 'Download JSON from Database'),
                            ('jup', 'Upload JSON to Database'),
                            ('jcsv', 'Create JSON descriptor for Story'),
+                           ('jreset', 'Reset DB JSON Prototypes'),
                            ]
     work_function = SelectField(label='Select Function',
                                 choices=supported_functions)

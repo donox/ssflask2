@@ -94,6 +94,8 @@ def get_image(image_path):
             close_session(db_session)
             photo_string.seek(0)
             wrapped_string = FileWrapper(photo_string)
+            # Note:  this return can be removed if Werkzeug is upgraded to handle ByteIO objects
+            # github.com/unbit/uwsgi/issues/1126
             return Response(wrapped_string, mimetype='image/jpeg', direct_passthrough=True)
             # return send_file(wrapped_string, mimetype='image/jpeg')
     except AttributeError as e:

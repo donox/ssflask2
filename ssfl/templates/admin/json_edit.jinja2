@@ -16,7 +16,9 @@
                         </ul>
                     {% endif %}
                 </div>
+            <div>Note: Reset function should be avoided (unless you are sure)</div>
                 <div class="input">
+
                     {{ form.work_function.label }}
                     {{ form.work_function(placeholder='0000') }}
                     {% if form.work_function.errors %}

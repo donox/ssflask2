@@ -67,6 +67,10 @@ def edit_json_file(session, form):
                 fl.write(json.content)
                 fl.close()
                 return True
+        elif work_function == 'jreset':
+            jsm = JSONStorageManager(session)
+            jsm.update_db_with_descriptor_prototype()
+            return True
         else:
             form.errors['work_function'] = ['Selected Work Function Not Yet Implemented']
             return False

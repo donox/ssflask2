@@ -5,33 +5,53 @@ import json as jsn
 
 
 class JSONStorageManager(object):
+    # Basic Structure
+    descriptor_page_layout = ["PAGE", "name", {"rows": []}]
+    descriptor_row_layout = ["ROW", {"columns": []}]
+    descriptor_column_layout = ["COLUMN", {"cells": []}, "column_width"]
+    descriptor_cell_layout = ["CELL", {"elements": []}]
+    descriptor_element_layout = ["ELEMENT", "element_type", "element", "width"]
+    descriptor_button_fields = ["BUTTON", "id", "button_type", "target", "text_content"]
+
+    # Content Types
     descriptor_picture_fields = ["PICTURE", "id", "url", "title", "caption", "width", "height", "alignment", "alt_text",
                                  "css_style", "css_class", "title_class", "caption_class", "image_class"]
     descriptor_slideshow_fields = ["SLIDESHOW", "title", "title_class", "position", "width", "height", "rotation",
                                    "frame_title", "pictures"]
     descriptor_story_fields = ["STORY", "id", "title", "name", "author", "date", "content", "snippet"]
-    descriptor_button_fields = ["BUTTON", "id", "button_type", "target", "text_content"]
-    descriptor_page_layout = ["PAGE", "name", "row_count", "column_count", "rows", "cells"]
-    descriptor_row_layout = ["ROW", "cells", "column_width"]
-    descriptor_column_layout = ["COLUMN", "cells"]
-    descriptor_cell_layout = ["CELL", "element_type", "element", "width"]
+
+    # Snippets
     descriptor_story_snippet_fields = ["STORY_SNIPPET", "id", "title", "name", "author", "date", "snippet", "photo",
                                        "content", "story_url", "read_more"]
     descriptor_calendar_snippet_fields = ["CALENDAR_SNIPPET", "events", "event_count"]
     descriptor_event_snippet_fields = ["EVENT_SNIPPET", "name", "date", "time", "venue"]
 
+    # Complex/predefined types
+    descriptor_front_page_fields = ["FRONTPAGE", "name",
+                                    {"rows": [["ROW", {"columns": [
+                                        ["COLUMN", {"cells": []}],
+                                        ["COLUMN", {"cells": []}],
+                                        ["COLUMN", {"cells": []}]
+                                    ]}, "column_width"],
+                                              ["ROW", {"columns": [], "column_width": 3}],
+                                              ["ROW", {"columns": []}, "column_width"]
+                                     ]}]
+
     def __init__(self, db_session):
         self.db_session = db_session
         cls = JSONStorageManager
         self.all_fields = dict()
-        self.all_fields['PICTURE'] = cls.descriptor_picture_fields
-        self.all_fields['SLIDESHOW'] = cls.descriptor_slideshow_fields
-        self.all_fields['STORY'] = cls.descriptor_story_fields
-        self.all_fields['BUTTON'] = cls.descriptor_button_fields
         self.all_fields['PAGE'] = cls.descriptor_page_layout
         self.all_fields['ROW'] = cls.descriptor_row_layout
         self.all_fields['COLUMN'] = cls.descriptor_column_layout
         self.all_fields['CELL'] = cls.descriptor_cell_layout
+        self.all_fields['ELEMENT'] = cls.descriptor_element_layout
+        self.all_fields['BUTTON'] = cls.descriptor_button_fields
+
+        self.all_fields['PICTURE'] = cls.descriptor_picture_fields
+        self.all_fields['SLIDESHOW'] = cls.descriptor_slideshow_fields
+        self.all_fields['STORY'] = cls.descriptor_story_fields
+
         self.all_fields['STORY_SNIPPET'] = cls.descriptor_story_snippet_fields
         self.all_fields['CALENDAR_SNIPPET'] = cls.descriptor_calendar_snippet_fields
         self.all_fields['EVENT_SNIPPET'] = cls.descriptor_event_snippet_fields
@@ -51,7 +71,20 @@ class JSONStorageManager(object):
         res = dict()
         res['type'] = desc_type
         for el in descriptor:
-            res[el] = None
+            if type(el) == dict:
+                for key, val in el.items():
+                    if type(val) == list:
+                        res[key] = []
+                        if len(val):
+                            for new_el in val:
+                                if type(new_el) == list:
+                                    res[key].append(JSONStorageManager.make_json_descriptor(new_el[0], new_el))
+                                else:
+                                    res[key].append(JSONStorageManager.make_json_descriptor(val[0], val))
+                    else:
+                        res[key] = val
+            else:
+                res[el] = None
         return res
 
     def get_json_from_name(self, name):
