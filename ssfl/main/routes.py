@@ -38,6 +38,19 @@ def sst_main():
     close_session(db_session)
     return render_template('main/main.jinja2', **context)
 
+@main_bp.route('/main2', methods=['GET'])
+@login_required
+def sst_main2():
+    """Main page route."""
+
+    db_session = create_session(get_engine())
+    msp = MultiStoryPage(db_session)
+    msp.load_descriptor_from_database('P_FRONTPAGE')
+    context = msp.make_multi_element_page_context()
+    context['APP_ROOT'] = request.base_url
+    close_session(db_session)
+    return render_template('main/main.jinja2', **context)
+
 
 @main_bp.route('/main/page/<string:page_ident>', methods=['GET'])
 @login_required
@@ -46,6 +59,20 @@ def sst_get_specific_page(page_ident):
     db_session = create_session(get_engine())
     bp = BuildPage(db_session, page_ident)
     context = bp.display_page()
+    context['APP_ROOT'] = request.base_url
+    close_session(db_session)
+    return render_template('main/specific_page.jinja2', **context)
+
+@main_bp.route('/main/testpage/<string:page_ident>', methods=['GET'])
+@login_required
+def sst_get_specific_test_page(page_ident):
+    """Get specific page by id or name."""
+    db_session = create_session(get_engine())
+    new_page = MultiStoryPage(db_session)
+    new_res = new_page.make_single_page_context(page_ident)    # TODO:  ALLOW PAGE ID
+    context = new_res['rows'][0]['columns'][0]['cells'][0]
+    context['story'] = context['STORY']
+    context['story']['body'] = context['story']['content']
     context['APP_ROOT'] = request.base_url
     close_session(db_session)
     return render_template('main/specific_page.jinja2', **context)

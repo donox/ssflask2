@@ -188,7 +188,8 @@ class SlideShow(object):
     def __init__(self, name, db_session):
         # ['SLIDESHOW', 'title', 'title_class', 'position', 'width', 'height', 'rotation', 'frame_title', 'pictures']
         self.db_session = db_session
-        self.show_desc = jsm.make_json_descriptor('Slideshow', jsm.descriptor_slideshow_fields)
+        self.json_store = jsm(db_session)
+        self.show_desc = self.json_store.get_json_from_name('P_SLIDESHOW')
         self.show_desc['title'] = name
         self.show_desc['title_class'] = 'title_class'
         self.show_desc['position'] = 'center'
@@ -232,7 +233,8 @@ class Picture(object):
     def __init__(self, db_session, photo_id):
         # ['PICTURE', 'id', 'url', 'title', 'caption', 'width', 'height', 'alignment', 'alt_text',
         #             'css_style', 'css_class', 'title_class', 'caption_class', 'image_class']
-        self.picture_desc = jsm.make_json_descriptor('Picture', jsm.descriptor_picture_fields)
+        self.json_store = jsm(db_session)
+        self.picture_desc = self.json_store.get_json_from_name('P_PICTURE')
         self.db_session = db_session
         self.picture_desc['id'] = photo_id
         res = db_session.query(Photo).filter(Photo.id == photo_id).first()

@@ -140,17 +140,16 @@ class Shortcode(object):
 
     def _process_singlepic(self):
         try:
-            keys = self.content_dict.keys()
             photo_id = int(self.content_dict['id'])
             photoframe = SlideShow('NEED PHOTO NAME', db_session=self.session)
             photoframe.add_photo(photo_id)
-            if 'h' in keys:
+            if 'h' in self.content_dict:
                 photoframe.set_dimension('height', self.content_dict['h'])
-            if 'w' in keys:
+            if 'w' in self.content_dict:
                 photoframe.set_dimension('width', self.content_dict['w'])
-            if 'title' in keys:
+            if 'title' in self.content_dict:
                 photoframe.add_title(self.content_dict['title'])
-            if 'align' in keys:
+            if 'align' in self.content_dict:
                 photo_position = self.content_dict['align']
                 if photo_position not in ['left', 'middle', 'right', 'top', 'bottom']:
                     raise ValueError(

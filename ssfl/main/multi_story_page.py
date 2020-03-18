@@ -65,7 +65,8 @@ class MultiStoryPage(object):
         Returns:    JSON descriptor
 
         """
-        self.descriptor = self.storage_manager.get_json_from_name(name)
+        self.descriptor = self.storage_manager.make_json_descriptor(self.storage_manager.get_json_from_name(name))
+        foo = 3
 
     def _set_descriptor_from_csv(self, layout):
         """Read descriptor for front page from csv file and build layout.
@@ -165,8 +166,12 @@ class MultiStoryPage(object):
         # descriptor_story_fields = ["id", "title", "name", "author", "date", "snippet",
         # "photo", "story_url", "content", "read_more"]
         width = 12  # TODO: determine correct input
-        page_name = elem['name']       # will use which ever is set
-        page_id = elem['page_id']
+        page_name = None
+        page_id = None
+        if 'name' in elem:
+            page_name = elem['name']   # will use which ever is set
+        if 'page_id' in elem:
+            page_id = elem['page_id']
         story = Story(self.session, width)
         story.create_story_from_db(page_id= page_id, page_name=page_name)
         elem['title'] = story.get_title()
@@ -216,7 +221,8 @@ class MultiStoryPage(object):
         ev_count = elem['event_count']
         for i in range(ev_count):
             # TODO:  Populate event descriptor
-            event_desc = jsm.make_json_descriptor('Event', jsm.descriptor_event_snippet_fields)
+            event_elements = jsm.make_json_descriptor('Event', jsm.descriptor_event_snippet_fields)
+            event_desc = jsm.convert_descriptor_list_to_dict(event_elements)
             elem['events'].append(event_desc)
             event_desc['name'] = f'Event Number {i}'
             event_desc['date'] = '2001-01-01'
@@ -235,13 +241,21 @@ class MultiStoryPage(object):
         for i, row in enumerate(self.descriptor['rows']):
             for j, col in enumerate(row['columns']):
                 for k, cell in enumerate(col['cells']):
-                    el_type = cell['element_type']
-                    elem = cell['element']
                     width = cell['width']
-                    if el_type == 'StorySnippet':
-                        self._fill_story_snippet(elem)
-                    elif el_type == 'FullStory':
-                        self._fill_story_snippet(elem)
-                    elif el_type == 'CalendarSnippet':
-                        self._fill_calendar_snippet(elem)
+                    if 'StorySnippet' in cell:
+                        self._fill_story_snippet(cell['STORY_SNIPPET'])
+                    elif 'STORY'  in cell:
+                        self._fill_full_story(cell['STORY'])
+                    elif 'CalendarSnippet'  in cell:
+                        self._fill_calendar_snippet(cell['CALENDAR_SNIPPET'])
+        return self.descriptor
+
+    def make_single_page_context(self, story: str) -> Dict[AnyStr, Any]:
+        mgr = jsm(self.session)
+        res = mgr.make_json_descriptor(mgr.get_json_from_name('P_SINGLECELLROW'))
+        res['rows'][0]['columns'][0]['cells'][0]['element'] = "S_STORY"
+        res['rows'][0]['columns'][0]['cells'][0]['element_type'] = "STORY"
+        self.descriptor = mgr.make_json_descriptor(res)
+        self.descriptor['rows'][0]['columns'][0]['cells'][0]['STORY']['name'] = story
+        self.make_multi_element_page_context()
         return self.descriptor

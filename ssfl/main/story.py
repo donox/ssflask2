@@ -30,6 +30,7 @@ class Story(object):
                        6: 'is-half',
                        8: 'is-two-thirds',
                        12: 'is-full'}
+        self.json_store = jsm(session)
         self.story = dict()
         self.pb = None  # PageBody
         self.session = session
@@ -68,7 +69,7 @@ class Story(object):
 
     def _create_read_more(self):
         """Create parameters for a button to go in a button transferring to this page"""
-        button = jsm.make_json_descriptor('Button', jsm.descriptor_button_fields)
+        button = self.json_store.get_json_from_name('P_BUTTON')
         button['button_type'] = 'is-link'
         button['styling'] = 'margin:4px; color:red'
         button['target'] = f'/main/page/{self.pb.page_in_db.id}'

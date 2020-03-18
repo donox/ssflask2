@@ -57,7 +57,7 @@ def edit_json_file(session, form):
                 session.commit()
                 return True
         elif work_function == 'jup':                           # => presumes valid json content
-            with open(direct + '/' + file + '.' + file_type, 'r') as fl:
+            with open(direct + '/' + file + '.' + file_type, 'r', encoding='utf-8-sig') as fl:
                 jsm = JSONStorageManager(session)
                 jsm.add_json(json_name, fl.read())
                 session.commit()
