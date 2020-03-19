@@ -19,14 +19,9 @@ class TestJSONStorageManager(BaseTestCase):
         db_session = create_session(get_engine())
         try:
             mgr = JSONStorageManager(db_session)
-            single_cell = mgr.make_json_descriptor(mgr.descriptor_single_cell_table_fields)
-            self.assertEqual(len(single_cell), 2, "Incorrect single_cell descriptor")
-            res = mgr.make_json_descriptor(mgr.descriptor_front_page_fields)
-            self.assertEqual(len(res), 3, "Incorrect number of items in expansion of descriptor")
-            self.assertEqual(len(res['rows']), 4, "Incorrect number of items in expansion of descriptor")
-            res = mgr.make_json_descriptor(mgr.descriptor_event_snippet_fields)
-            self.assertEqual(res, {'EVENT_SNIPPET': None, 'name': None, 'date': None, 'time': None, 'venue': None},
-                             "Failure matching event_snippet json")
+            single_cell = mgr.make_json_descriptor(mgr.descriptor_front_page_fields)
+            self.assertEqual(len(single_cell), 2, "Broken front page - 1")
+            self.assertEqual(len(single_cell['PAGE']['rows'][0]['ROW']['columns']), 3, "Broken Front Page - 2")
         finally:
             db_session.close()
 
@@ -34,7 +29,7 @@ class TestJSONStorageManager(BaseTestCase):
         db_session = create_session(get_engine())
         try:
             mgr = JSONStorageManager(db_session)
-            res = mgr.make_json_descriptor(mgr.descriptor_single_cell_table_fields)
+            res = mgr.make_json_descriptor(mgr.descriptor_test_fields)
             self.assertEqual(res, ['EVENT_SNIPPET', 'name', 'date', 'time', 'venue'],
                              "Failure matching event_snippet json")
             self.assertEqual(len(res), 3, "Incorrect number of items in expansion of descriptor")
