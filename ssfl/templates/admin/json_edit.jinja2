@@ -16,7 +16,7 @@
                         </ul>
                     {% endif %}
                 </div>
-            <div>Note: Reset function should be avoided (unless you are sure)</div>
+                <div>Note: Reset function should be avoided (unless you are sure)</div>
                 <div class="input">
 
                     {{ form.work_function.label }}
@@ -68,6 +68,28 @@
                     {% if form.file_type.errors %}
                         <ul class="errors">
                             {% for error in form.file_type.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+                <div class="file">
+                    {{ form.is_prototype.label }}
+                    {{ form.is_prototype(placeholder=True) }}
+                    {% if form.is_prototype.errors %}
+                        <ul class="errors">
+                            {% for error in form.is_prototype.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+                <div class="file">
+                    {{ form.compress.label }}
+                    {{ form.compress(placeholder=True) }}
+                    {% if form.compress.errors %}
+                        <ul class="errors">
+                            {% for error in form.compress.errors %}
                                 <li>{{ error }}</li>
                             {% endfor %}
                         </ul>

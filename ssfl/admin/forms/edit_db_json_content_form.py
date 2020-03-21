@@ -24,9 +24,11 @@ class DBJSONEditForm(FlaskForm):
     json_id = IntegerField('JSON DB ID', validators=[Optional()])
     json_name = StringField('JSON Template Name', validators=[Optional()])
     directory = StringField('Directory', validators=[DataRequired()], default=os.path.abspath(os.getcwd()))
-    file_name = StringField('Save File Name', validators=[DataRequired()])
-    file_type = StringField('File Type for Input', default='csv')
-    submit = SubmitField('Save to File')
+    file_name = StringField('File Name', validators=[DataRequired()])
+    file_type = StringField('File Type for Input', default='json')
+    is_prototype = BooleanField('Save as a PROTOTYPE?', default=False)
+    compress = BooleanField('Remove excess whitespace and newlines?', default=False)
+    submit = SubmitField('Submit')
 
     def validate_on_submit(self):
         res = super().validate_on_submit()

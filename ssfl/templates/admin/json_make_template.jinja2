@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+{% extends 'base/layout.jinja2' %}
+
+{% block content %}
+    <section class="container">
+        <div class="columns">
+            <form action="{{ url_for('admin_bp.make_story_json_template') }}" method="post">
+                <div class="input">
+                    {{ form.work_function.label }}
+                    {{ form.work_function(placeholder='0000') }}
+                    {% if form.work_function.errors %}
+                        <ul class="errors">
+                            {% for error in form.work_function.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+
+                <div style="display: none">
+                    <div class="input">
+                        {{ form.json_id.label }}
+                        {{ form.json_id(placeholder='0000') }}
+                        {% if form.json_id.errors %}
+                            <ul class="errors">
+                                {% for error in form.json_id.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+
+                    <div class="input">
+                        {{ form.json_name.label }}
+                        {{ form.json_name(placeholder='JSON template name(e.g., foo-bar-xx)') }}
+                        {% if form.json_name.errors %}
+                            <ul class="errors">
+                                {% for error in form.json_name.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+
+                    <div class="file">
+                        {{ form.template_content.label }}
+                        {{ form.template_content(placeholder=form.default_directory) }}
+                        {% if form.template_content.errors %}
+                            <ul class="errors">
+                                {% for error in form.template_content.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                    <div class="file">
+                        {{ form.is_prototype.label }}
+                        {{ form.is_prototype(placeholder=True) }}
+                        {% if form.is_prototype.errors %}
+                            <ul class="errors">
+                                {% for error in form.is_prototype.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div style="display: none">
+                    <div class="input">
+                        {{ form.story_template.label }}
+                        {{ form.story_template(placeholder='JSON template name(e.g., foo-bar-xx)') }}
+                        {% if form.story_template.errors %}
+                            <ul class="errors">
+                                {% for error in form.story_template.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                    <div class="input">
+                        {{ form.story_slug.label }}
+                        {{ form.story_slug(placeholder='Story Slug(e.g., foo-bar-xx)') }}
+                        {% if form.story_slug.errors %}
+                            <ul class="errors">
+                                {% for error in form.story_slug.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                    <div class="input">
+                        {{ form.story_author.label }}
+                        {{ form.story_author(placeholder='Author - to override that in story') }}
+                        {% if form.story_author.errors %}
+                            <ul class="errors">
+                                {% for error in form.story_author.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                    <div class="input">
+                        {{ form.story_title.label }}
+                        {{ form.story_title(placeholder='Story Title (overrides title in body of story') }}
+                        {% if form.story_title.errors %}
+                            <ul class="errors">
+                                {% for error in form.story_title.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                    <div class="input">
+                        {{ form.snippet_picture_id.label }}
+                        {{ form.snippet_picture_id(placeholder='Photo ID for story snippet') }}
+                        {% if form.snippet_picture_id.errors %}
+                            <ul class="errors">
+                                {% for error in form.snippet_picture_id.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div style="display: block">
+                    <div class="input">
+                        {{ form.page_slot.label }}
+                        {{ form.page_slot(placeholder='1') }}
+                        {% if form.page_slot.errors %}
+                            <ul class="errors">
+                                {% for error in form.page_slot.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                    <div class="input">
+                        {{ form.page_template.label }}
+                        {{ form.page_template(placeholder='1') }}
+                        {% if form.page_template.errors %}
+                            <ul class="errors">
+                                {% for error in form.page_template.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                    <div class="input">
+                        {{ form.page_story_template.label }}
+                        {{ form.page_story_template(placeholder='Template DB name') }}
+                        {% if form.page_story_template.errors %}
+                            <ul class="errors">
+                                {% for error in form.page_story_template.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                    <div class="input">
+                        {{ form.page_width.label }}
+                        {{ form.page_width(placeholder='350') }}
+                        {% if form.page_width.errors %}
+                            <ul class="errors">
+                                {% for error in form.page_width.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="button">
+                    <input id="submit" type="submit" value="Submit">
+                </div>
+                {% if form.errors %}
+                    <ul class="errors">
+                        {% for error, val in form.errors.items() %}
+                            <li>{{ error }} : {{ val }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                {{ form.csrf_token }}
+            </form>
+
+        </div>
+    </section>
+{% endblock %}

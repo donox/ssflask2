@@ -4,21 +4,21 @@
 
 {% block content %}
 <div class="container-fluid">
-    {% for row in rows %} {# Each item corresponds to all stories horizontally across the page #}
+    {% for row in PAGE.rows %} {# Each item corresponds to all stories horizontally across the page #}
     <div class="row">
-        {% for col in row.columns %}
+        {% for col in row.ROW.columns %}
         <div class="col col-md-6 col-lg-4 col-xl-3">
             <div class="container-fluid">
                 {% for cell in col.cells %}
-                    {% if cell.element_type == 'CalendarSnippet' %}
+                    {% if cell.element_type == 'CALENDAR_SNIPPET' %}
                         {% set calendar = cell.element %}
                         {% include 'main/snippet_calendar.jinja2' %}
                     {% endif %}
-                    {% if cell.element_type == 'StorySnippet' %}
+                    {% if cell.element_type == 'STORY_SNIPPET' %}
                         {% set story = cell.element %}
                         {% include 'main/snippet_story.jinja2' %}
                     {% endif %}
-                    {% if cell.element_type == 'FullStory' %}
+                    {% if cell.element_type == 'FULL_STORY' %}
                         {% set story = cell.element %}
                         {% include 'main/full_story.jinja2' %}
                     {% endif %}

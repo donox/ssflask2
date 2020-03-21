@@ -3,6 +3,8 @@ from utilities.sst_exceptions import DataEditingSystemError, log_sst_error
 from ssfl.main.multi_story_page import MultiStoryPage
 from wtforms import ValidationError
 import sys
+import json
+import re
 
 
 # json_id = IntegerField('JSON DB ID', validators=[Optional()])
@@ -27,27 +29,29 @@ def edit_json_file(session, form):
     direct = form.directory.data
     file = form.file_name.data
     file_type = form.file_type.data
+    is_prototype = form.is_prototype.data
+    compress = form.compress.data
     submit = form.submit.data
 
     try:
         if json_id:
-            json = session.query(JSONStore).filter(JSONStore.id == json_id).first()
+            json_store_obj = session.query(JSONStore).filter(JSONStore.id == json_id).first()
         else:
             json_name = form.json_name.data.lower()
-            json = session.query(JSONStore).filter(JSONStore.name == json_name).first()
-        if work_function == 'jdown':        # => from DB to file
-            if json is None:
+            json_store_obj = session.query(JSONStore).filter(JSONStore.name == json_name).first()
+        if work_function == 'jdown':  # => from DB to file
+            if json_store_obj is None:
                 form.errors['JSON Entry Not Found'] = ['There was no entry with that id/name.']
                 return False
-            if json.content != '' and json.content is not None:
+            if json_store_obj.content != '' and json_store_obj.content is not None:
                 with open(direct + '/' + file, 'w') as fl:
-                    fl.write(json.content)
+                    fl.write(json_store_obj.content)
                     fl.close()
                     return True
             else:
                 form.errors['JSON Empty'] = ['Database page had no content']
                 return False
-        elif work_function == 'jcsv':        # => from file to DB for page descriptor
+        elif work_function == 'jcsv':  # => from file to DB for page descriptor
             if file_type == 'csv':
                 msp = MultiStoryPage(session)
                 msp.make_descriptor_from_csv_file(file)
@@ -56,16 +60,16 @@ def edit_json_file(session, form):
                 jsm.add_json(json_name, descriptor)
                 session.commit()
                 return True
-        elif work_function == 'jup':                           # => presumes valid json content
+        elif work_function == 'jup':  # => presumes valid json content
             with open(direct + '/' + file + '.' + file_type, 'r', encoding='utf-8-sig') as fl:
+                content = fl.read()
+                if is_prototype:
+                    json_name = json_name.upper()
+                if compress:
+                    content = ''.join(content.split())
                 jsm = JSONStorageManager(session)
-                jsm.add_json(json_name, fl.read())
+                jsm.add_json(json_name, content)
                 session.commit()
-                return True
-        elif work_function == 'jdown':
-            with open(direct + '/' + file, 'w') as fl:
-                fl.write(json.content)
-                fl.close()
                 return True
         elif work_function == 'jreset':
             jsm = JSONStorageManager(session)

@@ -238,16 +238,17 @@ class MultiStoryPage(object):
         # descriptor_row_layout = ['columns']
         # descriptor_column_layout = ['cells', 'column_width']
         # descriptor_cell_layout = ['element_type', 'element', 'width']
-        for i, row in enumerate(self.descriptor['rows']):
-            for j, col in enumerate(row['columns']):
+        for i, row in enumerate(self.descriptor['PAGE']['rows']):
+            for j, col in enumerate(row['ROW']['columns']):
                 for k, cell in enumerate(col['cells']):
                     width = cell['width']
-                    if 'StorySnippet' in cell:
-                        self._fill_story_snippet(cell['STORY_SNIPPET'])
-                    elif 'STORY'  in cell:
-                        self._fill_full_story(cell['STORY'])
-                    elif 'CalendarSnippet'  in cell:
-                        self._fill_calendar_snippet(cell['CALENDAR_SNIPPET'])
+                    elem = cell['element']
+                    if 'STORY_SNIPPET' in elem:
+                        self._fill_story_snippet(elem)
+                    elif 'STORY' in elem:
+                        self._fill_full_story(elem)
+                    elif 'CALENDAR_SNIPPET' in elem:
+                        self._fill_calendar_snippet(elem)
         return self.descriptor
 
     def make_single_page_context(self, story: str) -> Dict[AnyStr, Any]:

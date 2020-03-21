@@ -17,6 +17,9 @@ class PageManager(object):
                 rec_list.append(rec[key])
             yield rec_list
 
+    def get_page_from_name(self, name):
+        res = self.db_session.query(Page).filter(Page.page_name == name).first()
+        return res
 
 
 class Page(db.Model):

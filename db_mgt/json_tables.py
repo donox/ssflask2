@@ -10,9 +10,11 @@ def get_name_type(name: str) -> int:
     # Case 2: NAME
     # Case 3: name
     # Case 4: F_xxxx
-    if len(name) > 1 and name[0:2] in ('P_', 'S_', 'F_'):
+    if len(name) > 1 and name[0:2] in ('P_', 'S_', 'F_', 'N_'):
         if name[0:2] == 'F_':
             return 'FUNCTION'
+        elif name[0:2] == 'N_':
+            return 'NOPROCESS'
         else:
             return 'PREAMBLE'
     elif name.upper() == name:
@@ -119,12 +121,12 @@ class JSONStorageManager(object):
                                    "width": None, "height": None, "rotation": None,
                                    "frame_title": None, "pictures": []}
     descriptor_story_fields = {"STORY": None, "id": None, "title": None, "name": None, "author": None,
-                               "date": None, "content": None, "snippet": None}
+                               "date": None, "content": None, "snippet": "S_STORY_SNIPPET"}
 
     # Snippets
     descriptor_story_snippet_fields = {"STORY_SNIPPET": None, "id": None, "title": None, "name": None, "author": None,
-                                       "date": None, "snippet": None, "photo": None,
-                                       "content": None, "story_url": None, "read_more": None}
+                                       "date": None, "snippet": None, "photo": "S_PICTURE",
+                                       "content": None, "story_url": None, "read_more": "S_BUTTON"}
     descriptor_calendar_snippet_fields = {"CALENDAR_SNIPPET": None, "events": [], "event_count": None}
     descriptor_event_snippet_fields = {"EVENT_SNIPPET": None, "name": None, "date": None, "time": None, "venue": None}
 
@@ -139,16 +141,19 @@ class JSONStorageManager(object):
     descriptor_three_cell_row_fields = {"THREECELLROW": "REMOVE",
                                         "ROW": {"columns": [{"COLUMN": None, "descriptor": "COLUMN",
                                                              "cells": [{"CELL": None, "descriptor": "CELL",
-                                                                        "element_type": None, "element": None,
-                                                                        "width": None}]},
+                                                                        "element_type": "N_STORY_SNIPPET",
+                                                                        "element": "P_STORY_SNIPPET",
+                                                                        "width": 400}]},
                                                             {"COLUMN": None,
                                                              "cells": [{"CELL": None, "descriptor": "CELL",
-                                                                        "element_type": None, "element": None,
-                                                                        "width": None}]},
+                                                                        "element_type": "N_STORY_SNIPPET",
+                                                                        "element": "P_STORY_SNIPPET",
+                                                                        "width": 400}]},
                                                             {"COLUMN": None,
                                                              "cells": [{"CELL": None, "descriptor": "CELL",
-                                                                        "element_type": None, "element": None,
-                                                                        "width": None}]}
+                                                                        "element_type": "N_STORY_SNIPPET",
+                                                                        "element": "P_STORY_SNIPPET",
+                                                                        "width": 400}]},
                                                             ],
                                                 "descriptor": "ROW"},
                                         "descriptor": "THREECELLROW"}
@@ -223,6 +228,8 @@ class JSONStorageManager(object):
                 result = self.make_json_descriptor(desc)
                 result.pop('descriptor')
                 rlt.add_value_to_result(result)
+            elif tmp == 'NOPROCESS':
+                rlt.add_value_to_result(descriptor[2:])
             elif tmp == 'UPPER':
                 result = self.get_json_from_name('P_' + descriptor)  # ?? right??
                 if not result:
@@ -245,6 +252,8 @@ class JSONStorageManager(object):
                 key_type = get_name_type(key)
                 if key_type in ['UPPER', 'NORMAL']:
                     rlt.add_key_to_result(key)
+                elif key_type == 'NOPROCESS':
+                    rlt.add_key_to_result(descriptor[2:])
                 else:
                     # NOTE:  key in ['PREAMBLE', 'FUNCTION'], so it is equivalent to a key/value pair
                     res = self.make_json_descriptor(key)
@@ -344,6 +353,38 @@ class JSONStorageManager(object):
             db_row = self.db_session.query(JSONStore).filter(JSONStore.name == name).delete()
             self.db_session.commit()
 
+    def find_instances(self, template, target):
+        """Create generator to find instances of target in template - depth first tree walk.
+
+        Args:
+            template: 'JSON' template to search
+            target: entry type expected in template
+
+        Returns: instance of dictionary of type target
+
+        """
+        if not template:
+            return None
+        if isinstance(template, dict):
+            if target in template:
+                yield template
+            for key, val in template.items():
+                if isinstance(val, dict):
+                    for x in self.find_instances(val, target):
+                        yield x
+                elif isinstance(val, list):
+                    for elem in val:
+                        for x in self.find_instances(elem, target):
+                            yield x
+                else:
+                    pass
+            return None
+        elif isinstance(template, list):
+            for elem in template:
+                for x in self.find_instances(elem, target):
+                    yield x
+        else:
+            return None
 
 class JSONStore(db.Model):
     __tablename__ = 'json_store'

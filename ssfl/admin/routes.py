@@ -17,12 +17,14 @@ from db_mgt.photo_tables import Photo
 from db_mgt.setup import get_engine, create_session, close_session
 from .edit_local_file import edit_database_file
 from .edit_json_file import edit_json_file
+from .manage_json_templates import manage_json_templates
 from .forms.edit_db_content_form import DBContentEditForm
 from .forms.manage_calendar_form import ManageCalendarForm
 from .forms.miscellaneous_functions_form import MiscellaneousFunctionsForm
 from .forms.index_pages_form import ManageIndexPagesForm
 from .forms.import_word_doc_form import ImportMSWordDocForm
 from .forms.edit_db_json_content_form import DBJSONEditForm
+from .forms.db_json_manage_templates_form import DBJSONManageTemplatesForm
 from .manage_events.manage_calendar import manage_calendar
 from .manage_events.event_retrieval_support import SelectedEvents
 from .miscellaneous_functions import miscellaneous_functions, import_docx_and_add_to_db
@@ -40,6 +42,38 @@ def flash_errors(form):
     for field, errors in form.errors.items():
         for error in errors:
             flash(u"routes - Error in the %s field - %s" % (getattr(form, field).label.text,  error), 'error')
+
+
+@admin_bp.route('/admin/manageTemplate', methods=['GET', 'POST'])
+@login_required
+def make_story_json_template():
+    sst_admin_access_log.make_info_entry(f"Route: /admin/make_story/")
+    form = DBJSONManageTemplatesForm()
+    try:
+        if request.method == 'GET':
+            context = dict()
+            context['form'] = DBJSONManageTemplatesForm()
+        elif request.method == 'POST':
+            context = dict()
+            context['form'] = form
+            if form.validate_on_submit():
+                db_session = create_session(get_engine())
+                res = manage_json_templates(db_session, form)
+                close_session(db_session)
+                if res:
+                    flash(f'JSON template update successful.', 'success')
+                else:
+                    form.errors['submit'] = 'Error processing json_edit_page'
+                    flash_errors(form)
+        else:
+            raise RequestInvalidMethodError('Invalid method type: {}'.format(request.method))
+    except Exception as e:
+        log_sst_error(sys.exc_info(), get_traceback=True)
+        form.errors['submit'] = 'Error processing JSON_Manage_Templates'
+        flash_errors(form)
+    finally:
+        return render_template('admin/json_make_template.jinja2', **context)    # Executed in all cases
+
 
 @admin_bp.route('/downloads/<string:file_path>', methods=['GET'])
 @login_required
@@ -106,18 +140,7 @@ def get_image(image_path):
         raise e
 
 
-@admin_bp.route('/admin/test', methods=['GET'])
-def admin():
-    """Admin page route."""
-    sst_admin_access_log.make_info_entry("Route: /admin/test")
-    try:
-        raise SiteObjectNotFoundError("Hi", "Boo", "baz")
-    except SiteObjectNotFoundError as e:
-        log_sst_error(e, "testing error processing")
-    return render_template('admin/test.html')
-
-
-def has_no_empty_params(rule):
+def _has_no_empty_params(rule):
     defaults = rule.defaults if rule.defaults is not None else ()
     arguments = rule.arguments if rule.arguments is not None else ()
     return len(defaults) >= len(arguments)
@@ -130,7 +153,7 @@ def site_map():
     for rule in app.url_map.iter_rules():
         # Filter out rules we can't navigate to in a browser
         # and rules that require parameters
-        if "GET" in rule.methods and has_no_empty_params(rule):
+        if "GET" in rule.methods and _has_no_empty_params(rule):
             url = url_for(rule.endpoint, **(rule.defaults or {}))
             links.append((url, rule.endpoint, rule.methods, rule.arguments))
     for x in links:
@@ -330,7 +353,7 @@ def sst_import_page():
 
 @admin_bp.route('/json', methods=['GET', 'POST'])
 @login_required
-def add_json_template():
+def up_down_load_json_template():
     sst_admin_access_log.make_info_entry(f"Route: /admin/json/")
     form = DBJSONEditForm()
     try:

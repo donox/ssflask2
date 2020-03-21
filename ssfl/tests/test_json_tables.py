@@ -37,6 +37,17 @@ class TestJSONStorageManager(BaseTestCase):
         finally:
             db_session.close()
 
+    def test_make_front_descriptor(self):
+        db_session = create_session(get_engine())
+        try:
+            mgr = JSONStorageManager(db_session)
+            json_content = mgr.get_json_from_name('P_NEWFRONTPAGE')
+            single_cell = mgr.make_json_descriptor(json_content)
+            self.assertEqual(len(single_cell), 2, "Broken front page - 1")
+            self.assertEqual(len(single_cell['PAGE']['rows'][0]['ROW']['columns']), 3, "Broken Front Page - 2")
+        finally:
+            db_session.close()
+
     def test_make_single_story_page(self):
         db_session = create_session(get_engine())
         try:
@@ -52,5 +63,17 @@ class TestJSONStorageManager(BaseTestCase):
             new_res = new_page.make_multi_element_page_context()
             self.assertEqual(len(new_res['rows'][0]['columns'][0]['cells'][0]['STORY']['content']), 5780,
                              "Story Expansion was wrong length")
+        finally:
+            db_session.close()
+
+    def test_find_instances(self):
+        db_session = create_session(get_engine())
+        try:
+            mgr = JSONStorageManager(db_session)
+            res = mgr.make_json_descriptor(mgr.get_json_from_name('fpage'))
+            count = 0
+            for x in mgr.find_instances(res, 'CELL'):
+                count += 1
+            self.assertEqual(count, 9, "Did not find correct number of cells")
         finally:
             db_session.close()

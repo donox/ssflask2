@@ -45,7 +45,7 @@ def sst_main2():
 
     db_session = create_session(get_engine())
     msp = MultiStoryPage(db_session)
-    msp.load_descriptor_from_database('P_FRONTPAGE')
+    msp.load_descriptor_from_database('fpage')
     context = msp.make_multi_element_page_context()
     context['APP_ROOT'] = request.base_url
     close_session(db_session)
