@@ -7,7 +7,7 @@
             <form action="{{ url_for('admin_bp.make_story_json_template') }}" method="post">
                 <div class="input">
                     {{ form.work_function.label }}
-                    {{ form.work_function(placeholder='0000') }}
+                    {{ form.work_function }}
                     {% if form.work_function.errors %}
                         <ul class="errors">
                             {% for error in form.work_function.errors %}
@@ -17,10 +17,10 @@
                     {% endif %}
                 </div>
 
-                <div style="display: none">
+                <div id="jcreate" style="display: block">
                     <div class="input">
                         {{ form.json_id.label }}
-                        {{ form.json_id(placeholder='0000') }}
+                        {{ form.json_id(placeholder='0') }}
                         {% if form.json_id.errors %}
                             <ul class="errors">
                                 {% for error in form.json_id.errors %}
@@ -32,7 +32,7 @@
 
                     <div class="input">
                         {{ form.json_name.label }}
-                        {{ form.json_name(placeholder='JSON template name(e.g., foo-bar-xx)') }}
+                        {{ form.json_name(placeholder='(e.g., foo-bar-xx)') }}
                         {% if form.json_name.errors %}
                             <ul class="errors">
                                 {% for error in form.json_name.errors %}
@@ -66,10 +66,10 @@
                     </div>
                 </div>
 
-                <div style="display: none">
+                <div id="jedit" style="display: none">
                     <div class="input">
                         {{ form.story_template.label }}
-                        {{ form.story_template(placeholder='JSON template name(e.g., foo-bar-xx)') }}
+                        {{ form.story_template(placeholder='(e.g., foo-bar-xx)') }}
                         {% if form.story_template.errors %}
                             <ul class="errors">
                                 {% for error in form.story_template.errors %}
@@ -91,7 +91,7 @@
                     </div>
                     <div class="input">
                         {{ form.story_author.label }}
-                        {{ form.story_author(placeholder='Author - to override that in story') }}
+                        {{ form.story_author(placeholder='Author') }}
                         {% if form.story_author.errors %}
                             <ul class="errors">
                                 {% for error in form.story_author.errors %}
@@ -102,7 +102,7 @@
                     </div>
                     <div class="input">
                         {{ form.story_title.label }}
-                        {{ form.story_title(placeholder='Story Title (overrides title in body of story') }}
+                        {{ form.story_title(placeholder='Story Title') }}
                         {% if form.story_title.errors %}
                             <ul class="errors">
                                 {% for error in form.story_title.errors %}
@@ -113,7 +113,7 @@
                     </div>
                     <div class="input">
                         {{ form.snippet_picture_id.label }}
-                        {{ form.snippet_picture_id(placeholder='Photo ID for story snippet') }}
+                        {{ form.snippet_picture_id(placeholder='Snippet Photo ID') }}
                         {% if form.snippet_picture_id.errors %}
                             <ul class="errors">
                                 {% for error in form.snippet_picture_id.errors %}
@@ -124,7 +124,7 @@
                     </div>
                 </div>
 
-                <div style="display: block">
+                <div id="jpage" style="display: none">
                     <div class="input">
                         {{ form.page_slot.label }}
                         {{ form.page_slot(placeholder='1') }}
@@ -184,5 +184,16 @@
             </form>
 
         </div>
+    <script>
+        $ = jQuery;
+        $('#js1').change(function(){
+            $('#jcreate').hide();
+            $('#jedit').hide();
+            $('#jpage').hide();
+            $('#jdelete').hide();
+            let opt = $('#js1 option:selected').val();
+            $('#' + opt).show();
+        });
+    </script>
     </section>
 {% endblock %}

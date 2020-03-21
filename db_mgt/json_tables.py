@@ -59,16 +59,12 @@ class _KeepResult(object):
         self.result[name] = val
 
     def add_key_to_result(self, key):
-        if type(key) != str:
-            foo = 3
         if self.res_val != 'UNUSED':
             self.result[key] = self.res_val
         else:
             self.res_key = key
 
     def add_value_to_result(self, val):
-        if type(self.res_key) != str:
-            foo = 3
         if self.res_key != 'UNUSED':
             self.result[self.res_key] = val
         else:

@@ -32,24 +32,12 @@ def sst_main():
 
     db_session = create_session(get_engine())
     msp = MultiStoryPage(db_session)
-    msp.load_descriptor_from_database('front-page')
-    context = msp.make_multi_element_page_context()
-    context['APP_ROOT'] = request.base_url
-    close_session(db_session)
-    return render_template('main/main.jinja2', **context)
-
-@main_bp.route('/main2', methods=['GET'])
-@login_required
-def sst_main2():
-    """Main page route."""
-
-    db_session = create_session(get_engine())
-    msp = MultiStoryPage(db_session)
     msp.load_descriptor_from_database('fpage')
     context = msp.make_multi_element_page_context()
     context['APP_ROOT'] = request.base_url
     close_session(db_session)
-    return render_template('main/main.jinja2', **context)
+    res = render_template('main/main.jinja2', **context)
+    return res
 
 
 @main_bp.route('/main/page/<string:page_ident>', methods=['GET'])

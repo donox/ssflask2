@@ -66,7 +66,6 @@ class MultiStoryPage(object):
 
         """
         self.descriptor = self.storage_manager.make_json_descriptor(self.storage_manager.get_json_from_name(name))
-        foo = 3
 
     def _set_descriptor_from_csv(self, layout):
         """Read descriptor for front page from csv file and build layout.

@@ -20,6 +20,9 @@ import re
 # story_author = StringField('Story Author (optional)', validators=[Optional()])
 # story_title = StringField('Story Title (optional)', validators=[Optional()])
 # snippet_picture_id = IntegerField('ID for picture for story snippet', validators=[Optional()])
+# snip_pic_height = IntegerField('Photo height in pixels', validators=[Optional()])
+# snip_pic_width = IntegerField('Photo width in pixels', validators=[Optional()])
+# snip_pic_position = SelectField(label='Select Function', choices=['left', 'center', 'right'])
 # page_slot = IntegerField('Slot on page for snippet', validators=[Optional()])
 # page_template = StringField('JSON Template for page layout', validators=[Optional()])
 # page_story_template = StringField('JSON Template of story to insert', validators=[Optional()])
@@ -40,6 +43,9 @@ def manage_json_templates(db_session, form):
     story_slug = form.story_slug.data
     story_author = form.story_author.data
     story_title = form.story_title.data
+    snip_pic_height = form.snip_pic_height
+    snip_pic_width = form.snip_pic_width
+    snip_pic_position = form.snip_pic_position
     snippet_picture_id = form.snippet_picture_id.data
 
     page_slot = form.page_slot.data
@@ -81,6 +87,9 @@ def manage_json_templates(db_session, form):
             template['author'] = story_author
             template['name'] = story_slug
             template['snippet']['photo']['id'] = snippet_picture_id
+            template['snippet']['photo']['width'] = snip_pic_width
+            template['snippet']['photo']['height'] = snip_pic_height
+            template['snippet']['photo']['alignment'] = snip_pic_position
             jsm.add_json(story_template, template)
             return True
 
@@ -102,6 +111,9 @@ def manage_json_templates(db_session, form):
                     elem['author'] = insert_template['author']
                     elem['title'] = insert_template['title']
                     elem['photo']['id'] = insert_template['snippet']['photo']['id']
+                    elem['photo']['height'] = insert_template['snippet']['photo']['height']
+                    elem['photo']['width'] = insert_template['snippet']['photo']['width']
+                    elem['photo']['alignment'] = insert_template['snippet']['photo']['alignment']
                     jsm.add_json(page_template, template)
                     return True
 

@@ -21,7 +21,7 @@ class DBJSONManageTemplatesForm(FlaskForm):
                            ('jdelete', 'Remove existing JSON entry'),
                            ]
     work_function = SelectField(label='Select Function',
-                                choices=supported_functions)
+                                choices=supported_functions, render_kw={"id": "js1"})
     json_id = IntegerField('JSON DB ID', validators=[Optional()])
     json_name = StringField('JSON Template Name', validators=[Optional()])
     template_content = StringField('Name of JSON Template to Expand as Content', validators=[Optional()])
@@ -31,7 +31,10 @@ class DBJSONManageTemplatesForm(FlaskForm):
     story_slug = StringField('Slug for story to process', validators=[Optional()])
     story_author = StringField('Story Author (optional)', validators=[Optional()])
     story_title = StringField('Story Title (optional)', validators=[Optional()])
-    snippet_picture_id = IntegerField('ID for picture for story snippet', validators=[Optional()])
+    snippet_picture_id = IntegerField('ID for photo for story snippet', validators=[Optional()])
+    snip_pic_height = IntegerField('Photo height in pixels', validators=[Optional()])
+    snip_pic_width = IntegerField('Photo width in pixels', validators=[Optional()])
+    snip_pic_position = SelectField(label='Select Function', choices=['left', 'center', 'right'])
     page_slot = IntegerField('Slot on page for snippet', validators=[Optional()])
     page_template = StringField('JSON Template for page layout', validators=[Optional()])
     page_story_template = StringField('JSON Template of story to insert', validators=[Optional()])
