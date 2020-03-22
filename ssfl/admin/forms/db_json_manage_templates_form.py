@@ -4,6 +4,7 @@ import os
 from utilities.sst_exceptions import DataEditingSystemError
 from flask_wtf import FlaskForm
 
+
 # id = db.Column(db.Integer, primary_key=True, autoincrement=True)
 # name = db.Column(db.String(), nullable=False, unique=True)
 # active = db.Column(db.Boolean(), default=True)
@@ -17,28 +18,48 @@ class DBJSONManageTemplatesForm(FlaskForm):
     """
     supported_functions = [('jcreate', 'Create New JSON DB entry'),
                            ('jedit', 'Edit Story JSON'),
+                           ('jcal', 'Edit Calendar JSON'),
                            ('jpage', 'Edit Page JSON'),
                            ('jdelete', 'Remove existing JSON entry'),
+                           ('jreload', 'Reload DB Prototype Templates'),
                            ]
+    picture_alignment_positions = [('left', 'Align Left'),
+                                   ('center', 'Align Center'),
+                                   ('right', 'Align Right'),
+                                   ]
     work_function = SelectField(label='Select Function',
                                 choices=supported_functions, render_kw={"id": "js1"})
-    json_id = IntegerField('JSON DB ID', validators=[Optional()])
-    json_name = StringField('JSON Template Name', validators=[Optional()])
-    template_content = StringField('Name of JSON Template to Expand as Content', validators=[Optional()])
-    is_prototype = BooleanField('Template is prototype', default=False)
-    compress = BooleanField('Remove excess whitespace and newlines?', default=False)
-    story_template = StringField('JSON Template to Complete', validators=[Optional()])
-    story_slug = StringField('Slug for story to process', validators=[Optional()])
-    story_author = StringField('Story Author (optional)', validators=[Optional()])
-    story_title = StringField('Story Title (optional)', validators=[Optional()])
-    snippet_picture_id = IntegerField('ID for photo for story snippet', validators=[Optional()])
-    snip_pic_height = IntegerField('Photo height in pixels', validators=[Optional()])
-    snip_pic_width = IntegerField('Photo width in pixels', validators=[Optional()])
-    snip_pic_position = SelectField(label='Select Function', choices=['left', 'center', 'right'])
-    page_slot = IntegerField('Slot on page for snippet', validators=[Optional()])
-    page_template = StringField('JSON Template for page layout', validators=[Optional()])
-    page_story_template = StringField('JSON Template of story to insert', validators=[Optional()])
-    page_width = IntegerField('Width of story display (in pixels)', validators=[Optional()])
+    json_id = IntegerField('JSON DB ID', validators=[Optional()], render_kw={"class": "jcreate"})
+    json_name = StringField('JSON Template Name', validators=[Optional()], render_kw={"class": "jcreate"})
+    template_content = StringField('Name of JSON Template to Expand as Content', validators=[Optional()],
+                                   render_kw={"class": "jcreate"})
+    is_prototype = BooleanField('Template is prototype', default=False, render_kw={"class": "jcreate"})
+    compress = BooleanField('Remove excess whitespace and newlines?', default=False, render_kw={"class": "jcreate"})
+
+    story_template = StringField('JSON Template to Complete', validators=[Optional()], render_kw={"class": "jedit"})
+    story_slug = StringField('Slug for story to process', validators=[Optional()], render_kw={"class": "jedit"})
+    story_author = StringField('Story Author (optional)', validators=[Optional()], render_kw={"class": "jedit"})
+    story_title = StringField('Story Title (optional)', validators=[Optional()], render_kw={"class": "jedit"})
+    snippet_picture_id = IntegerField('ID for photo for story snippet', validators=[Optional()],
+                                      render_kw={"class": "jedit"})
+
+    cal_template = StringField('JSON Template for Calendar', validators=[Optional()], render_kw={"class": "jcal"})
+    cal_result_template = StringField('JSON Template to Create', validators=[Optional()], render_kw={"class": "jcal"})
+    cal_display_count = IntegerField('Number of events to display', validators=[Optional()],
+                                     render_kw={"class": "jcal"}, default=6)
+    cal_width = IntegerField('Number of columns in display', validators=[Optional()],
+                             render_kw={"class": "jcal"}, default=4)
+
+    snip_pic_height = IntegerField('Photo height in pixels', validators=[Optional()], render_kw={"class": "jedit"})
+    snip_pic_width = IntegerField('Photo width in pixels', validators=[Optional()], render_kw={"class": "jedit"})
+    snip_pic_position = SelectField(label='Select Function', choices=picture_alignment_positions, default='left',
+                                    render_kw={"class": "jedit"})
+    page_slot = IntegerField('Slot on page for snippet', validators=[Optional()], render_kw={"class": "jpage"})
+    page_template = StringField('JSON Template for page layout', validators=[Optional()], render_kw={"class": "jpage"})
+    page_story_template = StringField('JSON Template of story to insert', validators=[Optional()],
+                                      render_kw={"class": "jpage"})
+    page_width = IntegerField('Width of story display (in pixels)', validators=[Optional()],
+                              render_kw={"class": "jpage"})
     submit = SubmitField('Submit')
 
     def validate_on_submit(self):

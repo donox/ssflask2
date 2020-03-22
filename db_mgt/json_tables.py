@@ -5,6 +5,7 @@ import json as jsn
 from collections import defaultdict
 
 
+
 def get_name_type(name: str) -> int:
     # Case 1: X_NAME for X = S, P
     # Case 2: NAME
@@ -123,7 +124,8 @@ class JSONStorageManager(object):
     descriptor_story_snippet_fields = {"STORY_SNIPPET": None, "id": None, "title": None, "name": None, "author": None,
                                        "date": None, "snippet": None, "photo": "S_PICTURE",
                                        "content": None, "story_url": None, "read_more": "S_BUTTON"}
-    descriptor_calendar_snippet_fields = {"CALENDAR_SNIPPET": None, "events": [], "event_count": None}
+    descriptor_calendar_snippet_fields = {"CALENDAR_SNIPPET": None, "events": [], "event_count": None, "width": None,
+                                          "audience": [], "categories": []}
     descriptor_event_snippet_fields = {"EVENT_SNIPPET": None, "name": None, "date": None, "time": None, "venue": None}
 
     # Complex/predefined types
@@ -137,18 +139,18 @@ class JSONStorageManager(object):
     descriptor_three_cell_row_fields = {"THREECELLROW": "REMOVE",
                                         "ROW": {"columns": [{"COLUMN": None, "descriptor": "COLUMN",
                                                              "cells": [{"CELL": None, "descriptor": "CELL",
-                                                                        "element_type": "N_STORY_SNIPPET",
-                                                                        "element": "P_STORY_SNIPPET",
+                                                                        "element_type": None,
+                                                                        "element":None,
                                                                         "width": 400}]},
                                                             {"COLUMN": None,
                                                              "cells": [{"CELL": None, "descriptor": "CELL",
-                                                                        "element_type": "N_STORY_SNIPPET",
-                                                                        "element": "P_STORY_SNIPPET",
+                                                                        "element_type": None,
+                                                                        "element":None,
                                                                         "width": 400}]},
                                                             {"COLUMN": None,
                                                              "cells": [{"CELL": None, "descriptor": "CELL",
-                                                                        "element_type": "N_STORY_SNIPPET",
-                                                                        "element": "P_STORY_SNIPPET",
+                                                                        "element_type": None,
+                                                                        "element":None,
                                                                         "width": 400}]},
                                                             ],
                                                 "descriptor": "ROW"},
@@ -186,6 +188,7 @@ class JSONStorageManager(object):
 
         self.template_functions = dict()
         self.template_functions['ONECELLCOLUMN'] = self._f_onecellcolumn
+
 
     def _f_onecellcolumn(self, **kwargs):
         # NEEDS REWRITING???

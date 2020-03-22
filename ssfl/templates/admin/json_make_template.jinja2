@@ -17,7 +17,7 @@
                     {% endif %}
                 </div>
 
-                <div id="jcreate" style="display: block">
+                <div id="jcreate" class="jcreate" style="display: None">
                     <div class="input">
                         {{ form.json_id.label }}
                         {{ form.json_id(placeholder='0') }}
@@ -66,7 +66,7 @@
                     </div>
                 </div>
 
-                <div id="jedit" style="display: none">
+                <div id="jedit" class="jedit" style="display: None">
                     <div class="input">
                         {{ form.story_template.label }}
                         {{ form.story_template(placeholder='(e.g., foo-bar-xx)') }}
@@ -124,7 +124,55 @@
                     </div>
                 </div>
 
-                <div id="jpage" style="display: none">
+
+                <div id="jcal" class="jcal" style="display: None">
+                    <div class="input">
+                        {{ form.cal_template.label }}
+                        {{ form.cal_template() }}
+                        {% if form.cal_template.errors %}
+                            <ul class="errors">
+                                {% for error in form.cal_template.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                    <div class="input">
+                        {{ form.cal_result_template.label }}
+                        {{ form.cal_result_template() }}
+                        {% if form.cal_result_template.errors %}
+                            <ul class="errors">
+                                {% for error in form.cal_result_template.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                    <div class="input">
+                        {{ form.cal_display_count.label }}
+                        {{ form.cal_display_count() }}
+                        {% if form.cal_display_count.errors %}
+                            <ul class="errors">
+                                {% for error in form.cal_display_count.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                    <div class="input">
+                        {{ form.cal_width.label }}
+                        {{ form.cal_width() }}
+                        {% if form.cal_width.errors %}
+                            <ul class="errors">
+                                {% for error in form.cal_width.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div id="jpage" class="jpage" style="display: None">
                     <div class="input">
                         {{ form.page_slot.label }}
                         {{ form.page_slot(placeholder='1') }}
@@ -170,6 +218,11 @@
                         {% endif %}
                     </div>
                 </div>
+
+                <div class="jreload" style="display: None">
+
+                </div>
+
                 <div class="button">
                     <input id="submit" type="submit" value="Submit">
                 </div>
@@ -184,16 +237,18 @@
             </form>
 
         </div>
-    <script>
+        <script>
         $ = jQuery;
         $('#js1').change(function(){
-            $('#jcreate').hide();
-            $('#jedit').hide();
-            $('#jpage').hide();
-            $('#jdelete').hide();
+            $('.jcreate').hide();
+            $('.jedit').hide();
+            $('.jpage').hide();
+            $('.jcal').hide();
+            $('.jdelete').hide();
+            $('.jreload').hide();
             let opt = $('#js1 option:selected').val();
-            $('#' + opt).show();
+            $('.' + opt).show();
         });
-    </script>
+        </script>
     </section>
 {% endblock %}

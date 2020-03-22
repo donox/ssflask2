@@ -2,6 +2,7 @@ import csv
 from ssfl.main.story import Story
 from db_mgt.photo_tables import Photo
 from db_mgt.json_tables import JSONStorageManager as jsm
+from ssfl.main.calendar_snippet import Calendar
 from config import Config
 from json import dumps
 from typing import Dict, AnyStr, Any
@@ -215,18 +216,14 @@ class MultiStoryPage(object):
 
     def _fill_calendar_snippet(self, elem):
         """Fill calendar event snippet."""
-        # descriptor_calendar_snippet_fields = ["events", "event_count"]
-        # descriptor_event_snippet_fields = ["name", "date", "time", "venue"]
+        # {"CALENDAR_SNIPPET": None, "events": [], "event_count": None, "width": None,
+        #  "audience": [], "categories": []}
         ev_count = elem['event_count']
-        for i in range(ev_count):
-            # TODO:  Populate event descriptor
-            event_elements = jsm.make_json_descriptor('Event', jsm.descriptor_event_snippet_fields)
-            event_desc = jsm.convert_descriptor_list_to_dict(event_elements)
-            elem['events'].append(event_desc)
-            event_desc['name'] = f'Event Number {i}'
-            event_desc['date'] = '2001-01-01'
-            event_desc['time'] = '13:00:00'
-            event_desc['venue'] = 'Hickory Cove'
+        calendar = Calendar(self.session, elem['width'])
+        calendar.create_daily_plugin(elem['event_count'], 'NOTHING')
+        content = calendar.get_calendar_snippet_data()
+        elem['events'] = content['events']
+
 
     def make_multi_element_page_context(self) -> Dict[AnyStr, Any]:
         """Create context for a page based on current descriptor.

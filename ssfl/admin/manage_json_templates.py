@@ -2,6 +2,7 @@ from db_mgt.json_tables import JSONStore, JSONStorageManager
 from utilities.sst_exceptions import DataEditingSystemError, log_sst_error
 from db_mgt.page_tables import PageManager
 import sys
+from ssfl.main.calendar_snippet import Calendar, SelectedEvents
 import json
 import re
 
@@ -23,11 +24,19 @@ import re
 # snip_pic_height = IntegerField('Photo height in pixels', validators=[Optional()])
 # snip_pic_width = IntegerField('Photo width in pixels', validators=[Optional()])
 # snip_pic_position = SelectField(label='Select Function', choices=['left', 'center', 'right'])
+# cal_template = StringField('JSON Template for Calendar', validators=[Optional()], render_kw={"class": "jcal"})
+# cal_result_template = StringField('JSON Template to Create', validators=[Optional()], render_kw={"class": "jcal"})
+# cal_display_count = IntegerField('Number of events to display', validators=[Optional()],
+#                                      render_kw={"class": "jcal"}, default=6)
+# cal_width = IntegerField('Number of columns in display', validators=[Optional()],
+#                              render_kw={"class": "jcal"}, default=4)
 # page_slot = IntegerField('Slot on page for snippet', validators=[Optional()])
 # page_template = StringField('JSON Template for page layout', validators=[Optional()])
 # page_story_template = StringField('JSON Template of story to insert', validators=[Optional()])
 # page_width = IntegerField('Width of story display (in pixels)', validators=[Optional()])
 # submit = SubmitField('Submit')
+
+
 
 def manage_json_templates(db_session, form):
     """Create, edit, modify JSON story entry in JSONStore.
@@ -43,10 +52,15 @@ def manage_json_templates(db_session, form):
     story_slug = form.story_slug.data
     story_author = form.story_author.data
     story_title = form.story_title.data
-    snip_pic_height = form.snip_pic_height
-    snip_pic_width = form.snip_pic_width
-    snip_pic_position = form.snip_pic_position
+    snip_pic_height = form.snip_pic_height.data
+    snip_pic_width = form.snip_pic_width.data
+    snip_pic_position = form.snip_pic_position.data
     snippet_picture_id = form.snippet_picture_id.data
+
+    cal_template = form.cal_template.data
+    cal_result_template = form.cal_result_template.data
+    cal_width = form.cal_width.data
+    cal_display_count = form.cal_display_count.data
 
     page_slot = form.page_slot.data
     page_template = form.page_template.data
@@ -86,6 +100,8 @@ def manage_json_templates(db_session, form):
                 return False
             template['author'] = story_author
             template['name'] = story_slug
+            template['snippet']['author'] = story_author
+            template['snippet']['name'] = story_slug
             template['snippet']['photo']['id'] = snippet_picture_id
             template['snippet']['photo']['width'] = snip_pic_width
             template['snippet']['photo']['height'] = snip_pic_height
@@ -93,35 +109,62 @@ def manage_json_templates(db_session, form):
             jsm.add_json(story_template, template)
             return True
 
-        # Edit page layout to insert a story
+        # Edit calendar snippet
+        elif work_function == 'jcal':
+            template = jsm.get_json_from_name(cal_template)
+            if not template:
+                form.errors['Nonexistent JSON template'] = ['Specified template does not exist']
+                return False
+            # TODO:  This should customize audience, categories, width,  Getting events occurs when page generated
+            calendar = Calendar(db_session, cal_width)
+            calendar.create_daily_plugin(cal_display_count, 'NOTHING')
+            content = calendar.get_calendar_snippet_data()
+            template['event_count'] = cal_display_count
+            template['width'] = content['width']
+            jsm.add_json(cal_result_template, template)
+            return True
+
+        # Edit page layout to insert a snippet
         elif work_function == 'jpage':
             template = jsm.get_json_from_name(page_template)
             if not template:
                 form.errors['Nonexistent JSON page template'] = ['Specified page template does not exist']
                 return False
             insert_template = jsm.get_json_from_name(page_story_template)
+
             if not insert_template:
                 form.errors['Nonexistent story template'] = ['Specified story does not exist']
                 return False
+            entry_type = [x for x in ['STORY_SNIPPET', 'CALENDAR_SNIPPET'] if x in insert_template][0]
             count = 0
-            for elem in jsm.find_instances(template, 'STORY_SNIPPET'):
+            for elem in jsm.find_instances(template, 'CELL'):
                 count += 1
                 if count == page_slot:
-                    elem['name'] = insert_template['name']
-                    elem['author'] = insert_template['author']
-                    elem['title'] = insert_template['title']
-                    elem['photo']['id'] = insert_template['snippet']['photo']['id']
-                    elem['photo']['height'] = insert_template['snippet']['photo']['height']
-                    elem['photo']['width'] = insert_template['snippet']['photo']['width']
-                    elem['photo']['alignment'] = insert_template['snippet']['photo']['alignment']
-                    jsm.add_json(page_template, template)
-                    return True
+                    if entry_type == 'STORY_SNIPPET':
+                        elem['element'] = insert_template['snippet']
+                        # These next 2 items should be corrected in the snippet
+                        elem['element']['author'] = insert_template['author']  # Fix as story builds structure to older spec
+                        elem['element']['name'] = insert_template['name']
+                        elem['element_type'] = 'STORY_SNIPPET'
+                        jsm.add_json(page_template, template)
+                        return True
+                    elif entry_type == 'CALENDAR_SNIPPET':
+                        elem['element'] = insert_template
+                        elem['element_type'] = 'CALENDAR_SNIPPET'
+                        jsm.add_json(page_template, template)
+                        return True
 
 
         elif work_function == 'jreset':
             jsm = JSONStorageManager(db_session)
             jsm.update_db_with_descriptor_prototype()
             return True
+
+        elif work_function == 'jreload':
+            jsm = JSONStorageManager(db_session)
+            jsm.update_db_with_descriptor_prototype()
+            return True
+
         else:
             form.errors['work_function'] = ['Selected Work Function Not Yet Implemented']
             return False

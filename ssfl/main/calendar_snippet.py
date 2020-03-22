@@ -7,17 +7,18 @@ from ssfl.admin.manage_events.event_retrieval_support import get_random_events, 
 from flask.views import MethodView
 from db_mgt.setup import get_engine, create_session, close_session
 import datetime as dt
+from db_mgt.json_tables import JSONStorageManager
 
 
 class Calendar(object):
     def __init__(self, session, width):
+        self.db_session = session
         width_sizes = {3: 'is-one-quarter',
                        4: 'is-one-third',
                        6: 'is-half',
                        8: 'is-two-thirds',
                        12: 'is-full'}
         self.cal_data = dict()
-        self.session = session
         self.snippet_width = width  # Width to display on front page in columns (1-12)
         self.cal_data['width'] = width
         self.cal_data['width-class'] = None
@@ -28,21 +29,20 @@ class Calendar(object):
         start = dt.datetime.now()
         end = dt.datetime.now() + dt.timedelta(hours=96)
         audience = ['IL', 'AL']
-        categories = ['resident clubs', 'event', 'wellness']
-        events = SelectedEvents(self.session, start, end, audience, categories)
+        categories = ['resident clubs', 'event', 'wellness', 'religion', 'community']
+        events = SelectedEvents(self.db_session, start, end, audience, categories)
         events = events.all_events[0:6]
         res = []
+        jsm = JSONStorageManager(self.db_session)
+        empty_event = jsm.get_json_from_name('P_EVENT_SNIPPET')
         for event in events:
-            evt_dict = {}
-            evt_dict['title'] = event.event_name
-            evt_dict['description'] = event.event_description
+            evt_dict = empty_event.copy()
+            evt_dict['name'] = event.event_name
             evt_dict['venue'] = event.event_location
-            evt_dict['all_day'] = event.all_day
-            evt_dict['ec_pickup'] = event.ec_pickup
-            evt_dict['event_cost'] = event.event_cost
-            evt_dict['event_end'] = event.event_end
-            evt_dict['event_start'] = event.event_start
-            evt_dict['event_sign_up'] = event.event_sign_up
-            evt_dict['hl_pick_up'] = event.hl_pick_up
+            evt_dict['date'] = event.event_start.date().strftime('%b-%d')
+            evt_dict['time'] = event.event_start.time().strftime('%H:%M')
             res.append(evt_dict)
         self.cal_data['events'] = res
+
+    def get_calendar_snippet_data(self):
+        return self.cal_data
