@@ -34,6 +34,7 @@
     </style>
 
     <script>
+        //# sourceURL=calendarextra.js
         document.addEventListener('DOMContentLoaded', function () {
             let calendarEl = document.getElementById('calendar');
             let calendar = new FullCalendar.Calendar(calendarEl, {
@@ -127,19 +128,19 @@
                     tmpnode.style.opacity = '100%'
                     tmpnode.setAttribute('class', 'event_popup');
 
-                    let tmpnode2 = document.createElement('div');
+                    let tmpnode2 = document.createElement('p');
                     tmpnode2.setAttribute('class', 'event_desc');
                     tmpnode2.textContent = info.event.extendedProps.description;
                     tmpnode.appendChild(tmpnode2);
 
-                    tmpnode2 = document.createElement('div');
-                    tmpnode2.setAttribute('class', 'event_cat');
-                    tmpnode2.textContent = info.event.extendedProps.categories;
+                    tmpnode2 = document.createElement('p');
+                    tmpnode2.setAttribute('class', 'event_loc');
+                    tmpnode2.textContent = info.event.extendedProps.venue;
                     tmpnode.appendChild(tmpnode2);
 
-                    tmpnode2 = document.createElement('div');
-                    tmpnode2.setAttribute('class', 'event_aud');
-                    tmpnode2.textContent = info.event.extendedProps.audiences;
+                    tmpnode2 = document.createElement('p');
+                    tmpnode2.setAttribute('class', 'event_cost');
+                    tmpnode2.textContent = info.event.extendedProps.cost;
                     tmpnode.appendChild(tmpnode2);
 
                     info.el.appendChild(tmpnode);

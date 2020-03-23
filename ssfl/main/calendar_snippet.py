@@ -10,28 +10,21 @@ import datetime as dt
 from db_mgt.json_tables import JSONStorageManager
 
 
+calendar_audiences = ['IL', 'AL']
+calendar_categories = ['resident clubs', 'event', 'wellness', 'religion', 'community']
+
+
 class Calendar(object):
     def __init__(self, session, width):
         self.db_session = session
-        width_sizes = {3: 'is-one-quarter',
-                       4: 'is-one-third',
-                       6: 'is-half',
-                       8: 'is-two-thirds',
-                       12: 'is-full'}
         self.cal_data = dict()
-        self.snippet_width = width  # Width to display on front page in columns (1-12)
         self.cal_data['width'] = width
-        self.cal_data['width-class'] = None
-        if width in width_sizes.keys():
-            self.cal_data['width-class'] = width_sizes[width]
 
-    def create_daily_plugin(self, stuff, xx):
+    def create_daily_plugin(self, event_count, audiences=calendar_audiences, categories=calendar_categories):
         start = dt.datetime.now()
         end = dt.datetime.now() + dt.timedelta(hours=96)
-        audience = ['IL', 'AL']
-        categories = ['resident clubs', 'event', 'wellness', 'religion', 'community']
-        events = SelectedEvents(self.db_session, start, end, audience, categories)
-        events = events.all_events[0:6]
+        events = SelectedEvents(self.db_session, start, end, audiences, categories)
+        events = events.all_events[0:event_count]
         res = []
         jsm = JSONStorageManager(self.db_session)
         empty_event = jsm.get_json_from_name('P_EVENT_SNIPPET')

@@ -64,7 +64,7 @@ def manage_json_templates(db_session, form):
 
     page_slot = form.page_slot.data
     page_template = form.page_template.data
-    page_story_template = form.page_story_template.data
+    page_content_template = form.page_story_template.data
     page_width = form.page_width.data
 
     submit = form.submit.data
@@ -115,9 +115,9 @@ def manage_json_templates(db_session, form):
             if not template:
                 form.errors['Nonexistent JSON template'] = ['Specified template does not exist']
                 return False
-            # TODO:  This should customize audience, categories, width,  Getting events occurs when page generated
+            # TODO:  This should customize audience, categories, -> keyword arguments to create plugin
             calendar = Calendar(db_session, cal_width)
-            calendar.create_daily_plugin(cal_display_count, 'NOTHING')
+            calendar.create_daily_plugin(cal_display_count)
             content = calendar.get_calendar_snippet_data()
             template['event_count'] = cal_display_count
             template['width'] = content['width']
@@ -130,7 +130,7 @@ def manage_json_templates(db_session, form):
             if not template:
                 form.errors['Nonexistent JSON page template'] = ['Specified page template does not exist']
                 return False
-            insert_template = jsm.get_json_from_name(page_story_template)
+            insert_template = jsm.get_json_from_name(page_content_template)
 
             if not insert_template:
                 form.errors['Nonexistent story template'] = ['Specified story does not exist']

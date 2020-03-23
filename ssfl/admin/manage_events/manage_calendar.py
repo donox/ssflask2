@@ -117,6 +117,12 @@ def manage_calendar(db_session, form):
 
         elif work_function.data == 'c_del':
             try:
+                if not audiences:
+                    form.errors['No Audience'] = ['No audiences specified => no events selectable']
+                    return False
+                if not categories:
+                    form.errors['No Category'] = ['No category specified => no events selectable']
+                    return False
                 ev = SelectedEvents(db_session, cal_start, cal_end, audiences, categories)
                 events = ev.get_events()
                 for event in events:

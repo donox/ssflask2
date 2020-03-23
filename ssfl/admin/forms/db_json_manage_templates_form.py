@@ -56,9 +56,9 @@ class DBJSONManageTemplatesForm(FlaskForm):
                                     render_kw={"class": "jedit"})
     page_slot = IntegerField('Slot on page for snippet', validators=[Optional()], render_kw={"class": "jpage"})
     page_template = StringField('JSON Template for page layout', validators=[Optional()], render_kw={"class": "jpage"})
-    page_story_template = StringField('JSON Template of story to insert', validators=[Optional()],
-                                      render_kw={"class": "jpage"})
-    page_width = IntegerField('Width of story display (in pixels)', validators=[Optional()],
+    page_content_template = StringField('JSON Template of snippet to insert', validators=[Optional()],
+                                        render_kw={"class": "jpage"})
+    page_width = IntegerField('Width of snippet display (in pixels)', validators=[Optional()],
                               render_kw={"class": "jpage"})
     submit = SubmitField('Submit')
 

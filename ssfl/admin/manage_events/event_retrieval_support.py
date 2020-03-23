@@ -60,6 +60,8 @@ class Evt(object):
         Returns: bool - True => successful delete.
 
         """
+        if not self.id or not self.event_audiences or not self.event_audiences:
+            return
         st_tm = start_time.strftime('%Y-%m-%d %H:%M:%S')
         end_tm = end_time.strftime('%Y-%m-%d %H:%M:%S')
         sql_time = f'delete from event_time where event_time.event_id={self.id} and event_time.start >= "{st_tm}" '
@@ -166,6 +168,9 @@ class SelectedEvents(object):
                           'groupId': None, 'allDay': event.all_day,
                           'start': event.event_start.isoformat(),
                           'end': event.event_end.isoformat(),
+                          'venue': event.event_location,
+                          'cost': event.event_cost,
+                          'signup': event.event_sign_up,
                           'className': 'info'}
             event_list.append(this_event)
         return event_list
