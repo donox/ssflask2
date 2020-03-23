@@ -29,10 +29,11 @@ var button_state = (function () {
     let wellness_state = false;
     let event_state = true;
     let club_state = false;
+    let community_state = false;
     let audiences = [al_state, il_state];
     let audience_names = ['AL', 'IL'];
     let audience_classes = ['fc-al_button-button', 'fc-il_button-button'];
-    let categories = [event_state, wellness_state, religion_state, club_state];
+    let categories = [event_state, wellness_state, religion_state, club_state, community_state];
     let category_names = ['Event', 'Wellness', 'Religion', 'Resident Clubs', 'Community'];
     let category_classes = ['fc-evt_button-button', 'fc-well_button-button', 'fc-rel_button-button',
     'fc-club_button-button', 'fc-community_button-button'];

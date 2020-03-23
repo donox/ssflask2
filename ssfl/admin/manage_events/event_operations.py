@@ -237,7 +237,7 @@ class JSONToDb(object):
 
     def read_file(self):
         f = json.loads(self.json_file)
-        rdr = f["EVENTS"]
+        rdr = f["Community"]
         for row in rdr:
             yield row
 
@@ -266,6 +266,22 @@ class JSONToDb(object):
     # "location": "Fishersville",
     # "desc"
 
+    @staticmethod
+    def _get_list_of_days(year: int, mth: str, days: str):
+        months = [dt.date(year, i, 1).strftime('%B') for i in range(1, 13)]
+        this_month = months.index(mth) + 1
+        if days == '':
+            return None
+        day_list = days.split(',')
+        res = []
+        for day_str in day_list:
+            day_range = day_str.split('-')
+            if len(day_range) == 1:
+                res.append(dt.date(year, this_month, int(day_range[0])))
+            else:
+                for i in range(int(day_range[0]), int(day_range[1])+1):
+                    res.append(dt.date(year, this_month, i))
+        return res
 
     def add_events(self):
         """Create list of all events in JSON file."""
@@ -274,19 +290,25 @@ class JSONToDb(object):
         try:
             for row in self.read_file():
                 new_event = CalendarEvent()
-                new_event.name = "EVENT NAME"
-                new_event.venue = row['location']
+                new_event.name = row['event_name']
+                new_event.venue = row['event_location']
                 # dl = [CsvToDb._try_parsing_date(x) for x in row[CAL_DATES_BEGIN:] if x]
-                dl = [dt.datetime.now().date()]
+                days = row['days']
+                mth = row['month']
+                year = int(dt.datetime.now().year)
+                dl = JSONToDb._get_list_of_days(year, mth, days)
                 st = JSONToDb._try_parsing_time('7:30PM')
                 nd = JSONToDb._try_parsing_time('9:30PM')
                 new_event.occurs = [(st, nd, x) for x in dl]
-                new_event.all_day = False
-                new_event.description = row['desc']
+                if row['all_day'] == '':
+                    new_event.all_day = False
+                else:
+                    new_event.all_day = True
+                new_event.description = row['event_description']
                 cat_list = ['Event']
                 new_event.categories = cat_list
                 new_event.audience = ['IL']
-                new_event.cost = ''
+                new_event.cost = row['event_cost']
                 new_event.sign_up = ''
                 new_event.ec_depart = ''
                 new_event.hl_depart = ''

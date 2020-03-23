@@ -58,7 +58,7 @@ def manage_calendar(db_session, form):
                     # file_path = tempfile.TemporaryFile()
                     input_file.save(file_path)
                     file_path.seek(0)
-                    file_content = file_path.read().decode(encoding='latin-1')
+                    file_content = file_path.read().decode(encoding='utf-8-sig')
                     build_calendar = JSONToDb(file_content)
                     build_calendar.add_events()
                     for evt in build_calendar.get_event_list():
