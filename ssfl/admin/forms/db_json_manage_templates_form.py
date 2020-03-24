@@ -16,6 +16,12 @@ class DBJSONManageTemplatesForm(FlaskForm):
     """Make Story JSON and add to JSONStore
 
     """
+    """ 
+     Route: '/admin/manageTemplate' => make_story_json_template
+     Template: json_make_template.jinja2
+     Form: db_manage_templates_form.py
+     Processor: manage_json_template.py
+    """
     supported_functions = [('jcreate', 'Create New JSON DB entry'),
                            ('jedit', 'Edit Story JSON'),
                            ('jcal', 'Edit Calendar JSON'),
@@ -29,8 +35,10 @@ class DBJSONManageTemplatesForm(FlaskForm):
                                    ]
     work_function = SelectField(label='Select Function',
                                 choices=supported_functions, render_kw={"id": "js1"})
-    json_id = IntegerField('JSON DB ID', validators=[Optional()], render_kw={"class": "jcreate"})
-    json_name = StringField('JSON Template Name', validators=[Optional()], render_kw={"class": "jcreate"})
+    json_id = IntegerField('JSON DB ID', validators=[Optional()],
+                           render_kw={"class": "jcreate jedit jcal jpage jdelete"})
+    json_name = StringField('JSON Template Name', validators=[Optional()],
+                            render_kw={"class": "jcreate jedit jcal jpage jdelete"})
     template_content = StringField('Name of JSON Template to Expand as Content', validators=[Optional()],
                                    render_kw={"class": "jcreate"})
     is_prototype = BooleanField('Template is prototype', default=False, render_kw={"class": "jcreate"})

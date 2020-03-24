@@ -7,6 +7,12 @@ def edit_database_file(session, form):
     """Edit file that is stored in database.
 
         This applies to the case where there is both a database entry and valid filename."""
+    """
+     Route: '/admin/edit' => edit_database_file
+     Template: edit.jinja2
+     Form: edit_db_content_form.py
+     Processor: edit_database_file.py
+    """
     page_id = form.page_id.data
     direct = form.directory.data
     file = form.file_name.data

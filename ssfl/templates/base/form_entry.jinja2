@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<!-- template entry for representing a form element
+    parameters:  element class: el_class
+                 element name:  el_name
+                 element placeholder: el_placeholder  (optional)
+-->
+
+<div class="el_class" style="margin-top: 10px;margin-bottom: 10px">
+    {{ el_name.label }}
+    {% if el_placeholder %}
+        {{ el_name(placeholder=el_placeholder) }}
+    {% else %}
+        {{ el_name }}
+    {% endif %}
+    {% if el_name.errors %}
+        <ul class="errors">
+            {% for error in el_name.errors %}
+                <li>{{ error }}</li>{% endfor %}
+        </ul>
+    {% endif %}
+</div>

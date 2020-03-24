@@ -10,11 +10,18 @@ class MiscellaneousFunctionsForm(FlaskForm):
     """Miscellaneous functions before revising interface.
 
     """
+    """
+     Route: '/admin/sst_miscellaneous' => miscellaneous_functions
+     Template: miscellaneous_functions.jinja2
+     Form: miscellaneous_functions_form.py
+     Processor: miscellaneous_functions.py
+    """
     supported_functions = [('dpdb', 'Delete Page from Database'),
                            ('dp', 'Download Page Directory'),
                            ('df', 'Delete File')]
     work_function = SelectField(label='Select Function',
-                                choices=supported_functions)
+                                choices=supported_functions,
+                                render_kw={"id": "js1"})
     page_name = StringField(label='Page Name', validators=[Optional()])
     filename = StringField(label='File Name', validators=[Optional()])
 

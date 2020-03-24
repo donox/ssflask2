@@ -9,19 +9,31 @@ import datetime as dt
 
 class ManageCalendarForm(FlaskForm):
     """Manage Calendar content."""
+    """
+     Route: '/admin/calendar' => manage_calendar
+     Template: calendar.jinja2
+     Form: manage_calendar_form.py
+     Processor: manage_calendar.py
+    """
     work_function = SelectField(label='Select Function',
                                 choices=[('c_pr', 'Print Calendar'),
                                          ('c_csv', 'Get  Events from CSV'), ('c_json', 'Get  Events from JSON'),
-                                         ('init', 'Initialize Calendar'), ('c_del', 'Delete Events')])
-    file_name = FileField('CSV or JSON file with Events')
-    audiences = SelectMultipleField(label='Select Audiences', choices=[('IL', 'IL'), ('AL', 'AL'), ('HC', 'HC')])
+                                         ('init', 'Initialize Calendar'), ('c_del', 'Delete Events')],
+                                render_kw={"id": "js1"})
+    file_name = FileField('CSV or JSON file with Events', render_kw={"class": "c_csv c_json"})
+    audiences = SelectMultipleField(label='Select Audiences', choices=[('IL', 'IL'), ('AL', 'AL'), ('HC', 'HC')],
+                                    render_kw={"class": "c_pr"})
     categories = \
         SelectMultipleField(label='Select Categories',
                             choices=[('Wellness', 'Wellness'), ('Event', 'Event'), ('Religion', 'Religion'),
-                                     ('Resident Clubs', 'Resident Clubs')])
-    start_datetime = DateTimeField('Start Date/Time', default=dt.datetime.now().date())
-    end_datetime = DateTimeField('End Date/Time', default=dt.datetime.now().date())
-    save_file_name = StringField('Save File Name', validators=[Optional()])
+                                     ('Resident Clubs', 'Resident Clubs')],
+                            render_kw={"class": "c_pr"})
+    start_datetime = DateTimeField('Start Date/Time', default=dt.datetime.now().date(),
+                                   render_kw={"class": "c_pr"})
+    end_datetime = DateTimeField('End Date/Time', default=dt.datetime.now().date(),
+                                 render_kw={"class": "c_pr"})
+    save_file_name = StringField('Save File Name', validators=[Optional()],
+                                 render_kw={"class": ""})
 
     submit = SubmitField('Save to File')
 

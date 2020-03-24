@@ -1,227 +1,149 @@
 <!DOCTYPE html>
+<!-- Route: '/admin/manageTemplate' => make_story_json_template
+     Template: json_make_template.jinja2
+     Form: db_manage_templates_form.py
+     Processor: manage_json_template.py
+     Functions:
+     ('jcreate', 'Create New JSON DB entry'),
+     ('jedit', 'Edit Story JSON'),
+     ('jcal', 'Edit Calendar JSON'),
+     ('jpage', 'Edit Page JSON'),
+     ('jdelete', 'Remove existing JSON entry'),
+     ('jreload', 'Reload DB Prototype Templates'),
+-->
 {% extends 'base/layout.jinja2' %}
 
 {% block content %}
     <section class="container">
         <div class="columns">
             <form action="{{ url_for('admin_bp.make_story_json_template') }}" method="post">
-                <div class="input">
-                    {{ form.work_function.label }}
-                    {{ form.work_function }}
-                    {% if form.work_function.errors %}
-                        <ul class="errors">
-                            {% for error in form.work_function.errors %}
-                                <li>{{ error }}</li>
-                            {% endfor %}
-                        </ul>
-                    {% endif %}
-                </div>
 
-                <div id="jcreate" class="jcreate" style="display: None">
-                    <div class="input">
-                        {{ form.json_id.label }}
-                        {{ form.json_id(placeholder='0') }}
-                        {% if form.json_id.errors %}
-                            <ul class="errors">
-                                {% for error in form.json_id.errors %}
-                                    <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
-                    </div>
+                {% with %}
+                    {% set el_name=form.work_function %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
 
-                    <div class="input">
-                        {{ form.json_name.label }}
-                        {{ form.json_name(placeholder='(e.g., foo-bar-xx)') }}
-                        {% if form.json_name.errors %}
-                            <ul class="errors">
-                                {% for error in form.json_name.errors %}
-                                    <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
-                    </div>
+                {% with %}
+                    {% set el_name=form.json_id %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
 
-                    <div class="file">
-                        {{ form.template_content.label }}
-                        {{ form.template_content(placeholder=form.default_directory) }}
-                        {% if form.template_content.errors %}
-                            <ul class="errors">
-                                {% for error in form.template_content.errors %}
-                                    <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
-                    </div>
-                    <div class="file">
-                        {{ form.is_prototype.label }}
-                        {{ form.is_prototype(placeholder=True) }}
-                        {% if form.is_prototype.errors %}
-                            <ul class="errors">
-                                {% for error in form.is_prototype.errors %}
-                                    <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
-                    </div>
-                </div>
+                {% with %}
+                    {% set el_name=form.json_name %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="(e.g., foo-bar-xx)" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
 
-                <div id="jedit" class="jedit" style="display: None">
-                    <div class="input">
-                        {{ form.story_template.label }}
-                        {{ form.story_template(placeholder='(e.g., foo-bar-xx)') }}
-                        {% if form.story_template.errors %}
-                            <ul class="errors">
-                                {% for error in form.story_template.errors %}
-                                    <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
-                    </div>
-                    <div class="input">
-                        {{ form.story_slug.label }}
-                        {{ form.story_slug(placeholder='Story Slug(e.g., foo-bar-xx)') }}
-                        {% if form.story_slug.errors %}
-                            <ul class="errors">
-                                {% for error in form.story_slug.errors %}
-                                    <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
-                    </div>
-                    <div class="input">
-                        {{ form.story_author.label }}
-                        {{ form.story_author(placeholder='Author') }}
-                        {% if form.story_author.errors %}
-                            <ul class="errors">
-                                {% for error in form.story_author.errors %}
-                                    <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
-                    </div>
-                    <div class="input">
-                        {{ form.story_title.label }}
-                        {{ form.story_title(placeholder='Story Title') }}
-                        {% if form.story_title.errors %}
-                            <ul class="errors">
-                                {% for error in form.story_title.errors %}
-                                    <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
-                    </div>
-                    <div class="input">
-                        {{ form.snippet_picture_id.label }}
-                        {{ form.snippet_picture_id(placeholder='Snippet Photo ID') }}
-                        {% if form.snippet_picture_id.errors %}
-                            <ul class="errors">
-                                {% for error in form.snippet_picture_id.errors %}
-                                    <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
-                    </div>
-                </div>
+                {% with %}
+                    {% set el_name=form.template_content %}
+                    {% set el_class="file" %}
+                    {% set el_placeholder="" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
+                {% with %}
+                    {% set el_name=form.is_prototype %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="True" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
 
 
-                <div id="jcal" class="jcal" style="display: None">
-                    <div class="input">
-                        {{ form.cal_template.label }}
-                        {{ form.cal_template() }}
-                        {% if form.cal_template.errors %}
-                            <ul class="errors">
-                                {% for error in form.cal_template.errors %}
-                                    <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
-                    </div>
-                    <div class="input">
-                        {{ form.cal_result_template.label }}
-                        {{ form.cal_result_template() }}
-                        {% if form.cal_result_template.errors %}
-                            <ul class="errors">
-                                {% for error in form.cal_result_template.errors %}
-                                    <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
-                    </div>
-                    <div class="input">
-                        {{ form.cal_display_count.label }}
-                        {{ form.cal_display_count() }}
-                        {% if form.cal_display_count.errors %}
-                            <ul class="errors">
-                                {% for error in form.cal_display_count.errors %}
-                                    <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
-                    </div>
-                    <div class="input">
-                        {{ form.cal_width.label }}
-                        {{ form.cal_width() }}
-                        {% if form.cal_width.errors %}
-                            <ul class="errors">
-                                {% for error in form.cal_width.errors %}
-                                    <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
-                    </div>
-                </div>
+                {% with %}
+                    {% set el_name=form.story_template %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="(e.g., foo-bar-xx)" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
 
-                <div id="jpage" class="jpage" style="display: None">
-                    <div class="input">
-                        {{ form.page_slot.label }}
-                        {{ form.page_slot(placeholder='1') }}
-                        {% if form.page_slot.errors %}
-                            <ul class="errors">
-                                {% for error in form.page_slot.errors %}
-                                    <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
-                    </div>
-                    <div class="input">
-                        {{ form.page_template.label }}
-                        {{ form.page_template(placeholder='1') }}
-                        {% if form.page_template.errors %}
-                            <ul class="errors">
-                                {% for error in form.page_template.errors %}
-                                    <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
-                    </div>
-                    <div class="input">
-                        {{ form.page_story_template.label }}
-                        {{ form.page_story_template(placeholder='Template DB name') }}
-                        {% if form.page_story_template.errors %}
-                            <ul class="errors">
-                                {% for error in form.page_story_template.errors %}
-                                    <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
-                    </div>
-                    <div class="input">
-                        {{ form.page_width.label }}
-                        {{ form.page_width(placeholder='350') }}
-                        {% if form.page_width.errors %}
-                            <ul class="errors">
-                                {% for error in form.page_width.errors %}
-                                    <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
-                    </div>
-                </div>
+                {% with %}
+                    {% set el_name=form.story_slug %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="Story Slug(e.g., foo-bar-xx)" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
 
-                <div class="jreload" style="display: None">
+                {% with %}
+                    {% set el_name=form.story_author %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="Author" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
 
-                </div>
+                {% with %}
+                    {% set el_name=form.story_title %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="Story Title" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
+                {% with %}
+                    {% set el_name=form.snippet_picture_id %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="Snippet Photo ID" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
+                {% with %}
+                    {% set el_name=form.cal_template %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
+                {% with %}
+                    {% set el_name=form.cal_result_template %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
+                {% with %}
+                    {% set el_name=form.cal_display_count %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
+                {% with %}
+                    {% set el_name=form.cal_width %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
+                {% with %}
+                    {% set el_name=form.page_slot %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="1" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
+                {% with %}
+                    {% set el_name=form.page_template %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="1" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
+                {% with %}
+                    {% set el_name=form.page_content_template %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="Template DB name" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
+                {% with %}
+                    {% set el_name=form.page_width %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="350" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
 
                 <div class="button">
                     <input id="submit" type="submit" value="Submit">
@@ -240,15 +162,17 @@
         <script>
         $ = jQuery;
         $('#js1').change(function(){
-            $('.jcreate').hide();
-            $('.jedit').hide();
-            $('.jpage').hide();
-            $('.jcal').hide();
-            $('.jdelete').hide();
-            $('.jreload').hide();
+            $('.jcreate').parent().hide();
+            $('.jedit').parent().hide();
+            $('.jpage').parent().hide();
+            $('.jcal').parent().hide();
+            $('.jdelete').parent().hide();
+            $('.jreload').parent().hide();
             let opt = $('#js1 option:selected').val();
-            $('.' + opt).show();
+            $('.' + opt).parent().show();
         });
+        //# sourceURL=json_make_template.js
+
         </script>
     </section>
 {% endblock %}

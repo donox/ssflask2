@@ -40,6 +40,12 @@ def import_docx_and_add_to_db(db_session, form, filename):
 
 def miscellaneous_functions(db_session, form):
     """Place to build support before rebuilding interface."""
+    """
+     Route: '/admin/sst_miscellaneous' => miscellaneous_functions
+     Template: miscellaneous_functions.jinja2
+     Form: miscellaneous_functions_form.py
+     Processor: miscellaneous_functions.py
+    """
     function_to_execute = form.work_function.data
     page_name = form.page_name.data
     filename = form.filename.data

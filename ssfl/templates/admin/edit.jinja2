@@ -1,60 +1,51 @@
 <!DOCTYPE html>
+<!--
+     Route: '/admin/edit' => edit_database_file
+     Template: edit.jinja2
+     Form: edit_db_content_form.py
+     Processor: edit_database_file.py
+-->
 {% extends 'base/layout.jinja2' %}
 
 {% block content %}
     <section class="container">
         <div class="columns">
             <form action="{{ url_for('admin_bp.sst_admin_edit') }}" method="post">
-                <div class="input">
-                    {{ form.page_id.label }}
-                    {{ form.page_id(placeholder='0000') }}
-                    {% if form.page_id.errors %}
-                        <ul class="errors">
-                            {% for error in form.page_id.errors %}
-                                <li>{{ error }}</li>{% endfor %}
-                        </ul>
-                    {% endif %}
-                </div>
-                <div class="input">
-                    {{ form.page_name.label }}
-                    {{ form.page_name(placeholder='Page name - not title (e.g., foo-bar-xx)') }}
-                    {% if form.page_name.errors %}
-                        <ul class="errors">
-                            {% for error in form.page_name.errors %}
-                                <li>{{ error }}</li>{% endfor %}
-                        </ul>
-                    {% endif %}
-                </div>
-                <div class="file">
-                    {{ form.directory.label }}
-                    {{ form.directory(placeholder=form.default_directory) }}
-                    {% if form.directory.errors %}
-                        <ul class="errors">
-                            {% for error in form.file_name.errors %}
-                                <li>{{ error }}</li>{% endfor %}
-                        </ul>
-                    {% endif %}
-                </div>
-                <div class="file">
-                    {{ form.file_name.label }}
-                    {{ form.file_name(placeholder='Path name to store data') }}
-                    {% if form.file_name.errors %}
-                        <ul class="errors">
-                            {% for error in form.file_name.errors %}
-                                <li>{{ error }}</li>{% endfor %}
-                        </ul>
-                    {% endif %}
-                </div>
-                <div class="checkbox">
-                    {{ form.direction.label }}
-                    {{ form.direction(placeholder='Transfer from DB to File') }}
-                    {% if form.direction.errors %}
-                        <ul class="errors">
-                            {% for error in form.direction.errors %}
-                                <li>{{ error }}</li>{% endfor %}
-                        </ul>
-                    {% endif %}
-                </div>
+                {% with %}
+                    {% set el_name=form.page_id %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="0000" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
+                {% with %}
+                    {% set el_name=form.page_name %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="Page name(e.g., foo-bar-xx)" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
+                {% with %}
+                    {% set el_name=form.directory %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder=form.default_directory %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
+                {% with %}
+                    {% set el_name=form.file_name %}
+                    {% set el_class="file" %}
+                    {% set el_placeholder="Path name to store data" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
+                {% with %}
+                    {% set el_name=form.direction %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="Transfer from DB to File" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
                 <div class="button">
                     <input id="submit" type="submit" value="Submit">
                 </div>

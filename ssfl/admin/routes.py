@@ -15,7 +15,7 @@ import tempfile
 from config import Config
 from db_mgt.photo_tables import Photo
 from db_mgt.setup import get_engine, create_session, close_session
-from .edit_local_file import edit_database_file
+from .edit_database_file import edit_database_file
 from .edit_json_file import edit_json_file
 from .manage_json_templates import manage_json_templates
 from .forms.edit_db_content_form import DBContentEditForm
@@ -47,6 +47,12 @@ def flash_errors(form):
 @admin_bp.route('/admin/manageTemplate', methods=['GET', 'POST'])
 @login_required
 def make_story_json_template():
+    """
+     Route: '/admin/manageTemplate' => make_story_json_template
+     Template: json_make_template.jinja2
+     Form: db_manage_templates_form.py
+     Processor: manage_json_template.py
+    """
     sst_admin_access_log.make_info_entry(f"Route: /admin/make_story/")
     form = DBJSONManageTemplatesForm()
     try:
@@ -169,6 +175,12 @@ def site_map():
 @login_required
 def sst_admin_edit():
     """Transfer content to-from DB for local editing."""
+    """
+     Route: '/admin/edit' => edit_database_file
+     Template: edit.jinja2
+     Form: edit_db_content_form.py
+     Processor: edit_database_file.py
+    """
     sst_admin_access_log.make_info_entry(f"Route: /admin/ss_admin_edit")
     if request.method == 'GET':
         context = dict()
@@ -193,6 +205,12 @@ def sst_admin_edit():
 @login_required
 def sst_admin_calendar():
     """Transfer content to-from DB for local editing."""
+    """
+     Route: '/admin/calendar' => manage_calendar
+     Template: calendar.jinja2
+     Form: manage_calendar_form.py
+     Processor: manage_calendar.py
+    """
     sst_admin_access_log.make_info_entry(f"Route: /admin/sst_admin_calendar")
     if request.method == 'GET':
         context = dict()
@@ -261,6 +279,12 @@ def upload_file():
 @login_required
 def sst_miscellaneous():
     """Translate file to HTML and store in database."""
+    """
+     Route: '/admin/sst_miscellaneous' => miscellaneous_functions
+     Template: miscellaneous_functions.jinja2
+     Form: miscellaneous_functions_form.py
+     Processor: miscellaneous_functions.py
+    """
     sst_admin_access_log.make_info_entry(f"Route: /admin/translate_to_html")
     if request.method == 'GET':
         context = dict()

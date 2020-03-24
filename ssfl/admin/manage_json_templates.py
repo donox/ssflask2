@@ -3,13 +3,15 @@ from utilities.sst_exceptions import DataEditingSystemError, log_sst_error
 from db_mgt.page_tables import PageManager
 import sys
 from ssfl.main.calendar_snippet import Calendar, SelectedEvents
-import json
-import re
+
 
 # supported_functions = [('jcreate', 'Create New JSON DB entry'),
 #                        ('jedit', 'Edit Story JSON'),
-#                        ('jxxx', 'Create JSON descriptor for Story'),
+#                        ('jcal', 'Edit Calendar JSON'),
+#                        ('jpage', 'Edit Page JSON'),
 #                        ('jdelete', 'Remove existing JSON entry'),
+#                        ('jreload', 'Reload DB Prototype Templates'),
+
 #                        ]
 # work_function = SelectField(label='Select Function', choices=supported_functions)
 # json_id = IntegerField('JSON DB ID', validators=[Optional()])
@@ -41,6 +43,12 @@ import re
 def manage_json_templates(db_session, form):
     """Create, edit, modify JSON story entry in JSONStore.
 
+    """
+    """ 
+     Route: '/admin/manageTemplate' => make_story_json_template
+     Template: json_make_template.jinja2
+     Form: db_manage_templates_form.py
+     Processor: manage_json_template.py
     """
     work_function = form.work_function.data
     json_id = form.json_id.data

@@ -17,6 +17,12 @@ def allowed_file(filename):
 
 def manage_calendar(db_session, form):
     """Process calendar form as requested."""
+    """
+     Route: '/admin/calendar' => manage_calendar
+     Template: calendar.jinja2
+     Form: manage_calendar_form.py
+     Processor: manage_calendar.py
+    """
     work_function = form.work_function
     input_file = form.file_name.data
     audiences = form.audiences.data
