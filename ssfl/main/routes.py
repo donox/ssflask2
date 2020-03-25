@@ -14,7 +14,7 @@ main_bp = Blueprint('main', __name__,
                     static_folder='static')
 
 cal_view = RandomCalendarAPI.as_view('cal_api')
-main_bp.add_url_rule('/cal/', defaults={'count': 10},
+main_bp.add_url_rule('/cal/', defaults={'count': 6},
                      view_func=cal_view, methods=['GET'])
 
 
@@ -29,7 +29,12 @@ def sst_main_calendar():
 @login_required
 def sst_main():
     """Main page route."""
-
+    """
+     Route: '/main/main' => multi_story_page
+     Template: main.jinja2
+     Form: 
+     Processor: multi_story_page.py
+    """
     db_session = create_session(get_engine())
     msp = MultiStoryPage(db_session)
     msp.load_descriptor_from_database('f2page')
@@ -40,10 +45,16 @@ def sst_main():
     return res
 
 
-@main_bp.route('/main/page/<string:page_ident>', methods=['GET'])
+@main_bp.route('/main/OLDpage/<string:page_ident>', methods=['GET'])
 @login_required
 def sst_get_specific_page(page_ident):
     """Get specific page by id."""
+    """
+     Route: '/main/page/<string:page_ident>' => build_page
+     Template: specific_page.jinja2
+     Form: 
+     Processor: build_page.py
+    """
     db_session = create_session(get_engine())
     bp = BuildPage(db_session, page_ident)
     context = bp.display_page()
@@ -51,15 +62,15 @@ def sst_get_specific_page(page_ident):
     close_session(db_session)
     return render_template('main/specific_page.jinja2', **context)
 
-@main_bp.route('/main/testpage/<string:page_ident>', methods=['GET'])
+@main_bp.route('/main/page/<string:page_ident>', methods=['GET'])
 @login_required
 def sst_get_specific_test_page(page_ident):
     """Get specific page by id or name."""
     db_session = create_session(get_engine())
     new_page = MultiStoryPage(db_session)
     new_res = new_page.make_single_page_context(page_ident)    # TODO:  ALLOW PAGE ID
-    context = new_res['rows'][0]['columns'][0]['cells'][0]
-    context['story'] = context['STORY']
+    context = new_res['PAGE']['rows'][0]['ROW']['columns'][0]['cells'][0]
+    context['story'] = context['element']
     context['story']['body'] = context['story']['content']
     context['APP_ROOT'] = request.base_url
     close_session(db_session)
@@ -83,6 +94,13 @@ def sst_get_single_page(page_ident):
 @login_required
 def sst_get_menu_page(page):
     """Load index page by name."""
+    """
+     Route: '/menu/<string:page>' => build_page
+     Template: specific_page.jinja2
+     Form: 
+     Processor: build_page.py
+    """
+    # Note:  CAN THIS BE REMOVED??????????????????????
     db_session = create_session(get_engine())
     bp = BuildPage(db_session, None)
     context = bp.display_menu_page(page)
@@ -94,6 +112,12 @@ def sst_get_menu_page(page):
 @main_bp.route('/index/<string:page>', methods=['GET'])
 @login_required
 def sst_get_index_page(page):
+    """
+     Route: '/index/<string:page>' => manage_index_pages
+     Template: manage_index_pages.jinja2
+     Form:
+     Processor: index_page_layout.py
+    """
     db_session = create_session(get_engine())
     try:
         index_page = db_session.query(IndexPage).filter(IndexPage.page_name == page).first()

@@ -10,6 +10,12 @@ from typing import Dict, AnyStr, Any
 
 class MultiStoryPage(object):
     """Populate page containing multiple items specified by a JSON descriptor."""
+    """
+     Route: '/main/main' => multi_story_page
+     Template: main.jinja2
+     Form: 
+     Processor: multi_story_page.py
+    """
     def __init__(self, db_session):
         self.session = db_session
         self.descriptor = None
@@ -54,7 +60,7 @@ class MultiStoryPage(object):
         cell_descriptor['element_type'] = 'FullStory'
         story_descriptor = jsm.make_json_descriptor('Story', jsm.descriptor_story_fields)
         cell_descriptor['element'] = story_descriptor
-        story_descriptor['page_id'] = page_id
+        story_descriptor['id'] = page_id                                            # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         return story_descriptor
 
     def load_descriptor_from_database(self, name: str) -> Dict[AnyStr, Any]:
@@ -170,8 +176,8 @@ class MultiStoryPage(object):
         page_id = None
         if 'name' in elem:
             page_name = elem['name']   # will use which ever is set
-        if 'page_id' in elem:
-            page_id = elem['page_id']
+        if 'id' in elem:                                                         # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            page_id = elem['id']                                                     # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         story = Story(self.session, width)
         story.create_story_from_db(page_id= page_id, page_name=page_name)
         elem['title'] = story.get_title()
@@ -250,9 +256,13 @@ class MultiStoryPage(object):
     def make_single_page_context(self, story: str) -> Dict[AnyStr, Any]:
         mgr = jsm(self.session)
         res = mgr.make_json_descriptor(mgr.get_json_from_name('P_SINGLECELLROW'))
-        res['rows'][0]['columns'][0]['cells'][0]['element'] = "S_STORY"
-        res['rows'][0]['columns'][0]['cells'][0]['element_type'] = "STORY"
-        self.descriptor = mgr.make_json_descriptor(res)
-        self.descriptor['rows'][0]['columns'][0]['cells'][0]['STORY']['name'] = story
+        res['ROW']['columns'][0]['cells'][0]['element'] = "S_STORY"
+        res['ROW']['columns'][0]['cells'][0]['element_type'] = "STORY"
+        partial_descriptor = mgr.make_json_descriptor(res)
+        if story.isdigit():
+            partial_descriptor['ROW']['columns'][0]['cells'][0]['element']['id'] = story
+        else:
+            partial_descriptor['ROW']['columns'][0]['cells'][0]['element']['name'] = story
+        self.descriptor = {'PAGE': {'rows': [partial_descriptor]}}
         self.make_multi_element_page_context()
         return self.descriptor

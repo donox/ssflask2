@@ -114,6 +114,12 @@ class DBManageIndexPages(object):
 
 
 def build_index_page_context(db_session, page):
+    """
+     Route: '/index/<string:page>' => manage_index_pages
+     Template: manage_index_pages.jinja2
+     Form:
+     Processor: index_page_layout.py
+    """
     context = dict()
     context['title'] = page.page_title
     context['content'] = page.page_content

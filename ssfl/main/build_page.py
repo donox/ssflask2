@@ -3,6 +3,12 @@ from db_mgt.page_tables import Page
 
 
 class BuildPage(object):
+    """
+     Route: '/main/page/<string:page_ident>' => build_page
+     Template: specific_page.jinja2
+     Form:
+     Processor: build_page.py
+    """
     def __init__(self, session, page_ident):
         self.page_id = None
         self.page_name = None

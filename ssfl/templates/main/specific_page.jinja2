@@ -1,5 +1,10 @@
 <!DOCTYPE html>
-
+<!--
+     Route: '/main/page/<string:page_ident>' => build_page
+     Template: specific_page.jinja2
+     Form:
+     Processor: build_page.py
+-->
 {% extends 'base/layout.jinja2' %}
 
 {% block content %}
