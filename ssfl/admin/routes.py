@@ -1,8 +1,6 @@
 import os
 import sys
-from ssfl import sst_syslog, sst_admin_access_log
-from utilities.sst_exceptions import log_sst_error, SiteObjectNotFoundError, RequestInvalidMethodError
-from utilities.miscellaneous import get_temp_file_name
+
 import dateutil.parser
 from flask import Blueprint, render_template, url_for, request, send_file, \
     abort, jsonify, redirect, flash, Response
@@ -10,26 +8,29 @@ from flask import current_app as app
 from flask_login import login_required
 from werkzeug.utils import secure_filename
 from werkzeug.wsgi import FileWrapper
-import tempfile
 
 from config import Config
 from db_mgt.photo_tables import Photo
 from db_mgt.setup import get_engine, create_session, close_session
+from ssfl import sst_admin_access_log
+from ssfl.admin.manage_events.import_word_docx import import_docx_and_add_to_db
+from utilities.miscellaneous import get_temp_file_name
+from utilities.sst_exceptions import RequestInvalidMethodError
+from utilities.sst_exceptions import log_sst_error
 from .edit_database_file import edit_database_file
 from .edit_json_file import edit_json_file
-from .manage_json_templates import manage_json_templates
-from .forms.edit_db_content_form import DBContentEditForm
-from .forms.manage_calendar_form import ManageCalendarForm
-from .forms.miscellaneous_functions_form import MiscellaneousFunctionsForm
-from .forms.index_pages_form import ManageIndexPagesForm
-from .forms.import_word_doc_form import ImportMSWordDocForm
-from .forms.edit_db_json_content_form import DBJSONEditForm
 from .forms.db_json_manage_templates_form import DBJSONManageTemplatesForm
-from .manage_events.manage_calendar import manage_calendar
+from .forms.edit_db_content_form import DBContentEditForm
+from .forms.edit_db_json_content_form import DBJSONEditForm
+from .forms.import_word_doc_form import ImportMSWordDocForm
+from .forms.manage_calendar_form import ManageCalendarForm
+from .forms.manage_index_pages_form import ManageIndexPagesForm
+from .forms.miscellaneous_functions_form import MiscellaneousFunctionsForm
 from .manage_events.event_retrieval_support import SelectedEvents
-from .miscellaneous_functions import miscellaneous_functions, import_docx_and_add_to_db
+from .manage_events.manage_calendar import manage_calendar
 from .manage_index_pages import DBManageIndexPages
-from utilities.sst_exceptions import log_sst_error
+from .manage_json_templates import manage_json_templates
+from .miscellaneous_functions import miscellaneous_functions
 
 # Set up a Blueprint
 admin_bp = Blueprint('admin_bp', __name__,
@@ -41,7 +42,7 @@ def flash_errors(form):
     """Flashes form errors"""
     for field, errors in form.errors.items():
         for error in errors:
-            flash(u"routes - Error in the %s field - %s" % (getattr(form, field).label.text,  error), 'error')
+            flash(u"routes - Error in the %s field - %s" % (getattr(form, field).label.text, error), 'error')
 
 
 @admin_bp.route('/admin/manageTemplate', methods=['GET', 'POST'])
@@ -78,7 +79,7 @@ def make_story_json_template():
         form.errors['submit'] = 'Error processing JSON_Manage_Templates'
         flash_errors(form)
     finally:
-        return render_template('admin/json_make_template.jinja2', **context)    # Executed in all cases
+        return render_template('admin/json_make_template.jinja2', **context)  # Executed in all cases
 
 
 @admin_bp.route('/downloads/<string:file_path>', methods=['GET'])
@@ -126,7 +127,7 @@ def get_image(image_path):
     width = 200
     height = 200
     if args['w'] and args['w'] != 'None':
-        width = int(args['w'])    # TODO: Change to width/height and in picture.jinja2
+        width = int(args['w'])  # TODO: Change to width/height and in picture.jinja2
     if args['h'] and args['h'] != 'None':
         height = int(args['h'])
     db_session = create_session(get_engine())
@@ -234,7 +235,9 @@ def sst_admin_calendar():
 
 
 @admin_bp.route('/admin/upload_form', methods=['GET', 'POST'])
+@login_required
 def upload_form():
+    # Used by upload_file below
     sst_admin_access_log.make_info_entry(f"Route: /admin/upload_form")
     return render_template('admin/upload.html')
 
@@ -250,6 +253,8 @@ def allowed_file(filename):
 @login_required
 def upload_file():
     """Upload file to system file directory."""
+    # This needs to be re-thought out - what/how are we handling uploads, how is the directory
+    # monitored, cleaned, ...  Need to tie to config entries and their use
     sst_admin_access_log.make_info_entry(f"Route: /admin/upload_file")
     if request.method == 'POST':
         upload_type = request.form['upload_type']
@@ -313,6 +318,13 @@ def sst_miscellaneous():
 @login_required
 def manage_index_page():
     """Manage Index Page CRUD and Index Items CRUD."""
+    """
+     Route: '/admin/manage_index_page' => manage_index_pages
+     Template: manage_index_pages.jinja2
+     Form: manage_index_pages_form.py
+     Processor: manage_index_pages.py
+    """
+    # TODO: template javascript not handling show/hide properly.
     sst_admin_access_log.make_info_entry(f"Route: /admin/manage_index_page")
     if request.method == 'GET':
         context = dict()
@@ -345,6 +357,12 @@ def manage_index_page():
 @login_required
 def sst_import_page():
     """Import Word Document, translate it and store in database."""
+    """
+     Route: '/admin/sst_import_page' => import_word_docx
+     Template: import_docx.jinja2
+     Form: import_docx_form.py
+     Processor: import_word_docx.py
+    """
     form = ImportMSWordDocForm()
     context = dict()
     try:
@@ -382,6 +400,12 @@ def sst_import_page():
 @admin_bp.route('/json', methods=['GET', 'POST'])
 @login_required
 def up_down_load_json_template():
+    """
+     Route: '/admin/json' => edit_json_file
+     Template: json_edit.jinja2
+     Form: edit_json_content_form.py
+     Processor: edit_json_file.py
+    """
     sst_admin_access_log.make_info_entry(f"Route: /admin/json/")
     form = DBJSONEditForm()
     try:
@@ -407,5 +431,4 @@ def up_down_load_json_template():
         form.errors['submit'] = 'Error processing JSON_edit page'
         flash_errors(form)
     finally:
-        return render_template('admin/json_edit.jinja2', **context)    # Executed in all cases
-
+        return render_template('admin/json_edit.jinja2', **context)  # Executed in all cases

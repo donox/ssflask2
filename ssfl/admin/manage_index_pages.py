@@ -7,11 +7,17 @@ from db_mgt.page_tables import Page
 from db_mgt.index_page_tables import IndexPage, IndexPageItem
 import db_mgt.setup as su
 import datetime as dt
-from ssfl.admin.forms.index_pages_form import ManageIndexPagesForm
+from ssfl.admin.forms.manage_index_pages_form import ManageIndexPagesForm
 from utilities.sst_exceptions import SiteObjectNotFoundError
 
 
 class DBManageIndexPages(object):
+    """
+     Route: '/admin/manage_index_page' => manage_index_pages
+     Template: manage_index_pages.jinja2
+     Form: manage_index_pages_form.py
+     Processor: manage_index_pages.py
+    """
     def __init__(self):
         self.index_page = None
         self.index_page_items = []

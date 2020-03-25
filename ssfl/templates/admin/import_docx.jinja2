@@ -1,58 +1,66 @@
 <!DOCTYPE html>
+<!--
+     Route: '/admin/sst_import_page' => import_word_docx
+     Template: import_docx.jinja2
+     Form: import_docx_form.py
+     Processor: import_word_docx.py
+-->
 {% extends 'base/layout.jinja2' %}
 
 {% block content %}
-<section class="container">
-    <div class="XXX">
-        <h3>Import MS Word Page to Database</h3>
-        <form action="{{ url_for('admin_bp.sst_import_page') }}" method="post" enctype="multipart/form-data">
-            <div class="input">
-                {{ form.page_name.label }}
-                {{ form.page_name(placeholder='Page name (e.g., foo-bar-xx)') }}
-                {% if form.page_name.errors %}
-                <ul class="errors">
-                    {% for error in form.page_name.errors %}
-                    <li>{{ error }}</li>
-                    {% endfor %}
-                </ul>
-                {% endif %}
-            </div>
-            <div class="file">
-                {{ form.file_name.label }} {{ form.file_name }}
-                {% if form.file_name.errors %}
-                <ul class="errors">
-                    {% for error in form.file_name.errors %}
-                    <li>{{ error }}</li>
-                    {% endfor %}
-                </ul>
-                {% endif %}
-            </div>
-            <div class="file">
-                {{ form.overwrite.label }}
-                {{ form.overwrite() }}
-                {% if form.overwrite.errors %}
-                <ul class="errors">
-                    {% for error in form.overwrite.errors %}
-                    <li>{{ error }}</li>
-                    {% endfor %}
-                </ul>
-                {% endif %}
-            </div>
-            <div class="button">
-                <input id="submit" type="submit" value="Submit">
-            </div>
-            {% if form.errors %}
-            <ul class="errors">
-                {% for error in form.errors.keys() %}
-                {% for specific in form.errors[error] %}
-                <li>{{ error }} : {{ specific }}</li>
-                {% endfor %}
-                {% endfor %}
-            </ul>
-            {% endif %}
-            {{ form.csrf_token }}
-        </form>
+    <section class="container">
+        <div class="">
+            <h3>Import MS Word Page to Database</h3>
+            <form action="{{ url_for('admin_bp.sst_import_page') }}" method="post" enctype="multipart/form-data">
+                {% with %}
+                    {% set el_name=form.page_name %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="Page name (e.g., foo-bar-xx)" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
 
-    </div>
-</section>
+                {% with %}
+                    {% set el_name=form.file_name %}
+                    {% set el_class="file" %}
+                    {% set el_placeholder="" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
+                {% with %}
+                    {% set el_name=form.overwrite %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
+                <div class="button">
+                    <input id="submit" type="submit" value="Submit">
+                </div>
+                {% if form.errors %}
+                    <ul class="errors">
+                        {% for error in form.errors.keys() %}
+                            {% for specific in form.errors[error] %}
+                                <li>{{ error }} : {{ specific }}</li>
+                            {% endfor %}
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                {{ form.csrf_token }}
+            </form>
+        </div>
+        <script>
+{#        $ = jQuery;#}
+{#        $('#js1').change(function(){#}
+{#            $('.c_csv').parent().hide();#}
+{#            $('.c_json').parent().hide();#}
+{#            $('.c_pr').parent().hide();#}
+{#            $('.c_new').parent().hide();#}
+{#            $('.jdelete').parent().hide();#}
+{#            $('.jreload').parent().hide();#}
+{#            let opt = $('#js1 option:selected').val();#}
+{#            $('.' + opt).parent().show();#}
+{#        });#}
+        //# sourceURL=import_word.js
+        </script>
+    </section>
 {% endblock %}

@@ -56,7 +56,7 @@ class Config:
     USER_DEFINITION_FILES = USER_DIRECTORY_BASE + 'definition_files/'
     # Config name assumed by Flask-Upload
     UPLOAD_FOLDER = USER_DIRECTORY_BASE + 'uploads/'
-    # Storage for docx pages that master for html pages
+    # Storage for docx pages that master for html pages  -- Believe this is no longer used
     USER_PAGE_MASTERS = UPLOAD_FOLDER + 'page_masters/'
 
     USER_DIRECTORY_STATIC = os.environ.get('USER_DIRECTORY_STATIC')

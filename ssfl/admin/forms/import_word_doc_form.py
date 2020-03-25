@@ -1,9 +1,7 @@
 from wtforms import Form, StringField,  SubmitField, BooleanField
 from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, Length, Optional
 from flask_wtf.file import FileField, FileRequired, FileStorage
-import os
 
-from utilities.sst_exceptions import DataEditingSystemError
 from flask_wtf import FlaskForm
 from flask import flash
 from db_mgt.page_tables import Page
@@ -12,6 +10,12 @@ from db_mgt.page_tables import Page
 class ImportMSWordDocForm(FlaskForm):
     """Upload Word Doc, convert and add to database.
 
+    """
+    """
+     Route: '/admin/sst_import_page' => import_word_docx
+     Template: import_docx.jinja2
+     Form: import_docx_form.py
+     Processor: import_word_docx.py
     """
     file_name = FileField('Word Document')
     page_name = StringField('Page Name', validators=[Optional()])

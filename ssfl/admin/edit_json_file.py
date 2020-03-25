@@ -18,6 +18,12 @@ def edit_json_file(session, form):
     """Edit file that is stored in database.
 
         This applies to the case where there is both a database entry and valid filename."""
+    """
+     Route: '/admin/json' => edit_json_file
+     Template: json_edit.jinja2
+     Form: edit_json_content_form.py
+     Processor: edit_json_file.py
+    """
     # supported_functions = [('jdown', 'Download JSON from Database'),
     #                        ('jup', 'Upload JSON to Database'),
     #                        ('jcsv', 'Create JSON descriptor for Story'),
