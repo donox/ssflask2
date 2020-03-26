@@ -15,7 +15,7 @@ def remove_max1bytes(x):
     return ''.join(c for c in x if ord(c) < 0x100)
 
 
-class ImportPageData(object):
+class FileImportPageData(object):
     def __init__(self, session, datafile):
         self.session = session
         self.datafile = datafile
@@ -122,7 +122,7 @@ if __name__ == '__main__':
     engine = su.get_engine()
     session = su.create_session(engine)
     tables = su.create_tables(engine)
-    ipd = ImportPageData(session, df)
+    ipd = FileImportPageData(session, df)
     print("Start update_db")
     ipd.update_db()
     print("Start write_update_parents")
