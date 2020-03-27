@@ -44,7 +44,7 @@ def member_page():
 
 
 # The Admin page requires an 'Admin' role.
-@login_bp.route('/admin')
+@login_bp.route('/adminpage')
 @roles_required('Admin')
 def admin_page():
     return render_template_string("""

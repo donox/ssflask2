@@ -24,17 +24,24 @@ class Calendar(object):
         start = dt.datetime.now()
         end = dt.datetime.now() + dt.timedelta(hours=96)
         events = SelectedEvents(self.db_session, start, end, audiences, categories)
-        events = events.all_events[0:event_count]
+        dupe_check = set()
         res = []
         jsm = JSONStorageManager(self.db_session)
         empty_event = jsm.get_json_from_name('P_EVENT_SNIPPET')
-        for event in events:
+        current_count = event_count
+        for event in events.all_events:
             evt_dict = empty_event.copy()
             evt_dict['name'] = event.event_name
             evt_dict['venue'] = event.event_location
             evt_dict['date'] = event.event_start.date().strftime('%b-%d')
             evt_dict['time'] = event.event_start.time().strftime('%H:%M')
-            res.append(evt_dict)
+            dupe = evt_dict['name'] + evt_dict['venue'] + evt_dict['date'] + evt_dict['time']
+            if dupe not in dupe_check:
+                res.append(evt_dict)
+                dupe_check.add(dupe)
+                current_count -= 1
+                if not current_count:
+                    break
         self.cal_data['events'] = res
 
     def get_calendar_snippet_data(self):

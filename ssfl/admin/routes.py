@@ -26,11 +26,13 @@ from .forms.import_word_doc_form import ImportMSWordDocForm
 from .forms.manage_calendar_form import ManageCalendarForm
 from .forms.manage_index_pages_form import ManageIndexPagesForm
 from .forms.miscellaneous_functions_form import MiscellaneousFunctionsForm
+from .forms.import_database_functions_form import ImportDatabaseFunctionsForm
 from .manage_events.event_retrieval_support import SelectedEvents
 from .manage_events.manage_calendar import manage_calendar
 from .manage_index_pages import DBManageIndexPages
 from .manage_json_templates import manage_json_templates
 from .miscellaneous_functions import miscellaneous_functions
+from import_data.db_import_pages import ImportPageData
 
 # Set up a Blueprint
 admin_bp = Blueprint('admin_bp', __name__,
@@ -432,3 +434,36 @@ def up_down_load_json_template():
         flash_errors(form)
     finally:
         return render_template('admin/json_edit.jinja2', **context)  # Executed in all cases
+
+
+@admin_bp.route('/admin/sst_import_database', methods=['GET', 'POST'])
+@login_required
+def sst_import_database():
+    """Translate file to HTML and store in database."""
+    """
+     Route: '/admin/sst_import_database' => db_import_pages
+     Template: import_database_functions.jinja2
+     Form: import_database_functions_form.py
+     Processor: db_import_pages.py
+    """
+    sst_admin_access_log.make_info_entry(f"Route: /admin/sst_import_database")
+    if request.method == 'GET':
+        context = dict()
+        context['form'] = ImportDatabaseFunctionsForm()
+        return render_template('admin/import_database_functions.jinja2', **context)
+    elif request.method == 'POST':
+        form = ImportDatabaseFunctionsForm()
+        context = dict()
+        context['form'] = form
+        if form.validate_on_submit():
+            db_session = create_session(get_engine())
+            mgr = ImportPageData(db_session)
+            mgr.import_useable_pages_from_wp_database()
+            close_session(db_session)
+            flash('You were successful', 'success')
+            return render_template('admin/import_database_functions.jinja2', **context)  # redirect to success url
+
+        flash_errors(form)
+        return render_template('admin/import_database_functions.jinja2', **context)
+    else:
+        raise RequestInvalidMethodError('Invalid method type: {}'.format(request.method))

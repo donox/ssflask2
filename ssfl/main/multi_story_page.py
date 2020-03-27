@@ -226,7 +226,7 @@ class MultiStoryPage(object):
         #  "audience": [], "categories": []}
         ev_count = elem['event_count']
         calendar = Calendar(self.session, elem['width'])
-        calendar.create_daily_plugin(elem['event_count'], 'NOTHING')
+        calendar.create_daily_plugin(elem['event_count'])
         content = calendar.get_calendar_snippet_data()
         elem['events'] = content['events']
 
