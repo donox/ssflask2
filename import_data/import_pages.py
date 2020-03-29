@@ -117,20 +117,3 @@ class FileImportPageData(object):
                     print("{} page parent not found. Old page: {}, Parent: {}".format(new_page_id, old_page_id, parent))
 
 
-if __name__ == '__main__':
-    df = '/home/don/devel/foo.tsv'
-    engine = su.get_engine()
-    session = su.create_session(engine)
-    tables = su.create_tables(engine)
-    ipd = FileImportPageData(session, df)
-    print("Start update_db")
-    ipd.update_db()
-    print("Start write_update_parents")
-    ipd.write_update_parents()
-    print("Start load_update_parents")
-    ipd.load_update_parents()
-    print("Start update_parents")
-    ipd.update_parents()
-    print("Start replace_line_breaks")
-    # ipd.replace_line_breaks()
-    foo = 3

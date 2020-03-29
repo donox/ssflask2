@@ -101,8 +101,9 @@ class SelectedEvents(object):
     sql += 'and em3.meta_key = \'location\' '
     sql += 'order by event.id, start;'
 
-    def __init__(self, db_session, start_time, end_time, audiences: list, categories: list):
-        self.session = db_session
+    def __init__(self, db_exec, start_time, end_time, audiences: list, categories: list):
+        self.db_exec = db_exec
+        self.db_session = db_exec.get_db_session()
         self.evt_count = 0
         if type(start_time) == dt.datetime:
             self.start = start_time.strftime('%Y-%m-%d %H:%M:%S')
@@ -113,7 +114,7 @@ class SelectedEvents(object):
         self.audiences = ", ".join([quotify(x.upper()) for x in audiences])
         self.categories = ", ".join([quotify(x.lower()) for x in categories])
         full_sql = SelectedEvents.sql.format(self.start, self.end, self.audiences, self.categories)
-        res = db_session.execute(full_sql)
+        res = self.db_session.execute(full_sql)
         all_events = []
         last_id = None
         last_start = None

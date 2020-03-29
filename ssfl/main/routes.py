@@ -3,6 +3,7 @@ from flask_login import login_required
 
 from db_mgt.index_page_tables import IndexPage
 from db_mgt.setup import get_engine, create_session, close_session
+from db_mgt.db_exec import DBExec
 from ssfl.admin.manage_index_pages import build_index_page_context
 from ssfl.main.build_page import BuildPage
 from ssfl.main.multi_story_page import MultiStoryPage
@@ -35,60 +36,33 @@ def sst_main():
      Form: 
      Processor: multi_story_page.py
     """
-    db_session = create_session(get_engine())
-    msp = MultiStoryPage(db_session)
-    msp.load_descriptor_from_database('f2page')
-    context = msp.make_multi_element_page_context()
-    context['APP_ROOT'] = request.base_url
-    close_session(db_session)
-    res = render_template('main/main.jinja2', **context)
-    return res
+    db_exec = DBExec()
+    try:
+        msp = MultiStoryPage(db_exec)
+        msp.load_descriptor_from_database('f2page')
+        context = msp.make_multi_element_page_context()
+        context['APP_ROOT'] = request.base_url
+        res = render_template('main/main.jinja2', **context)
+        return res
+    finally:
+        db_exec.terminate()
 
-
-@main_bp.route('/main/OLDpage/<string:page_ident>', methods=['GET'])
-@login_required
-def sst_get_specific_page(page_ident):
-    """Get specific page by id."""
-    """
-     Route: '/main/page/<string:page_ident>' => build_page
-     Template: specific_page.jinja2
-     Form: 
-     Processor: build_page.py
-    """
-    db_session = create_session(get_engine())
-    bp = BuildPage(db_session, page_ident)
-    context = bp.display_page()
-    context['APP_ROOT'] = request.base_url
-    close_session(db_session)
-    return render_template('main/specific_page.jinja2', **context)
 
 @main_bp.route('/main/page/<string:page_ident>', methods=['GET'])
 @login_required
 def sst_get_specific_test_page(page_ident):
     """Get specific page by id or name."""
-    db_session = create_session(get_engine())
-    new_page = MultiStoryPage(db_session)
-    new_res = new_page.make_single_page_context(page_ident)    # TODO:  ALLOW PAGE ID
-    context = new_res['PAGE']['rows'][0]['ROW']['columns'][0]['cells'][0]
-    context['story'] = context['element']
-    context['story']['body'] = context['story']['content']
-    context['APP_ROOT'] = request.base_url
-    close_session(db_session)
-    return render_template('main/specific_page.jinja2', **context)
-
-
-@main_bp.route('/main/single/<string:page_ident>', methods=['GET'])
-@login_required
-def sst_get_single_page(page_ident):
-    """TEMPORARY - step to using  common page rendering."""
-    db_session = create_session(get_engine())
-    msp = MultiStoryPage(db_session)
-    msp.make_descriptor_from_story_id(page_ident, 12)
-    context = msp.make_multi_element_page_context()
-    context['APP_ROOT'] = request.base_url
-    close_session(db_session)
-    return render_template('main/main.jinja2', **context)
-
+    db_exec = DBExec()
+    try:
+        new_page = MultiStoryPage(db_exec)
+        new_res = new_page.make_single_page_context(page_ident)    # TODO:  ALLOW PAGE ID
+        context = new_res['PAGE']['rows'][0]['ROW']['columns'][0]['cells'][0]
+        context['story'] = context['element']
+        context['story']['body'] = context['story']['content']
+        context['APP_ROOT'] = request.base_url
+        return render_template('main/specific_page.jinja2', **context)
+    finally:
+        db_exec.terminate()
 
 @main_bp.route('/menu/<string:page>', methods=['GET'])
 @login_required

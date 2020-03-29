@@ -2,6 +2,40 @@ from ssfl import db
 import datetime as dt
 from sqlalchemy.orm import defer
 from .json_tables import JSONStorageManager as jsm
+from .base_table_manager import BaseTableManager
+from utilities.sst_exceptions import SiteIdentifierError, SiteObjectNotFoundError
+
+
+class PageManager(BaseTableManager):
+    def __init__(self, db_session):
+        super().__init__(db_session)
+
+    def fetch_page(self, page_id, page_name):
+        """Fetch page from database, using cached page if it exists and is current."""
+        try:
+            if page_id:
+                target_page = self.db_session.query(Page).filter(Page.id == page_id).first()
+            elif page_name:
+                target_page = self.db_session.query(Page).filter(Page.page_name == page_name.lower()).first()
+            else:
+                raise SiteIdentifierError(None, None, 'No id or page_name provided')
+            if target_page:
+                return target_page
+            else:
+                raise SiteObjectNotFoundError(page_id, page_name, 'DB returned null result')
+        except Exception as e:
+            print(e.args)
+        finally:
+            target_page = self._dummy_result_page(page_id, page_name)
+        return target_page
+
+    def _dummy_result_page(self, page_id, page_name):
+        """Dummy page for failing retrieve."""
+        result = Page()
+        result.page_title = 'Page Not Found: {}'.format(page_name)
+        result.page_content = '''<p>Fail when loading page with id/name: {}/{}</p>'''.format(page_id, page_name)
+        return result
+
 
 class PageManager(object):
     def __init__(self, db_session):
@@ -20,6 +54,33 @@ class PageManager(object):
     def get_page_from_name(self, name):
         res = self.db_session.query(Page).filter(Page.page_name == name).first()
         return res
+
+    def fetch_page(self, page_id, page_name):
+        """Fetch page from database, using cached page if it exists and is current."""
+        try:
+            if page_id:
+                target_page = self.db_session.query(Page).filter(Page.id == page_id).first()
+            elif page_name:
+                target_page = self.db_session.query(Page).filter(Page.page_name == page_name.lower()).first()
+            else:
+                raise SiteIdentifierError(None, None, 'No id or page_name provided')
+            if target_page:
+                return target_page
+            else:
+                raise SiteObjectNotFoundError(page_id, page_name, 'DB returned null result')
+        except Exception as e:
+            print(e.args)
+
+
+
+    def update_cached_page(self, page, res):
+        print("page_tables.py update_cache disabled")
+        return
+        if not page.page_do_not_cache:
+            page.page_cached_content = res
+            page.page_cached = True  # todo:  SHOULD BE TRUE EX DEBUG
+            page.page_cached_date = dt.datetime.now()
+            # session.commit()                          # commit handled at request completion
 
 
 class Page(db.Model):
@@ -77,13 +138,7 @@ class Page(db.Model):
             return self.page_content
 
     def update_cache(self, session, new_text):
-        print("page_tables.py update_cache disabled")
-        return
-        if not self.page_do_not_cache:
-            self.page_cached_content = new_text
-            self.page_cached = True                    # todo:  SHOULD BE TRUE EX DEBUG
-            self.page_cached_date = dt.datetime.now()
-            # session.commit()                          # commit handled at request completion
+        raise SystemError("moved to Page Manager")
 
     def __repr__(self):
         return '<Flask Page {}>'.format(self.__tablename__)

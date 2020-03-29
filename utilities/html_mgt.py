@@ -16,7 +16,7 @@ NSMAP = {None: XHTML_NAMESPACE}
 class PageBody(object):
     """Utility operations to organize and structure the body of an html page.
     """
-    def __init__(self, session):
+    def __init__(self, db_exec):
         # TODO: set directories via config
         self.working_dir = '/home/don/devel/flaskSamples/'
         self.doc_as_html = None  # Not set if page is loaded from database
@@ -24,38 +24,15 @@ class PageBody(object):
         self.tab_title = None   # Generally same as title, but may be different
         self.body = None  # As original doc with title removed
         self.page_date = None
-        self.session = session
+        self.db_exec = db_exec
         self.page_in_db = None
-
-    def _dummy_result_page(self, page_id, page_name):
-        """Dummy page for failing retrieve."""
-        result = Page()
-        result.page_title = 'Page Not Found: {}'.format(page_name)
-        result.page_content = '''<p>Fail when loading page with id/name: {}/{}</p>'''.format(page_id, page_name)
-        return result
-
-    def _fetch_page(self, page_id, page_name):
-        """Fetch page from database, using cached page if it exists and is current."""
-        try:
-            if page_id:
-                target_page = self.session.query(Page).filter(Page.id == page_id).first()
-            elif page_name:
-                target_page = self.session.query(Page).filter(Page.page_name == page_name.lower()).first()
-            else:
-                raise SiteIdentifierError(None, None, 'No id or page_name provided')
-            if target_page:
-                self.page_in_db = target_page
-                return target_page
-            else:
-                raise SiteObjectNotFoundError(page_id, page_name, 'DB returned null result')
-        except Exception as e:
-            print(e.args)
-        finally:
-            target_page = self._dummy_result_page(page_id, page_name)
-        return target_page
+        self.page_manager = db_exec.get_manager('page')
+        # TODO: Remove dependence on access to session (seems only needed for page caching)
+        self.session = db_exec.get_db_session()
 
     def load_from_db(self, page_id=None, page_name=None):
-        target_page = self._fetch_page(page_id, page_name)
+        target_page = self.page_manager.fetch_page(page_id, page_name)
+        self.page_in_db = target_page
         content = target_page.fetch_content(self.session)
         xhtml = etree.Element(XHTML + "html", nsmap=NSMAP)  # set namespaces so they don't appear in result HTML
         body = etree.SubElement(xhtml, XHTML + "body")
@@ -145,7 +122,7 @@ class PageBody(object):
     def update_cached_page(self):
         if self.page_in_db:
             res = tostring(self.body, 'utf-8').decode('utf-8').replace('<html:', '<').replace('/html:', '/')
-            self.page_in_db.update_cache(self.session, res)
+            self.page_manager.update_cached_page(self.page_in_db, res)
 
     def find_title(self):
         """Find title from the body, if it exists.

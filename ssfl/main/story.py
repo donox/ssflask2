@@ -24,21 +24,14 @@ class Story(object):
             arg (str): This is where we store arg,
         """
 
-    def __init__(self, session, width):
-        width_sizes = {3: 'is-one-quarter',
-                       4: 'is-one-third',
-                       6: 'is-half',
-                       8: 'is-two-thirds',
-                       12: 'is-full'}
-        self.json_store = jsm(session)
+    def __init__(self, db_exec, width):
+        self.db_exec = db_exec
+        self.json_store = jsm(db_exec)
         self.story = dict()
         self.pb = None  # PageBody
-        self.session = session
         self.snippet_width = width       # Width to display on front page in columns (1-12)
         self.story['width'] = width
         self.story['width-class'] = None
-        if width in width_sizes.keys():
-            self.story['width-class'] = width_sizes[width]
         self.read_more = None
 
 
@@ -81,7 +74,7 @@ class Story(object):
         return self.read_more
 
     def create_story_from_db(self, page_id=None, page_name=None):
-        self.pb = PageBody(self.session)
+        self.pb = PageBody(self.db_exec)
         self.pb.load_from_db(page_id=page_id, page_name=page_name)
         # Expand shortcodes
 
@@ -89,7 +82,7 @@ class Story(object):
         for shortcode in sc_list:
             sc, elem, start, end = shortcode
             sc_string = elem.text[start:end]
-            sc_obj = Shortcode(self.session, sc_string)
+            sc_obj = Shortcode(self.db_exec, sc_string)
             sc_obj.parse_shortcode()
             sc_obj.process_shortcode()
             if 'result' in sc_obj.content_dict.keys():

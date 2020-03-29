@@ -16,8 +16,8 @@ class Shortcode(object):
     sc_re = re.compile(r'\[(\w+)( *.+)* *\]', re.I)
     sc_re_arg = re.compile(r'( *([A-Za-z0-9_]+) *= *"(.*)")+?')
 
-    def __init__(self, db_session, string_to_match=None):
-        self.session = db_session
+    def __init__(self, db_exec, string_to_match=None):
+        self.db_exec = db_exec
         self.specific_processors = {'maxbutton': self._process_maxbutton,
                                     'singlepic': self._process_singlepic,
                                     'ngg_images': self._process_ngg_images,
@@ -97,7 +97,7 @@ class Shortcode(object):
             print("Maxbutton Key Error in dict: {}".format(self.content_dict))
             raise e
         try:
-            target_page = find_page_from_url(self.session, url_content)
+            target_page = find_page_from_url(self.db_exec, url_content)
             if target_page:
                 page_id = target_page.id
                 target = 'http://' + Config.SERVER_NAME + "/main/page/" + str(page_id)
@@ -121,19 +121,19 @@ class Shortcode(object):
         # TODO: change to current id's and update singlepic reference
         # TODO: change to use same photo url build as in multi_story_page
         if old_id:
-            photo_rec = self.session.query(DBPhoto).filter(DBPhoto.old_id == photo_id).first()
+            photo_rec = self.session.query(DBPhoto).filter(DBPhoto.old_id == photo_id).first()     ###########################################################
         else:
             photo_rec = self.session.query(DBPhoto).filter(DBPhoto.id == photo_id).first()
         gallery_id = photo_rec.old_gallery_id
         photo_file = photo_rec.file_name
         alt_text = photo_rec.alt_text
         photo_caption = photo_rec.caption
-        gallery_rec = self.session.query(PhotoGallery).filter(PhotoGallery.old_id == gallery_id).first()
+        gallery_rec = self.session.query(PhotoGallery).filter(PhotoGallery.old_id == gallery_id).first()  ###################################################
         file_path = gallery_rec.path_name + photo_file
         return photo_rec, gallery_rec, gallery_id, photo_file, photo_caption, alt_text, file_path
 
     def _get_photo_list_by_gallery_id(self, gallery_id, old_id=True):
-        gallery_rec = self.session.query(PhotoGallery).filter(PhotoGallery.old_id == gallery_id).first()
+        gallery_rec = self.session.query(PhotoGallery).filter(PhotoGallery.old_id == gallery_id).first()    #######################################################
         photo_ids = [x.id for x in
                      self.session.query(DBPhoto).filter(DBPhoto.old_gallery_id == gallery_rec.old_id).all()]
         return photo_ids
@@ -141,7 +141,7 @@ class Shortcode(object):
     def _process_singlepic(self):
         try:
             photo_id = int(self.content_dict['id'])
-            photoframe = SlideShow('NEED PHOTO NAME', db_session=self.session)
+            photoframe = SlideShow('NO NAME', self.db_exec)
             photoframe.add_photo(photo_id)
             if 'h' in self.content_dict:
                 photoframe.set_dimension('height', self.content_dict['h'])
@@ -213,7 +213,7 @@ class Shortcode(object):
             if len(photo_ids) == 1:
                 for photo_id in photo_ids:  # retrieve single element from either list or set
                     break
-            photoframe = SlideShow('NEED PHOTO NAME', db_session=self.session)
+            photoframe = SlideShow(self.db_exec)
             for p_id in photo_ids:
                 photoframe.add_photo(p_id)
             if 'h' in keys:

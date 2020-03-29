@@ -3,6 +3,16 @@ import datetime as dt
 from sqlalchemy.orm import defer
 import json as jsn
 from collections import defaultdict
+from.base_table_manager import BaseTableManager
+
+
+class JSONTableManager(BaseTableManager):
+    def __init__(self, db_session):
+        super().__init__(db_session)
+
+    def get_json_by_name(self, name: str):
+        res = self.db_session.query(JSONStore).filter(JSONStore.name == name).first()
+        return res
 
 
 
@@ -163,9 +173,10 @@ class JSONStorageManager(object):
 
     descriptor_test_fields = {"ONECELL": "REMOVE", "PAGE": "S_SINGLECELLROW", "descriptor": "PAGE"}
 
-    def __init__(self, db_session):
-        self.db_session = db_session
+    def __init__(self, db_exec):
+        self.db_exec = db_exec
         cls = JSONStorageManager
+        self.table_manager = self.db_exec.create_json_manager()
         self.all_fields = dict()
         self.all_fields['PAGE'] = cls.descriptor_page_layout
         self.all_fields['ROW'] = cls.descriptor_row_layout
@@ -314,7 +325,7 @@ class JSONStorageManager(object):
         return res
 
     def get_json_from_name(self, name):
-        res = self.db_session.query(JSONStore).filter(JSONStore.name == name).first()
+        res = self.table_manager.get_json_by_name(name)
         if res:
             json = jsn.loads(res.content)
             return json

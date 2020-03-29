@@ -16,11 +16,12 @@ class MultiStoryPage(object):
      Form: 
      Processor: multi_story_page.py
     """
-    def __init__(self, db_session):
-        self.session = db_session
+    def __init__(self, db_exec):
+        self.db_exec = db_exec
         self.descriptor = None
         self.context = dict()
-        self.storage_manager = jsm(db_session)
+        self.storage_manager = jsm(db_exec)
+        self.photo_manager = db_exec.create_photo_manager()
 
     def make_descriptor_from_csv_file(self, file):
         """Create a descriptor corresponding to a formatted spreadsheet.
@@ -178,7 +179,7 @@ class MultiStoryPage(object):
             page_name = elem['name']   # will use which ever is set
         if 'id' in elem:                                                         # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             page_id = elem['id']                                                     # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        story = Story(self.session, width)
+        story = Story(self.db_exec, width)
         story.create_story_from_db(page_id= page_id, page_name=page_name)
         elem['title'] = story.get_title()
         elem['content'] = story.get_body()
@@ -193,13 +194,12 @@ class MultiStoryPage(object):
         #        loaded from the DB. This is equivalent to creating a Photo object and then calling
         #        the get_json_descriptor on it.
         photo_id = elem['id']
-        # TODO: Needs to become Photo.id when photo tables are fully converted (or Story sets current id in descriptor)
-        photo = self.session.query(Photo).filter(Photo.old_id == photo_id).first()
+        photo = self.photo_manager.get_photo_from_id(photo_id)
         if not photo:
             raise ValueError(f'No photo with id: {photo_id}')
         if not elem['caption']:
             elem['caption'] = photo.caption
-        elem['url'] = photo.get_photo_url(self.session, photo_id)
+        elem['url'] = self.photo_manager.get_photo_url(photo_id)
         elem['alt_text'] = photo.alt_text
 
     def _fill_story_snippet(self, elem):
@@ -209,7 +209,7 @@ class MultiStoryPage(object):
         width = 3  # TODO: determine correct input
         id_val = elem['id']
         page_name = elem['name']
-        story = Story(self.session, width)
+        story = Story(self.db_exec, width)
         if id_val:
             story.create_story_from_db(page_id=id_val)
         else:
@@ -225,7 +225,7 @@ class MultiStoryPage(object):
         # {"CALENDAR_SNIPPET": None, "events": [], "event_count": None, "width": None,
         #  "audience": [], "categories": []}
         ev_count = elem['event_count']
-        calendar = Calendar(self.session, elem['width'])
+        calendar = Calendar(self.db_exec, elem['width'])
         calendar.create_daily_plugin(elem['event_count'])
         content = calendar.get_calendar_snippet_data()
         elem['events'] = content['events']
@@ -254,7 +254,7 @@ class MultiStoryPage(object):
         return self.descriptor
 
     def make_single_page_context(self, story: str) -> Dict[AnyStr, Any]:
-        mgr = jsm(self.session)
+        mgr = jsm(self.db_exec)
         res = mgr.make_json_descriptor(mgr.get_json_from_name('P_SINGLECELLROW'))
         res['ROW']['columns'][0]['cells'][0]['element'] = "S_STORY"
         res['ROW']['columns'][0]['cells'][0]['element_type'] = "STORY"

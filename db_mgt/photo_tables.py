@@ -9,6 +9,84 @@ from .json_tables import JSONStorageManager as jsm
 from flask import url_for, render_template
 import os
 from io import BytesIO
+from .base_table_manager import BaseTableManager
+
+
+class PhotoManager(BaseTableManager):
+    """Manager to control access to Photos, Slideshows, and Galleries
+
+    """
+
+    def __init__(self, db_session):
+        super().__init__(db_session)
+        self.get_photo_field_value = self.get_table_value('photo')
+        self.get_gallery_field_value = self.get_table_value('photo_gallery')
+
+    def get_photoframe(self, show_name='NEED PHOTO NAME'):
+        photoframe = SlideShow(show_name, db_session=self.db_session)
+        return photoframe
+
+    def get_photo_from_id(self, photo_id):
+        if photo_id < 10000:
+            # This is an old photo ID
+            # TODO: Remove this leg of test when all photos have been imported and old links removed
+            sql = f'select * from ssflask2.photo ph join v_photo_picture pp '
+            sql += f'where pp.photo_id = ph.id and pp.wp_picture_id = {photo_id};'
+        else:
+            sql = f'select * from ssflask2.photo where id={photo_id};'
+        res = self.db_session.execute(sql).first()
+        if res:
+            gv = self.get_photo_field_value(res)
+            photo = Photo(id=gv('id'), image_slug=gv('image_slug'), gallery_id=gv('gallery_id'),
+                          file_name=gv('file_name'), caption=gv('caption'), alt_text=gv('alt_text'),
+                          image_date=gv('image_date'), meta_data=gv('meta_data'), old_gallery_id=0)
+            return photo
+        else:
+            # Missing photo - return dummy
+            photo = Photo(id=photo_id, image_slug='no-slug', gallery_id=0,
+                          file_name='no_such_file', caption='Photo Missing', alt_text='Photo Missing',
+                          image_date=None, meta_data=None, old_gallery_id=0)
+            return photo
+
+    def get_gallery_by_id(self, pid):
+        # This is new gallery_id
+        sql = f'select * from photo_gallery where id={pid}'
+        res = self.db_session.execute(sql)
+        if res:
+            res = res.first()
+            gv = self.get_gallery_field_value(res)
+            gallery = PhotoGallery(id=gv('id'), old_id=0, name=gv('name'),
+                                   slug_name=gv('slug_name'), path_name=gv('path_name'))
+            return gallery
+        return None
+
+    def get_photo_url(self, old_photo_id):  # TODO: replace to use current id
+        try:
+            temp = self.get_photo_file_path(old_photo_id)
+            if temp:
+                url = url_for('admin_bp.get_image', image_path=temp)
+                return url
+            return None
+        except Exception as e:
+            foo = 3
+            raise e
+
+    def get_photo_file_path(self, photo_id):  # TODO: replace to use current id
+        try:
+            photo = self.get_photo_from_id(photo_id)
+            gallery_id = photo.gallery_id
+            if gallery_id:
+                gallery = self.get_gallery_by_id(gallery_id)
+                # A url suitable for appending to the url_root of a request
+                temp = gallery.path_name + photo.file_name
+                return temp
+            else:
+                return None
+        except InterfaceError as e:
+            return None
+        except Exception as e:
+            foo = 3
+            raise e
 
 
 class Photo(db.Model):
@@ -29,31 +107,6 @@ class Photo(db.Model):
         if commit:
             session.commit()
         return self
-
-    @staticmethod
-    def get_photo_url(session, old_photo_id):  # TODO: replace to use current id
-        try:
-            temp = Photo.get_photo_file_path(session, old_photo_id)
-            url = url_for('admin_bp.get_image', image_path=temp)
-            return url
-        except Exception as e:
-            foo = 3
-            raise e
-
-    @staticmethod
-    def get_photo_file_path(session, old_photo_id):  # TODO: replace to use current id
-        try:
-            photo = session.query(Photo).filter(Photo.old_id == old_photo_id).first()
-            gallery_id = photo.old_gallery_id
-            gallery = session.query(PhotoGallery).filter(PhotoGallery.old_id == gallery_id).first()
-            # A url suitable for appending to the url_root of a request
-            temp = gallery.path_name + photo.file_name
-            return temp
-        except InterfaceError as e:
-            return None
-        except Exception as e:
-            foo = 3
-            raise e
 
     def get_resized_photo(self, session, width=None, height=None):
         """Get  resized copy of self photo into temporary file.
@@ -95,7 +148,7 @@ class Photo(db.Model):
                 photo = Photo()
                 res = session.execute(sql).first()
                 photo_id, old_id, image_slug, gallery_id, old_gallery_id, file_name, caption, \
-                    alt_text, image_date, meta_data = res
+                alt_text, image_date, meta_data = res
                 photo.id = photo_id
                 photo.old_id = old_id
                 photo.image_slug = image_slug
@@ -185,10 +238,11 @@ class SlideShow(object):
     Collection of photos rendered by template to produce html for slideshow.
     """
 
-    def __init__(self, name, db_session):
+    def __init__(self, name, db_exec):
         # ['SLIDESHOW', 'title', 'title_class', 'position', 'width', 'height', 'rotation', 'frame_title', 'pictures']
-        self.db_session = db_session
-        self.json_store = jsm(db_session)
+        self.db_exec = db_exec
+        self.json_store = jsm(db_exec)
+        self.photo_manager = db_exec.create_photo_manager()
         self.show_desc = self.json_store.get_json_from_name('P_SLIDESHOW')
         self.show_desc['title'] = name
         self.show_desc['title_class'] = 'title_class'
@@ -200,7 +254,7 @@ class SlideShow(object):
         self.html = ''
 
     def add_photo(self, photo_id):
-        new_photo = Picture(self.db_session, photo_id)
+        new_photo = Picture(self.db_exec, photo_id)  # make call as self.photo_manager(photo_id)
         self.show_desc['pictures'].append(new_photo.get_picture_descriptor())
 
     def add_title(self, title):
@@ -230,26 +284,23 @@ class SlideShow(object):
 
 
 class Picture(object):
-    def __init__(self, db_session, photo_id):
+    def __init__(self, db_exec, photo_id):
         # ['PICTURE', 'id', 'url', 'title', 'caption', 'width', 'height', 'alignment', 'alt_text',
         #             'css_style', 'css_class', 'title_class', 'caption_class', 'image_class']
-        self.json_store = jsm(db_session)
+        self.json_store = jsm(db_exec)
         self.picture_desc = self.json_store.get_json_from_name('P_PICTURE')
-        self.db_session = db_session
+        self.db_exec = db_exec
         self.picture_desc['id'] = photo_id
-        res = db_session.query(Photo).filter(Photo.id == photo_id).first()
-        if not res:
-            # TODO:  REMOVE THIS WHEN ALL PHOTOS ARE USING NEW ID
-            res = db_session.query(Photo).filter(Photo.old_id == photo_id).first()
+        self.picture_manager = db_exec.create_photo_manager()
+        res = self.picture_manager.get_photo_from_id(photo_id)
         if res:
             db_photo = res
-            gallery_id = db_photo.old_gallery_id
+            gallery_id = db_photo.gallery_id
             file_name = db_photo.file_name
             self.picture_desc[''] = db_photo.alt_text
             self.picture_desc['caption'] = db_photo.caption
-            res_gal = db_session.query(PhotoGallery).filter(PhotoGallery.old_id == gallery_id)
-            if res_gal:
-                db_gallery = res_gal.first()
+            db_gallery = self.picture_manager.get_gallery_by_id(gallery_id)
+            if db_gallery:
                 path = db_gallery.path_name
                 relative_path = '/static/gallery/' + path + file_name
                 self.picture_desc['url'] = relative_path

@@ -9,7 +9,7 @@ import datetime as dt
 from db_mgt.page_tables import Page
 
 
-class TestJSONStorageManager(BaseTestCase):
+class TestImportPages(BaseTestCase):
     def test_get_fields_from_table(self):
         db_session = create_session(get_engine())
         try:
