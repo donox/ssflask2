@@ -33,6 +33,7 @@ from .manage_index_pages import DBManageIndexPages
 from .manage_json_templates import manage_json_templates
 from .miscellaneous_functions import miscellaneous_functions
 from import_data.db_import_pages import ImportPageData
+from db_mgt.db_exec import DBExec
 
 # Set up a Blueprint
 admin_bp = Blueprint('admin_bp', __name__,
@@ -124,33 +125,32 @@ def get_events():
 @admin_bp.route('/getimage/<path:image_path>', methods=['GET'])
 def get_image(image_path):
     sst_admin_access_log.make_info_entry(f"Route: /admin/get_image/{image_path}")
-    path = Config.USER_DIRECTORY_IMAGES + image_path
-    args = request.args
-    width = 200
-    height = 200
-    if args['w'] and args['w'] != 'None':
-        width = int(args['w'])  # TODO: Change to width/height and in picture.jinja2
-    if args['h'] and args['h'] != 'None':
-        height = int(args['h'])
-    db_session = create_session(get_engine())
-    fl = f'Photo {path} not available'
+    db_exec = DBExec()
     try:
-        photo = Photo.get_photo_from_path(db_session, path)
-        if photo:
-            photo_string = photo.get_resized_photo(db_session, width=width, height=height)
-            close_session(db_session)
-            photo_string.seek(0)
-            wrapped_string = FileWrapper(photo_string)
-            # Note:  this return can be removed if Werkzeug is upgraded to handle ByteIO objects
-            # github.com/unbit/uwsgi/issues/1126
-            return Response(wrapped_string, mimetype='image/jpeg', direct_passthrough=True)
-            # return send_file(wrapped_string, mimetype='image/jpeg')
-    except AttributeError as e:
-        close_session(db_session)
-        return abort(404, "Screwed up")
-    except Exception as e:
-        close_session(db_session)
-        raise e
+        path = Config.USER_DIRECTORY_IMAGES + image_path
+        args = request.args
+        width = 200
+        height = 200
+        if args['w'] and args['w'] != 'None':
+            width = int(args['w'])  # TODO: Change to width/height and in picture.jinja2
+        if args['h'] and args['h'] != 'None':
+            height = int(args['h'])
+        fl = f'Photo {path} not available'
+        try:
+            photo_mgr = db_exec.create_photo_manager()
+            photo = photo_mgr.get_photo_from_path(path)
+            if photo:
+                photo_string = photo_mgr.get_resized_photo(photo, width=width, height=height)
+                photo_string.seek(0)
+                wrapped_string = FileWrapper(photo_string)
+                # Note:  this return can be removed if Werkzeug is upgraded to handle ByteIO objects
+                # github.com/unbit/uwsgi/issues/1126
+                return Response(wrapped_string, mimetype='image/jpeg', direct_passthrough=True)
+                # return send_file(wrapped_string, mimetype='image/jpeg')
+        except AttributeError as e:
+            return abort(404, "Screwed up")
+    finally:
+        db_exec.terminate()
 
 
 def _has_no_empty_params(rule):

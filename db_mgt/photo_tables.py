@@ -48,6 +48,35 @@ class PhotoManager(BaseTableManager):
                           image_date=None, meta_data=None, old_gallery_id=0)
             return photo
 
+    def get_photo_from_path(self, path):
+
+        photo_path = path.split('/')[-1]
+        multi_try = 3  # Acts as if there may be a race condition - trying multiple times before failure
+        while multi_try > 0:
+            try:
+                sql = 'SELECT *  FROM photo '
+                sql += f'WHERE file_name = "{photo_path}";'
+                photo = Photo()
+                res = self.db_session.execute(sql).first()
+                photo_id, old_id, image_slug, gallery_id, old_gallery_id, file_name, caption, \
+                alt_text, image_date, meta_data = res
+                photo.id = photo_id
+                photo.old_id = old_id
+                photo.image_slug = image_slug
+                photo.gallery_id = gallery_id
+                photo.old_gallery_id = old_gallery_id
+                photo.file_name = file_name
+                photo.caption = caption
+                photo.alt_text = alt_text
+                photo.image_date = image_date
+                photo.meta_data = meta_data
+                return photo
+            except Exception as e:
+                multi_try -= 1
+                if not multi_try:
+                    raise ValueError(f'Multiple Failures retrieving photo {photo_path}')
+
+
     def get_gallery_by_id(self, pid):
         # This is new gallery_id
         sql = f'select * from photo_gallery where id={pid}'
@@ -71,7 +100,7 @@ class PhotoManager(BaseTableManager):
             foo = 3
             raise e
 
-    def get_photo_file_path(self, photo_id):  # TODO: replace to use current id
+    def get_photo_file_path(self, photo_id):
         try:
             photo = self.get_photo_from_id(photo_id)
             gallery_id = photo.gallery_id
@@ -82,8 +111,31 @@ class PhotoManager(BaseTableManager):
                 return temp
             else:
                 return None
-        except InterfaceError as e:
-            return None
+        except Exception as e:
+            foo = 3
+            raise e
+
+    def get_resized_photo(self, photo, width=None, height=None):
+        """Get  resized copy of self photo into temporary file.
+        """
+        try:
+            file_path = self.get_photo_file_path(photo.id)
+            file = Config.USER_DIRECTORY_IMAGES + file_path
+            if os.path.exists(file):
+                image = Image.open(file)
+            else:
+                raise PhotoHandlingError(f'Photo file does not exist: {file}')
+
+            # print(f'Image Size {image.size}')
+            image.thumbnail((width, height))
+
+            # tmp_fl = get_temp_file_name('photo', 'jpg')
+            byte_io = BytesIO()
+            image.save(byte_io, 'JPEG')
+            return byte_io
+        except PhotoHandlingError as e:
+            foo = 3
+            raise e
         except Exception as e:
             foo = 3
             raise e
@@ -107,63 +159,6 @@ class Photo(db.Model):
         if commit:
             session.commit()
         return self
-
-    def get_resized_photo(self, session, width=None, height=None):
-        """Get  resized copy of self photo into temporary file.
-        """
-        try:
-            try:
-                file = Config.USER_DIRECTORY_IMAGES + Photo.get_photo_file_path(session, self.old_id)
-            except Exception as e:
-                raise PhotoHandlingError(f'Failure retrieving photo from DB with old_id: {self.old_id}')
-
-            if os.path.exists(file):
-                image = Image.open(file)
-            else:
-                raise PhotoHandlingError(f'Photo file does not exist: {file}')
-
-            # print(f'Image Size {image.size}')
-            image.thumbnail((width, height))
-
-            # tmp_fl = get_temp_file_name('photo', 'jpg')
-            byte_io = BytesIO()
-            image.save(byte_io, 'JPEG')
-            return byte_io
-        except PhotoHandlingError as e:
-            foo = 3
-        except Exception as e:
-            foo = 3
-
-    @staticmethod
-    def get_photo_from_path(session, path):
-        photo_path = path.split('/')[-1]
-        multi_try = 3  # Acts as if there may be a race condition - trying multiple times before failure
-        while multi_try > 0:
-            try:
-                # Note:  This is an attempt to avoid DB errors ************************************
-                # photo = session.query(Photo).filter(Photo.file_name == photo_path).first()
-                sql = 'SELECT id, old_id, image_slug, gallery_id, old_gallery_id, file_name, caption, '
-                sql += 'alt_text, image_date, meta_data FROM photo '
-                sql += f'WHERE file_name = "{photo_path}";'
-                photo = Photo()
-                res = session.execute(sql).first()
-                photo_id, old_id, image_slug, gallery_id, old_gallery_id, file_name, caption, \
-                alt_text, image_date, meta_data = res
-                photo.id = photo_id
-                photo.old_id = old_id
-                photo.image_slug = image_slug
-                photo.gallery_id = gallery_id
-                photo.old_gallery_id = old_gallery_id
-                photo.file_name = file_name
-                photo.caption = caption
-                photo.alt_text = alt_text
-                photo.image_date = image_date
-                photo.meta_data = meta_data
-                return photo
-            except Exception as e:
-                multi_try -= 1
-                if not multi_try:
-                    raise ValueError(f'Multiple Failures retrieving photo {photo_path}')
 
     def get_json_descriptor(self):
         res = jsm.make_json_descriptor('Photo', jsm.descriptor_picture_fields)
