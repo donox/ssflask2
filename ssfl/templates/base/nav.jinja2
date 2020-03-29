@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<nav class="navbar navbar-expand-md navbar-dark bg-dark mb-3" role="navigation" aria-label="main navigation">
+<nav class="navbar navbar-expand-md navbar-dark bg-dark mb-3 sticky-top" role="navigation" aria-label="main navigation">
     <div class="container">
         <div class="navbar-brand mr-3">
             <a class="navbar-item" href="https://sunnyside.cc">
-                <img src="{{ url_for('static', filename='images/NoEvil.jpg') }}" width="50" height="50">
+                <img src="{{ url_for('static', filename='images/NoEvil.jpg') }}" width="50px" height="50px">
             </a>
 
             <a role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false"
@@ -16,36 +16,36 @@
 
         <div id="navbarSST" class="navbar-menu">
             <div class="navbar-start">
-                <a class="navbar-item" href="{{ url_for('main.sst_main') }}">
+                <a class="navbar-item has-text-white" href="{{ url_for('main.sst_main') }}">
                     Home
                 </a>
 
-                <a class="navbar-item" href="{{ url_for('main.sst_main_calendar') }}">
+                <a class="navbar-item has-text-white" href="{{ url_for('main.sst_main_calendar') }}">
                     Calendar
                 </a>
 
-                <a class="navbar-item" href="{{ url_for('main.sst_get_menu_page', page='activities-index') }}">
+                <a class="navbar-item has-text-white" href="{{ url_for('main.sst_get_menu_page', page='activities-index') }}">
                     Activities
                 </a>
 
-                <a class="navbar-item" href="{{ url_for('main.sst_get_menu_page', page='cool-stories-index') }}">
+                <a class="navbar-item has-text-white" href="{{ url_for('main.sst_get_menu_page', page='cool-stories-index') }}">
                     Cool Stories
                 </a>
 
-                <a class="navbar-item" href="{{ url_for('main.sst_get_menu_page', page='resources-index') }}">
+                <a class="navbar-item has-text-white" href="{{ url_for('main.sst_get_menu_page', page='resources-index') }}">
                     Resources
                 </a>
 
-                <a class="navbar-item" href="{{ url_for('main.sst_get_menu_page', page='administration-index') }}">
+                <a class="navbar-item has-text-white" href="{{ url_for('main.sst_get_menu_page', page='administration-index') }}">
                     Admin
                 </a>
 
-                <div class="navbar-item has-dropdown is-hoverable">
+                <div class="navbar-item has-dropdown is-hoverable has-text-white">
                     <a class="navbar-link">
                         More
                     </a>
 
-                    <div class="navbar-dropdown">
+                    <div class="navbar-dropdown has-text-white">
                         <a class="navbar-item" href="{{ url_for('main.sst_get_menu_page', page='quick-access') }}">
                             Quick Links
                         </a>
@@ -63,7 +63,7 @@
                     </div>
                 </div>
 
-                <div class="navbar-item has-dropdown is-hoverable">
+                <div class="navbar-item has-dropdown is-hoverable has-text-white">
                     <a class="navbar-link">
                         Site Admin
                     </a>
