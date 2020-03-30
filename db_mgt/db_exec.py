@@ -2,6 +2,7 @@ from .setup import get_engine, create_session, close_session
 from .photo_tables import PhotoManager
 from .page_tables import PageManager
 from .json_tables import JSONTableManager
+from .event_tables import EventManager
 
 
 
@@ -50,7 +51,8 @@ class DBExec(object):
         pass
 
     def create_event_manager(self):
-        pass
+        mgr = EventManager(self.db_session)
+        return mgr
 
     def create_calendar_manager(self):
         pass

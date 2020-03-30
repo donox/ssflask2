@@ -14,7 +14,7 @@ import re
 # file_type = StringField('File Type for Input', default='csv')
 # submit = SubmitField('Save to File')
 
-def edit_json_file(session, form):
+def edit_json_file(db_exec, form):
     """Edit file that is stored in database.
 
         This applies to the case where there is both a database entry and valid filename."""
@@ -40,11 +40,11 @@ def edit_json_file(session, form):
     submit = form.submit.data
 
     try:
-        if json_id:
-            json_store_obj = session.query(JSONStore).filter(JSONStore.id == json_id).first()
-        else:
-            json_name = form.json_name.data.lower()
-            json_store_obj = session.query(JSONStore).filter(JSONStore.name == json_name).first()
+        json_table_mgr = db_exec.create_json_manager()
+        jsm = JSONStorageManager(db_exec)
+        json_name = form.json_name.data.lower()
+        json_store_obj = json_table_mgr.get_json_record_by_name_or_id(json_id, json_name)
+
         if work_function == 'jdown':  # => from DB to file
             if json_store_obj is None:
                 form.errors['JSON Entry Not Found'] = ['There was no entry with that id/name.']
@@ -59,12 +59,10 @@ def edit_json_file(session, form):
                 return False
         elif work_function == 'jcsv':  # => from file to DB for page descriptor
             if file_type == 'csv':
-                msp = MultiStoryPage(session)
+                msp = MultiStoryPage(db_exec)
                 msp.make_descriptor_from_csv_file(file)
                 descriptor = msp.get_descriptor_as_string()
-                jsm = JSONStorageManager(session)
-                jsm.add_json(json_name, descriptor)
-                session.commit()
+                json_table_mgr.add_json(json_name, descriptor)
                 return True
         elif work_function == 'jup':  # => presumes valid json content
             with open(direct + '/' + file + '.' + file_type, 'r', encoding='utf-8-sig') as fl:
@@ -73,13 +71,10 @@ def edit_json_file(session, form):
                     json_name = json_name.upper()
                 if compress:
                     content = ''.join(content.split())
-                jsm = JSONStorageManager(session)
-                jsm.add_json(json_name, content)
-                session.commit()
+                json_table_mgr.add_json(json_name, content)
                 return True
         elif work_function == 'jreset':
-            jsm = JSONStorageManager(session)
-            jsm.update_db_with_descriptor_prototype()
+            json_table_mgr.update_db_with_descriptor_prototype()
             return True
         else:
             form.errors['work_function'] = ['Selected Work Function Not Yet Implemented']
@@ -90,3 +85,6 @@ def edit_json_file(session, form):
         # TODO: handle error/log, and return useful message to user
         form.errors['Exception'] = 'Exception occurred processing page'
         return False
+
+    finally:
+        db_exec.terminate()

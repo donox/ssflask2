@@ -3,6 +3,7 @@ from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, Le
 import os
 from utilities.sst_exceptions import DataEditingSystemError
 from flask_wtf import FlaskForm
+from .form_docs.json_manage_templates_doc import docs
 
 
 # id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -36,20 +37,26 @@ class DBJSONManageTemplatesForm(FlaskForm):
     work_function = SelectField(label='Select Function',
                                 choices=supported_functions, render_kw={"id": "js1"})
     json_id = IntegerField('JSON DB ID', validators=[Optional()],
-                           render_kw={"class": "jcreate jedit jcal jpage jdelete"})
+                           render_kw={"class": "jcreate jedit jcal jpage jdelete", "docs": docs['all']['id']})
     json_name = StringField('JSON Template Name', validators=[Optional()],
-                            render_kw={"class": "jcreate jedit jcal jpage jdelete"})
+                            render_kw={"class": "jcreate jedit jcal jpage jdelete", "docs": docs['all']['name']})
     template_content = StringField('Name of JSON Template to Expand as Content', validators=[Optional()],
-                                   render_kw={"class": "jcreate"})
-    is_prototype = BooleanField('Template is prototype', default=False, render_kw={"class": "jcreate"})
-    compress = BooleanField('Remove excess whitespace and newlines?', default=False, render_kw={"class": "jcreate"})
+                                   render_kw={"class": "jcreate", "docs": docs['jcreate']['template_content'] })
+    is_prototype = BooleanField('Template is prototype', default=False,
+                                render_kw={"class": "jcreate", "docs": docs['jcreate']['prototype']})
+    compress = BooleanField('Remove excess whitespace and newlines?', default=False,
+                            render_kw={"class": "jcreate", "docs": docs['jcreate']['compress']})
 
-    story_template = StringField('JSON Template to Complete', validators=[Optional()], render_kw={"class": "jedit"})
-    story_slug = StringField('Slug for story to process', validators=[Optional()], render_kw={"class": "jedit"})
-    story_author = StringField('Story Author (optional)', validators=[Optional()], render_kw={"class": "jedit"})
-    story_title = StringField('Story Title (optional)', validators=[Optional()], render_kw={"class": "jedit"})
+    story_template = StringField('JSON Template to Complete', validators=[Optional()],
+                                 render_kw={"class": "jedit", "docs": docs['jedit']['story_template']})
+    story_slug = StringField('Slug for story to process', validators=[Optional()],
+                             render_kw={"class": "jedit", "docs": docs['jedit']['story_slug']})
+    story_author = StringField('Story Author (optional)', validators=[Optional()],
+                               render_kw={"class": "jedit", "docs": docs['jedit']['story_author']})
+    story_title = StringField('Story Title (optional)', validators=[Optional()],
+                              render_kw={"class": "jedit", "docs": docs['jedit']['story_title']})
     snippet_picture_id = IntegerField('ID for photo for story snippet', validators=[Optional()],
-                                      render_kw={"class": "jedit"})
+                                      render_kw={"class": "jedit", "docs": docs['jedit']['snippet_picture_id']})
 
     cal_template = StringField('JSON Template for Calendar', validators=[Optional()], render_kw={"class": "jcal"})
     cal_result_template = StringField('JSON Template to Create', validators=[Optional()], render_kw={"class": "jcal"})

@@ -15,18 +15,18 @@ calendar_categories = ['resident clubs', 'event', 'wellness', 'religion', 'commu
 
 
 class Calendar(object):
-    def __init__(self, session, width):
-        self.db_session = session
+    def __init__(self, db_exec, width):
+        self.db_exec = db_exec
         self.cal_data = dict()
         self.cal_data['width'] = width
 
     def create_daily_plugin(self, event_count, audiences=calendar_audiences, categories=calendar_categories):
         start = dt.datetime.now()
         end = dt.datetime.now() + dt.timedelta(hours=96)
-        events = SelectedEvents(self.db_session, start, end, audiences, categories)
+        events = SelectedEvents(self.db_exec, start, end, audiences, categories)
         dupe_check = set()
         res = []
-        jsm = JSONStorageManager(self.db_session)
+        jsm = JSONStorageManager(self.db_exec)
         empty_event = jsm.get_json_from_name('P_EVENT_SNIPPET')
         current_count = event_count
         for event in events.all_events:

@@ -1,4 +1,5 @@
 from ssfl import db
+from .base_table_manager import BaseTableManager
 import datetime as dt
 
 # Table supporting many-many relationships between events and metadata items.
@@ -8,6 +9,10 @@ event_meta_tbl = db.Table('event_meta_tbl', db.metadata,
                           db.Column('meta_id', db.Integer, db.ForeignKey('event_meta.id',
                                     ondelete='CASCADE'), primary_key=True),
                           extend_existing=True)
+
+class EventManager(BaseTableManager):
+    def __init__(self, db_session):
+        super().__init__(db_session)
 
 
 class Event(db.Model):

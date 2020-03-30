@@ -9,10 +9,52 @@ from.base_table_manager import BaseTableManager
 class JSONTableManager(BaseTableManager):
     def __init__(self, db_session):
         super().__init__(db_session)
+        self.db_session = db_session
 
     def get_json_by_name(self, name: str):
         res = self.db_session.query(JSONStore).filter(JSONStore.name == name).first()
         return res
+
+    def get_json_from_name(self, name):
+        res = self.get_json_by_name(name)
+        if res:
+            json = jsn.loads(res.content)
+            return json
+        else:
+            return None
+
+    def get_json_record_by_name_or_id(self, json_id, json_name ):
+        if json_id:
+            json_store_obj = self.db_session.query(JSONStore).filter(JSONStore.id == json_id).first()
+        else:
+            json_store_obj = self.db_session.query(JSONStore).filter(JSONStore.name == json_name).first()
+
+    def add_json(self, name, content):
+        exists = self.get_json_from_name(name)
+        if type(content) is str:
+            json_content = content
+        else:
+            json_content = jsn.dumps(content)
+        today = dt.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        if exists:
+            db_row = self.db_session.query(JSONStore).filter(JSONStore.name == name).first()
+            db_row.content = json_content
+            db_row.last_update = today
+            db_row.status = "active"
+            self.db_session.commit()
+        else:
+            db_row = JSONStore(name=name, content=json_content, status='active', last_update=today)
+            db_row.add_to_db(self.db_session, commit=True)
+
+    def update_db_with_descriptor_prototype(self, json_object):
+        """Update the definitions of each descriptor in the database as a prototype."""
+        for key, val in json_object.all_fields.items():
+            db_name = 'P_' + key
+            if json_object.get_json_from_name(db_name):
+                json_object.delete_descriptor(db_name)
+            desc = json_object.make_json_descriptor(val)
+            desc['descriptor'] = key
+            self.add_json(db_name, desc)
 
 
 
@@ -213,16 +255,6 @@ class JSONStorageManager(object):
         current_result['columns'].append(col['columns'][0])
         return
 
-    def update_db_with_descriptor_prototype(self):
-        """Update the definitions of each descriptor in the database as a prototype."""
-        for key, val in self.all_fields.items():
-            db_name = 'P_' + key
-            if self.get_json_from_name(db_name):
-                self.delete_descriptor(db_name)
-            desc = self.make_json_descriptor(val)
-            desc['descriptor'] = key
-            self.add_json(db_name, desc)
-
     def make_json_descriptor(self, descriptor: dict, result_processor: object = None):
         rlt = _KeepResult()
 
@@ -324,7 +356,7 @@ class JSONStorageManager(object):
             res[el] = None
         return res
 
-    def get_json_from_name(self, name):
+    def Xget_json_from_name(self, name):
         res = self.table_manager.get_json_by_name(name)
         if res:
             json = jsn.loads(res.content)
@@ -339,23 +371,6 @@ class JSONStorageManager(object):
             return json
         else:
             return None
-
-    def add_json(self, name, content):
-        exists = self.get_json_from_name(name)
-        if type(content) is str:
-            json_content = content
-        else:
-            json_content = jsn.dumps(content)
-        today = dt.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        if exists:
-            db_row = self.db_session.query(JSONStore).filter(JSONStore.name == name).first()
-            db_row.content = json_content
-            db_row.last_update = today
-            db_row.status = "active"
-            self.db_session.commit()
-        else:
-            db_row = JSONStore(name=name, content=json_content, status='active', last_update=today)
-            db_row.add_to_db(self.db_session, commit=True)
 
     def delete_descriptor(self, name):
         exists = self.get_json_from_name(name)

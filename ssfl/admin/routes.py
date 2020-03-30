@@ -58,6 +58,7 @@ def make_story_json_template():
      Processor: manage_json_template.py
     """
     sst_admin_access_log.make_info_entry(f"Route: /admin/make_story/")
+    db_exec = DBExec()
     form = DBJSONManageTemplatesForm()
     try:
         if request.method == 'GET':
@@ -67,9 +68,7 @@ def make_story_json_template():
             context = dict()
             context['form'] = form
             if form.validate_on_submit():
-                db_session = create_session(get_engine())
-                res = manage_json_templates(db_session, form)
-                close_session(db_session)
+                res = manage_json_templates(db_exec, form)
                 if res:
                     flash(f'JSON template update successful.', 'success')
                 else:
@@ -82,6 +81,7 @@ def make_story_json_template():
         form.errors['submit'] = 'Error processing JSON_Manage_Templates'
         flash_errors(form)
     finally:
+        db_exec.terminate()
         return render_template('admin/json_make_template.jinja2', **context)  # Executed in all cases
 
 
@@ -106,20 +106,20 @@ def get_events():
 
     """
     sst_admin_access_log.make_info_entry(f"Route: /admin/get_events")
+    db_exec = DBExec()
     try:
         args = request.args
         start = dateutil.parser.isoparse(args['start'])
         end = dateutil.parser.isoparse(args['end'])
-        db_session = create_session(get_engine())
         audiences = [args['audience']]
         categories = [args['category']]
-        event_class = SelectedEvents(db_session, start, end, audiences, categories)
+        event_class = SelectedEvents(db_exec, start, end, audiences, categories)
         events = event_class.get_events_as_dict()
-        close_session(db_session)
         return jsonify(events)
     except Exception as e:  # Normally occurs if there are no events to show
-        close_session(db_session)
         return jsonify({})
+    finally:
+        db_exec.terminate()
 
 
 @admin_bp.route('/getimage/<path:image_path>', methods=['GET'])
