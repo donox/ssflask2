@@ -293,27 +293,29 @@ def sst_miscellaneous():
      Processor: miscellaneous_functions.py
     """
     sst_admin_access_log.make_info_entry(f"Route: /admin/translate_to_html")
-    if request.method == 'GET':
-        context = dict()
-        context['form'] = MiscellaneousFunctionsForm()
-        return render_template('admin/miscellaneous_functions.jinja2', **context)
-    elif request.method == 'POST':
-        form = MiscellaneousFunctionsForm()
-        context = dict()
-        context['form'] = form
-        if form.validate_on_submit():
-            db_session = create_session(get_engine())
-            func, res = miscellaneous_functions(db_session, form)
-            close_session(db_session)
-            if func in ['dpdb', 'df'] and res:
-                flash('You were successful', 'success')
-                return render_template('admin/miscellaneous_functions.jinja2', **context)  # redirect to success url
-            else:
-                return send_file(res, mimetype="text/csv", as_attachment=True)
-        flash_errors(form)
-        return render_template('admin/miscellaneous_functions.jinja2', **context)
-    else:
-        raise RequestInvalidMethodError('Invalid method type: {}'.format(request.method))
+    db_exec = DBExec()
+    try:
+        if request.method == 'GET':
+            context = dict()
+            context['form'] = MiscellaneousFunctionsForm()
+            return render_template('admin/miscellaneous_functions.jinja2', **context)
+        elif request.method == 'POST':
+            form = MiscellaneousFunctionsForm()
+            context = dict()
+            context['form'] = form
+            if form.validate_on_submit():
+                func, res = miscellaneous_functions(db_exec, form)
+                if func in ['dpdb', 'df'] and res:
+                    flash('You were successful', 'success')
+                    return render_template('admin/miscellaneous_functions.jinja2', **context)  # redirect to success url
+                else:
+                    return send_file(res, mimetype="text/csv", as_attachment=True)
+            flash_errors(form)
+            return render_template('admin/miscellaneous_functions.jinja2', **context)
+        else:
+            raise RequestInvalidMethodError('Invalid method type: {}'.format(request.method))
+    finally:
+        db_exec.terminate()
 
 
 @admin_bp.route('/admin/manage_index_page', methods=['GET', 'POST'])
@@ -410,6 +412,7 @@ def up_down_load_json_template():
     """
     sst_admin_access_log.make_info_entry(f"Route: /admin/json/")
     form = DBJSONEditForm()
+    db_exec = DBExec()
     try:
         if request.method == 'GET':
             context = dict()
@@ -418,9 +421,7 @@ def up_down_load_json_template():
             context = dict()
             context['form'] = form
             if form.validate_on_submit():
-                db_session = create_session(get_engine())
-                res = edit_json_file(db_session, form)
-                close_session(db_session)
+                res = edit_json_file(db_exec, form)
                 if res:
                     flash(f'JSON edit succeeded', 'success')
                 else:
@@ -433,6 +434,7 @@ def up_down_load_json_template():
         form.errors['submit'] = 'Error processing JSON_edit page'
         flash_errors(form)
     finally:
+        db_exec.terminate()
         return render_template('admin/json_edit.jinja2', **context)  # Executed in all cases
 
 

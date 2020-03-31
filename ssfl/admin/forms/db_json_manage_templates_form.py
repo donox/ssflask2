@@ -37,9 +37,9 @@ class DBJSONManageTemplatesForm(FlaskForm):
     work_function = SelectField(label='Select Function',
                                 choices=supported_functions, render_kw={"id": "js1"})
     json_id = IntegerField('JSON DB ID', validators=[Optional()],
-                           render_kw={"class": "jcreate jedit jcal jpage jdelete", "docs": docs['all']['id']})
+                           render_kw={"class": "jcreate jedit jcal jdelete", "docs": docs['all']['id']})
     json_name = StringField('JSON Template Name', validators=[Optional()],
-                            render_kw={"class": "jcreate jedit jcal jpage jdelete", "docs": docs['all']['name']})
+                            render_kw={"class": "jcreate jedit jcal jdelete", "docs": docs['all']['name']})
     template_content = StringField('Name of JSON Template to Expand as Content', validators=[Optional()],
                                    render_kw={"class": "jcreate", "docs": docs['jcreate']['template_content'] })
     is_prototype = BooleanField('Template is prototype', default=False,
@@ -58,23 +58,27 @@ class DBJSONManageTemplatesForm(FlaskForm):
     snippet_picture_id = IntegerField('ID for photo for story snippet', validators=[Optional()],
                                       render_kw={"class": "jedit", "docs": docs['jedit']['snippet_picture_id']})
 
-    cal_template = StringField('JSON Template for Calendar', validators=[Optional()], render_kw={"class": "jcal"})
-    cal_result_template = StringField('JSON Template to Create', validators=[Optional()], render_kw={"class": "jcal"})
+    cal_template = StringField('JSON Template for Calendar', validators=[Optional()],
+                               render_kw={"class": "jcal", "docs": docs['jcal']['cal_template']})
+    # cal_result_template = StringField('JSON Template to Create', validators=[Optional()], render_kw={"class": "jcal"})
     cal_display_count = IntegerField('Number of events to display', validators=[Optional()],
-                                     render_kw={"class": "jcal"}, default=6)
+                                     render_kw={"class": "jcal", "docs": docs['jcal']['cal_display_count']}, default=6)
     cal_width = IntegerField('Number of columns in display', validators=[Optional()],
-                             render_kw={"class": "jcal"}, default=4)
+                             render_kw={"class": "jcal", "docs": docs['jcal']['cal_width']}, default=4)
 
+    # TODO:  Either remove or use the snip values - not currently set
     snip_pic_height = IntegerField('Photo height in pixels', validators=[Optional()], render_kw={"class": "jedit"})
     snip_pic_width = IntegerField('Photo width in pixels', validators=[Optional()], render_kw={"class": "jedit"})
     snip_pic_position = SelectField(label='Select Function', choices=picture_alignment_positions, default='left',
                                     render_kw={"class": "jedit"})
-    page_slot = IntegerField('Slot on page for snippet', validators=[Optional()], render_kw={"class": "jpage"})
-    page_template = StringField('JSON Template for page layout', validators=[Optional()], render_kw={"class": "jpage"})
+    page_slot = IntegerField('Slot on page for snippet', validators=[Optional()],
+                             render_kw={"class": "jpage", "docs": docs['jpage']['page_slot']})
+    page_template = StringField('JSON Template for page layout', validators=[Optional()],
+                                render_kw={"class": "jpage", "docs": docs['jpage']['page_template']})
     page_content_template = StringField('JSON Template of snippet to insert', validators=[Optional()],
-                                        render_kw={"class": "jpage"})
+                                        render_kw={"class": "jpage", "docs": docs['jpage']['page_content_template']})
     page_width = IntegerField('Width of snippet display (in pixels)', validators=[Optional()],
-                              render_kw={"class": "jpage"})
+                              render_kw={"class": "jpage", "docs": docs['jpage']['page_width']})
     submit = SubmitField('Submit')
 
     def validate_on_submit(self):

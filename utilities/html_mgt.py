@@ -26,7 +26,7 @@ class PageBody(object):
         self.page_date = None
         self.db_exec = db_exec
         self.page_in_db = None
-        self.page_manager = db_exec.get_manager('page')
+        self.page_manager = db_exec.create_page_manager()
         # TODO: Remove dependence on access to session (seems only needed for page caching)
         self.session = db_exec.get_db_session()
 

@@ -236,9 +236,9 @@ class SlideShow(object):
     def __init__(self, name, db_exec):
         # ['SLIDESHOW', 'title', 'title_class', 'position', 'width', 'height', 'rotation', 'frame_title', 'pictures']
         self.db_exec = db_exec
-        self.json_store = jsm(db_exec)
+        self.json_store_manager = db_exec.create_json_manager()
         self.photo_manager = db_exec.create_photo_manager()
-        self.show_desc = self.json_store.get_json_from_name('P_SLIDESHOW')
+        self.show_desc = self.json_store_manager.get_json_from_name('P_SLIDESHOW')
         self.show_desc['title'] = name
         self.show_desc['title_class'] = 'title_class'
         self.show_desc['position'] = 'center'
@@ -282,7 +282,7 @@ class Picture(object):
     def __init__(self, db_exec, photo_id):
         # ['PICTURE', 'id', 'url', 'title', 'caption', 'width', 'height', 'alignment', 'alt_text',
         #             'css_style', 'css_class', 'title_class', 'caption_class', 'image_class']
-        self.json_store = jsm(db_exec)
+        self.json_store = db_exec.create_json_manager()
         self.picture_desc = self.json_store.get_json_from_name('P_PICTURE')
         self.db_exec = db_exec
         self.picture_desc['id'] = photo_id

@@ -66,13 +66,13 @@ def manage_json_templates(db_exec, form):
     snippet_picture_id = form.snippet_picture_id.data
 
     cal_template = form.cal_template.data
-    cal_result_template = form.cal_result_template.data
+    # cal_result_template = form.cal_result_template.data
     cal_width = form.cal_width.data
     cal_display_count = form.cal_display_count.data
 
     page_slot = form.page_slot.data
     page_template = form.page_template.data
-    page_content_template = form.template_content.data
+    page_content_template = form.page_content_template.data
     page_width = form.page_width.data
 
     submit = form.submit.data
@@ -95,7 +95,7 @@ def manage_json_templates(db_exec, form):
 
         # Edit existing story entry so that it can be expanded
         elif work_function == 'jedit':
-            template = json_table_mgr.get_json_from_name(story_template)
+            template = json_table_mgr.get_json_from_name(template_to_expand)
             if not template:
                 form.errors['Nonexistent JSON template'] = ['Specified template does not exist']
                 return False
@@ -127,7 +127,7 @@ def manage_json_templates(db_exec, form):
             content = calendar.get_calendar_snippet_data()
             template['event_count'] = cal_display_count
             template['width'] = content['width']
-            json_table_mgr.add_json(cal_result_template, template)
+            json_table_mgr.add_json(json_name, template)    # IS THIS RIGHT - was cal_result_template - redundant?
             return True
 
         # Edit page layout to insert a snippet
@@ -141,13 +141,21 @@ def manage_json_templates(db_exec, form):
             if not insert_template:
                 form.errors['Nonexistent story template'] = ['Specified story does not exist']
                 return False
-            entry_type = [x for x in ['STORY_SNIPPET', 'CALENDAR_SNIPPET'] if x in insert_template][0]
+            entry_type = [x for x in ['STORY', 'STORY_SNIPPET', 'CALENDAR_SNIPPET'] if x in insert_template]
+            if entry_type:
+                entry_type = entry_type[0]
+            else:
+                form.errors['page_content_template'] = [f'Unrecognized element entry type: {entry_type}']
+                return False
             count = 0
-            for elem in jsm.find_instances(template, 'CELL'):
+            for elem in json_table_mgr.find_instances(template, 'CELL'):
                 count += 1
                 if count == page_slot:
-                    if entry_type == 'STORY_SNIPPET':
-                        elem['element'] = insert_template['snippet']
+                    if entry_type == 'STORY' or entry_type == 'STORY_SNIPPET':
+                        if entry_type == 'STORY':
+                            elem['element'] = insert_template['snippet']
+                        else:
+                            elem['element'] = insert_template
                         # These next 2 items should be corrected in the snippet
                         elem['element']['author'] = insert_template['author']  # Fix as story builds structure to older spec
                         elem['element']['name'] = insert_template['name']

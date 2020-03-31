@@ -18,6 +18,7 @@
         <div class="columns">
             <form action="{{ url_for('admin_bp.make_story_json_template') }}" method="post">
 
+                {#  Work Function          #}
                 {% with %}
                     {% set el_name=form.work_function %}
                     {% set el_class="input" %}
@@ -25,6 +26,7 @@
                     {% include 'base/form_entry.jinja2' %}
                 {% endwith %}
 
+                {#  json_id, json_name  #}
                 {% with %}
                     {% set el_name=form.json_id %}
                     {% set el_class="input" %}
@@ -39,6 +41,7 @@
                     {% include 'base/form_entry.jinja2' %}
                 {% endwith %}
 
+                {#  template_content, is_prototype, compress[not used    #}
                 {% with %}
                     {% set el_name=form.template_content %}
                     {% set el_class="file" %}
@@ -53,7 +56,7 @@
                     {% include 'base/form_entry.jinja2' %}
                 {% endwith %}
 
-
+                {#  story_template, story_slug, story_author, story_title, snippet_picture_id   #}
                 {% with %}
                     {% set el_name=form.story_template %}
                     {% set el_class="input" %}
@@ -89,6 +92,7 @@
                     {% include 'base/form_entry.jinja2' %}
                 {% endwith %}
 
+                {#  cal_template, cal_display_count, cal_width  #}
                 {% with %}
                     {% set el_name=form.cal_template %}
                     {% set el_class="input" %}
@@ -96,12 +100,12 @@
                     {% include 'base/form_entry.jinja2' %}
                 {% endwith %}
 
-                {% with %}
-                    {% set el_name=form.cal_result_template %}
-                    {% set el_class="input" %}
-                    {% set el_placeholder="" %}
-                    {% include 'base/form_entry.jinja2' %}
-                {% endwith %}
+{#                {% with %}#}
+{#                    {% set el_name=form.json_name %}#}
+{#                    {% set el_class="input" %}#}
+{#                    {% set el_placeholder="" %}#}
+{#                    {% include 'base/form_entry.jinja2' %}#}
+{#                {% endwith %}#}
 
                 {% with %}
                     {% set el_name=form.cal_display_count %}
@@ -117,6 +121,7 @@
                     {% include 'base/form_entry.jinja2' %}
                 {% endwith %}
 
+                {#  page_slot, page_template, page_content_template, page_width #}
                 {% with %}
                     {% set el_name=form.page_slot %}
                     {% set el_class="input" %}

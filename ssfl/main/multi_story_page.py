@@ -20,7 +20,7 @@ class MultiStoryPage(object):
         self.db_exec = db_exec
         self.descriptor = None
         self.context = dict()
-        self.storage_manager = jsm(db_exec)
+        self.storage_manager = db_exec.create_json_manager()
         self.photo_manager = db_exec.create_photo_manager()
 
     def make_descriptor_from_csv_file(self, file):
@@ -254,7 +254,7 @@ class MultiStoryPage(object):
         return self.descriptor
 
     def make_single_page_context(self, story: str) -> Dict[AnyStr, Any]:
-        mgr = jsm(self.db_exec)
+        mgr = self.storage_manager
         res = mgr.make_json_descriptor(mgr.get_json_from_name('P_SINGLECELLROW'))
         res['ROW']['columns'][0]['cells'][0]['element'] = "S_STORY"
         res['ROW']['columns'][0]['cells'][0]['element_type'] = "STORY"

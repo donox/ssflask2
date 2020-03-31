@@ -1,4 +1,4 @@
-<div class="{{ photo.css_class }} float-left px-3">
+<div class="{{ photo.css_class }} float-left px-3" style="max-width: {{ photo.width }}px">
     <figure class="figure">
         {%  if photo.title %}
             <figcaption class="figure-caption has-text-black {{ photo.title_class }}">{{ photo.title }}</figcaption>

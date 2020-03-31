@@ -26,7 +26,7 @@ class Story(object):
 
     def __init__(self, db_exec, width):
         self.db_exec = db_exec
-        self.json_store = jsm(db_exec)
+        self.json_store = db_exec.create_json_manager()
         self.story = dict()
         self.pb = None  # PageBody
         self.snippet_width = width       # Width to display on front page in columns (1-12)

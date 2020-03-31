@@ -10,24 +10,28 @@ class PageManager(BaseTableManager):
     def __init__(self, db_session):
         super().__init__(db_session)
 
+    def _get_page_if_exists(self, page_id, page_name):
+        if page_id:
+            target_page = self.db_session.query(Page).filter(Page.id == page_id).first()
+            return target_page
+        elif page_name:
+            target_page = self.db_session.query(Page).filter(Page.page_name == page_name.lower()).first()
+            return target_page
+        else:
+            return None
+
     def fetch_page(self, page_id, page_name):
         """Fetch page from database, using cached page if it exists and is current."""
         try:
-            if page_id:
-                target_page = self.db_session.query(Page).filter(Page.id == page_id).first()
-            elif page_name:
-                target_page = self.db_session.query(Page).filter(Page.page_name == page_name.lower()).first()
-            else:
-                raise SiteIdentifierError(None, None, 'No id or page_name provided')
+            target_page = self._get_page_if_exists(page_id, page_name)
             if target_page:
                 return target_page
             else:
                 raise SiteObjectNotFoundError(page_id, page_name, 'DB returned null result')
         except Exception as e:
             print(e.args)
-        finally:
             target_page = self._dummy_result_page(page_id, page_name)
-        return target_page
+            return target_page
 
     def _dummy_result_page(self, page_id, page_name):
         """Dummy page for failing retrieve."""
@@ -35,6 +39,35 @@ class PageManager(BaseTableManager):
         result.page_title = 'Page Not Found: {}'.format(page_name)
         result.page_content = '''<p>Fail when loading page with id/name: {}/{}</p>'''.format(page_id, page_name)
         return result
+
+    def delete_page(self, page_id, page_name):
+        page = self._get_page_if_exists(page_id, page_name)
+        if not page:
+            self.db_session.delete(page)
+            self.db_session.commit()
+            return True
+        else:
+            return None
+
+    def generate_page_records(self, key_list):
+        res = self.db_session.query(Page).options(defer('page_content'),
+                                                  defer('page_cached_content')).all()
+        for record in res:
+            rec = record.__dict__
+            rec_list = []
+            for key in key_list:
+                rec_list.append(rec[key])
+            yield rec_list
+
+    def update_cached_page(self, page, res):
+        print("page_tables.py update_cache disabled")
+        return
+        if not page.page_do_not_cache:
+            page.page_cached_content = res
+            page.page_cached = True  # todo:  SHOULD BE TRUE EX DEBUG
+            page.page_cached_date = dt.datetime.now()
+            # session.commit()
+
 
 
 class OLDPageManager(object):
@@ -73,14 +106,7 @@ class OLDPageManager(object):
 
 
 
-    def update_cached_page(self, page, res):
-        print("page_tables.py update_cache disabled")
-        return
-        if not page.page_do_not_cache:
-            page.page_cached_content = res
-            page.page_cached = True  # todo:  SHOULD BE TRUE EX DEBUG
-            page.page_cached_date = dt.datetime.now()
-            # session.commit()                          # commit handled at request completion
+                      # commit handled at request completion
 
 
 class Page(db.Model):

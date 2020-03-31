@@ -26,7 +26,7 @@ class Calendar(object):
         events = SelectedEvents(self.db_exec, start, end, audiences, categories)
         dupe_check = set()
         res = []
-        jsm = JSONStorageManager(self.db_exec)
+        jsm = self.db_exec.create_json_manager()
         empty_event = jsm.get_json_from_name('P_EVENT_SNIPPET')
         current_count = event_count
         for event in events.all_events:
