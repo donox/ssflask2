@@ -7,7 +7,7 @@ from flask import render_template
 from .calendar_snippet import Calendar
 
 
-class BuildFrontPage(object):
+class XBuildFrontPage(object):
     def __init__(self, db_session):
         self.session = db_session
         self.descriptor = None

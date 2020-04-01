@@ -141,7 +141,8 @@ def manage_json_templates(db_exec, form):
             if not insert_template:
                 form.errors['Nonexistent story template'] = ['Specified story does not exist']
                 return False
-            entry_type = [x for x in ['STORY', 'STORY_SNIPPET', 'CALENDAR_SNIPPET'] if x in insert_template]
+            entry_type = [x for x in ['STORY', 'STORY_SNIPPET', 'CALENDAR_SNIPPET',
+                                      'SLIDESHOW_SNIPPET'] if x in insert_template]
             if entry_type:
                 entry_type = entry_type[0]
             else:
@@ -165,6 +166,11 @@ def manage_json_templates(db_exec, form):
                     elif entry_type == 'CALENDAR_SNIPPET':
                         elem['element'] = insert_template
                         elem['element_type'] = 'CALENDAR_SNIPPET'
+                        json_table_mgr.add_json(page_template, template)
+                        return True
+                    elif entry_type == 'SLIDESHOW_SNIPPET':
+                        elem['element'] = insert_template
+                        elem['element_type'] = 'SLIDESHOW_SNIPPET'
                         json_table_mgr.add_json(page_template, template)
                         return True
 

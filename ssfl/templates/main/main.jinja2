@@ -28,6 +28,10 @@
                         {% set story = cell.element %}
                         {% include 'main/full_story.jinja2' %}
                     {% endif %}
+                    {% if cell.element_type == 'SLIDESHOW_SNIPPET' %}
+                        {% set story = cell.element %}
+                        {% include 'main/snippet_slideshow.jinja2' %}
+                    {% endif %}
                 {% endfor %}
             </div>
         </div>

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<!-- Route: '/admin/manageTemplate' => make_story_json_template
+     Template: json_make_template.jinja2
+     Form: db_manage_templates_form.py
+     Processor: manage_json_template.py
+     Functions:
+-->
+{% extends 'base/layout.jinja2' %}
+
+{% block content %}
+    <section class="container">
+        <div class="columns">
+            <form action="{{ url_for('admin_bp.manage_photos') }}" method="post">
+
+                {#  Work Function          #}
+                {% with %}
+                    {% set el_name=form.work_function %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
+                {#  slideshow_id, slideshow_name  #}
+                {% with %}
+                    {% set el_name=form.slideshow_id %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
+                {% with %}
+                    {% set el_name=form.slideshow_name %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="(e.g., foo-bar-xx)" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
+                {# slide_list, show_title, show_text    #}
+                {% with %}
+                    {% set el_name=form.slide_list %}
+                    {% set el_class="file" %}
+                    {% set el_placeholder="" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
+                {% with %}
+                    {% set el_name=form.show_title %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="True" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
+                {% with %}
+                    {% set el_name=form.show_text %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="(e.g., foo-bar-xx)" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
+                {# frame control (size, rate, alignment) #}
+                {% with %}
+                    {% set el_name=form.slide_frame_height %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="Story Slug(e.g., foo-bar-xx)" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
+                {% with %}
+                    {% set el_name=form.slide_frame_width %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="Author" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
+                {% with %}
+                    {% set el_name=form.slide_change %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="Story Title" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
+                {% with %}
+                    {% set el_name=form.slide_alignment %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="Snippet Photo ID" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
+
+                <div class="button">
+                    <input id="submit" type="submit" value="Submit">
+                </div>
+                {% if form.errors %}
+                    <ul class="errors">
+                        {% for error, val in form.errors.items() %}
+                            <li>{{ error }} : {{ val }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                {{ form.csrf_token }}
+            </form>
+
+        </div>
+        <script>
+        $ = jQuery;
+        $('#js1').change(function(){
+            $('.jcreate').parent().hide();
+            $('.jedit').parent().hide();
+            $('.jpage').parent().hide();
+            $('.jcal').parent().hide();
+            $('.jdelete').parent().hide();
+            $('.jreload').parent().hide();
+            let opt = $('#js1 option:selected').val();
+            $('.' + opt).parent().show();
+        });
+        //# sourceURL=json_make_template.js
+
+
+        </script>
+    </section>
+{% endblock %}

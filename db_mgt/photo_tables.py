@@ -26,6 +26,10 @@ class PhotoManager(BaseTableManager):
         photoframe = SlideShow(show_name, db_session=self.db_session)
         return photoframe
 
+    def get_photo_from_slug(self, slug):
+        sql = f'select * from ssflask2.photo where image_slug="{slug}"'
+        return self._get_photo(sql)
+
     def get_photo_from_id(self, photo_id):
         if photo_id < 10000:
             # This is an old photo ID
@@ -34,6 +38,9 @@ class PhotoManager(BaseTableManager):
             sql += f'where pp.photo_id = ph.id and pp.wp_picture_id = {photo_id};'
         else:
             sql = f'select * from ssflask2.photo where id={photo_id};'
+        return self._get_photo(sql)
+
+    def _get_photo(self, sql):
         res = self.db_session.execute(sql).first()
         if res:
             gv = self.get_photo_field_value(res)
@@ -43,14 +50,14 @@ class PhotoManager(BaseTableManager):
             return photo
         else:
             # Missing photo - return dummy
-            photo = Photo(id=photo_id, image_slug='no-slug', gallery_id=0,
+            photo = Photo(id=0, image_slug='no-slug', gallery_id=0,
                           file_name='no_such_file', caption='Photo Missing', alt_text='Photo Missing',
                           image_date=None, meta_data=None, old_gallery_id=0)
             return photo
 
     def get_photo_from_path(self, path):
-
         photo_path = path.split('/')[-1]
+        # TODO: Determine if this code is really broken????
         multi_try = 3  # Acts as if there may be a race condition - trying multiple times before failure
         while multi_try > 0:
             try:
@@ -58,13 +65,11 @@ class PhotoManager(BaseTableManager):
                 sql += f'WHERE file_name = "{photo_path}";'
                 photo = Photo()
                 res = self.db_session.execute(sql).first()
-                photo_id, old_id, image_slug, gallery_id, old_gallery_id, file_name, caption, \
+                photo_id, image_slug, gallery_id, file_name, caption, \
                 alt_text, image_date, meta_data = res
                 photo.id = photo_id
-                photo.old_id = old_id
                 photo.image_slug = image_slug
                 photo.gallery_id = gallery_id
-                photo.old_gallery_id = old_gallery_id
                 photo.file_name = file_name
                 photo.caption = caption
                 photo.alt_text = alt_text
@@ -89,9 +94,9 @@ class PhotoManager(BaseTableManager):
             return gallery
         return None
 
-    def get_photo_url(self, old_photo_id):  # TODO: replace to use current id
+    def get_photo_url(self, photo_id):
         try:
-            temp = self.get_photo_file_path(old_photo_id)
+            temp = self.get_photo_file_path(photo_id)
             if temp:
                 url = url_for('admin_bp.get_image', image_path=temp)
                 return url

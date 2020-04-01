@@ -24,19 +24,23 @@
                     Calendar
                 </a>
 
-                <a class="navbar-item has-text-white" href="{{ url_for('main.sst_get_menu_page', page='activities-index') }}">
+                <a class="navbar-item has-text-white"
+                   href="{{ url_for('main.sst_get_menu_page', page='activities-index') }}">
                     Activities
                 </a>
 
-                <a class="navbar-item has-text-white" href="{{ url_for('main.sst_get_menu_page', page='cool-stories-index') }}">
+                <a class="navbar-item has-text-white"
+                   href="{{ url_for('main.sst_get_menu_page', page='cool-stories-index') }}">
                     Cool Stories
                 </a>
 
-                <a class="navbar-item has-text-white" href="{{ url_for('main.sst_get_menu_page', page='resources-index') }}">
+                <a class="navbar-item has-text-white"
+                   href="{{ url_for('main.sst_get_menu_page', page='resources-index') }}">
                     Resources
                 </a>
 
-                <a class="navbar-item has-text-white" href="{{ url_for('main.sst_get_menu_page', page='administration-index') }}">
+                <a class="navbar-item has-text-white"
+                   href="{{ url_for('main.sst_get_menu_page', page='administration-index') }}">
                     Admin
                 </a>
 
@@ -96,6 +100,9 @@
                         </a>
                         <a class="navbar-item" href="{{ url_for('admin_bp.make_story_json_template') }}">
                             Manage JSON templates
+                        </a>
+                        <a class="navbar-item" href="{{ url_for('admin_bp.manage_photos') }}">
+                            Manage Photos
                         </a>
                         <hr class="navbar-divider">
                         <a class="navbar-item" href="{{ url_for('admin_bp.sst_import_database') }}">

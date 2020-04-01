@@ -16,6 +16,7 @@ class MultiStoryPage(object):
      Form: 
      Processor: multi_story_page.py
     """
+
     def __init__(self, db_exec):
         self.db_exec = db_exec
         self.descriptor = None
@@ -61,7 +62,7 @@ class MultiStoryPage(object):
         cell_descriptor['element_type'] = 'FullStory'
         story_descriptor = jsm.make_json_descriptor('Story', jsm.descriptor_story_fields)
         cell_descriptor['element'] = story_descriptor
-        story_descriptor['id'] = page_id                                            # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        story_descriptor['id'] = page_id  # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         return story_descriptor
 
     def load_descriptor_from_database(self, name: str) -> Dict[AnyStr, Any]:
@@ -176,11 +177,11 @@ class MultiStoryPage(object):
         page_name = None
         page_id = None
         if 'name' in elem:
-            page_name = elem['name']   # will use which ever is set
-        if 'id' in elem:                                                         # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            page_id = elem['id']                                                     # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            page_name = elem['name']  # will use which ever is set
+        if 'id' in elem:  # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            page_id = elem['id']  # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         story = Story(self.db_exec, width)
-        story.create_story_from_db(page_id= page_id, page_name=page_name)
+        story.create_story_from_db(page_id=page_id, page_name=page_name)
         elem['title'] = story.get_title()
         elem['content'] = story.get_body()
 
@@ -230,6 +231,15 @@ class MultiStoryPage(object):
         content = calendar.get_calendar_snippet_data()
         elem['events'] = content['events']
 
+    def _fill_slideshow_snippet(self, elem):
+        """Fill slideshow snippet"""
+        # {"SLIDESHOW_SNIPPET": None, "id": None, "title": None, "text": None,
+        # "slides": {"SLIDESHOW": None, "title": None, "title_class": None, "position": None,
+        #                                    "width": None, "height": None, "rotation": None,
+        #                                    "frame_title": None, "pictures": []}}
+        photo_list = elem['slides']['pictures']
+        foo = 3
+
 
     def make_multi_element_page_context(self) -> Dict[AnyStr, Any]:
         """Create context for a page based on current descriptor.
@@ -251,6 +261,8 @@ class MultiStoryPage(object):
                         self._fill_full_story(elem)
                     elif 'CALENDAR_SNIPPET' in elem:
                         self._fill_calendar_snippet(elem)
+                    elif 'SLIDESHOW_SNIPPET' in elem:
+                        self._fill_slideshow_snippet(elem)
         return self.descriptor
 
     def make_single_page_context(self, story: str) -> Dict[AnyStr, Any]:

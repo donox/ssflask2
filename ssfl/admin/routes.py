@@ -27,10 +27,12 @@ from .forms.manage_calendar_form import ManageCalendarForm
 from .forms.manage_index_pages_form import ManageIndexPagesForm
 from .forms.miscellaneous_functions_form import MiscellaneousFunctionsForm
 from .forms.import_database_functions_form import ImportDatabaseFunctionsForm
+from .forms.manage_photo_functions_form import DBPhotoManageForm
 from .manage_events.event_retrieval_support import SelectedEvents
 from .manage_events.manage_calendar import manage_calendar
 from .manage_index_pages import DBManageIndexPages
 from .manage_json_templates import manage_json_templates
+from .manage_photo_functions import manage_photo_functions
 from .miscellaneous_functions import miscellaneous_functions
 from import_data.db_import_pages import ImportPageData
 from db_mgt.db_exec import DBExec
@@ -469,3 +471,39 @@ def sst_import_database():
         return render_template('admin/import_database_functions.jinja2', **context)
     else:
         raise RequestInvalidMethodError('Invalid method type: {}'.format(request.method))
+
+@admin_bp.route('/manage_photos', methods=['GET', 'POST'])
+@login_required
+def manage_photos():
+    """
+     Route: '/admin/json' => edit_json_file
+     Template: json_edit.jinja2
+     Form: edit_json_content_form.py
+     Processor: edit_json_file.py
+    """
+    sst_admin_access_log.make_info_entry(f"Route: /admin/manage_photos/")
+    form = DBPhotoManageForm()
+    db_exec = DBExec()
+    try:
+        if request.method == 'GET':
+            context = dict()
+            context['form'] = DBPhotoManageForm()
+        elif request.method == 'POST':
+            context = dict()
+            context['form'] = form
+            if form.validate_on_submit():
+                res = manage_photo_functions(db_exec, form)
+                if res:
+                    flash(f'Manage Photos succeeded', 'success')
+                else:
+                    form.errors['submit'] = 'Error processing manage_photo_templates'
+                    flash_errors(form)
+        else:
+            raise RequestInvalidMethodError('Invalid method type: {}'.format(request.method))
+    except Exception as e:
+        log_sst_error(sys.exc_info(), get_traceback=True)
+        form.errors['submit'] = 'Error processing manage_photo_templates'
+        flash_errors(form)
+    finally:
+        db_exec.terminate()
+        return render_template('admin/manage_photos.jinja2', **context)  # Executed in all cases

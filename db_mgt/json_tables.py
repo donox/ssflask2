@@ -350,6 +350,8 @@ class JSONStorageManager(object):
                                        "content": None, "story_url": None, "read_more": "S_BUTTON"}
     descriptor_calendar_snippet_fields = {"CALENDAR_SNIPPET": None, "events": [], "event_count": None, "width": None,
                                           "audience": [], "categories": []}
+    descriptor_slideshow_snippet_fields = {"SLIDESHOW_SNIPPET": None, "id": None, "title": None, "text": None,
+                                           "slides": "S_SLIDESHOW"}
     descriptor_event_snippet_fields = {"EVENT_SNIPPET": None, "name": None, "date": None, "time": None, "venue": None}
 
     # Complex/predefined types
@@ -401,6 +403,7 @@ class JSONStorageManager(object):
     json_field_dictionary['STORY_SNIPPET'] = descriptor_story_snippet_fields
     json_field_dictionary['CALENDAR_SNIPPET'] = descriptor_calendar_snippet_fields
     json_field_dictionary['EVENT_SNIPPET'] = descriptor_event_snippet_fields
+    json_field_dictionary['SLIDESHOW_SNIPPET'] = descriptor_slideshow_snippet_fields
     json_field_dictionary['SINGLECELLROW'] = descriptor_row_with_single_cell_fields
     json_field_dictionary['ONECELL'] = descriptor_single_cell_table_fields
     json_field_dictionary['THREECELLROW'] = descriptor_three_cell_row_fields
@@ -412,170 +415,8 @@ class JSONStorageManager(object):
         self.all_fields = JSONStorageManager.json_field_dictionary
         self.table_manager = self.db_exec.create_json_manager()
         self.template_functions = dict()
-        # self.template_functions['ONECELLCOLUMN'] = self.XX_f_onecellcolumn
 
 
-    def _XX_f_onecellcolumn(self, **kwargs):
-        # NEEDS REWRITING???
-        col = self.make_json_descriptor(self.get_json_from_name('P_COLUMN'))
-        col['descriptor'] = 'COLUMN'
-        cell = self.make_json_descriptor(self.get_json_from_name('P_CELL'))
-        cell['descriptor'] = 'CELL'
-        col['cells'].append(cell)
-        current_result = kwargs['current_result']
-        # col is a dictionary with a value 'columns' that
-        current_result['columns'].append(col['columns'][0])
-        return
-
-    def XXmake_json_descriptor(self, descriptor: dict, result_processor: object = None):
-        rlt = _KeepResult()
-
-        if isinstance(descriptor, str):
-            # All str types will return their value - no need to add to result dict
-            tmp = get_name_type(descriptor)
-            if tmp == 'FUNCTION':
-                function = self.template_functions[descriptor[2:]]
-                result = function()
-                raise SystemError('Function call templates not yet implemented')
-            elif tmp == 'PREAMBLE':
-                desc = self.get_json_from_name('P_' + descriptor[2:])
-                result = self.make_json_descriptor(desc)
-                result.pop('descriptor')
-                rlt.add_value_to_result(result)
-            elif tmp == 'NOPROCESS':
-                rlt.add_value_to_result(descriptor[2:])
-            elif tmp == 'UPPER':
-                result = self.get_json_from_name('P_' + descriptor)  # ?? right??
-                if not result:
-                    rlt.add_value_to_result(descriptor)
-                elif isinstance(result, dict):
-                    rlt.add_key_value_pair_to_result(result['descriptor'], result)
-                else:
-                    raise ValueError(f'Invalid value of type "UPPER" for descriptor: {descriptor}')
-            elif tmp == 'NORMAL':
-                result = self.get_json_from_name(descriptor)
-                if not isinstance(result, dict):
-                    foo = 3
-                rlt.add_key_value_pair_to_result(result['descriptor'], result)
-            else:
-                raise ValueError(f'Invalid descriptor string type: {tmp}')
-        # elif isinstance(descriptor, list):
-        #     pass
-        elif isinstance(descriptor, dict):
-            for key, val in descriptor.items():
-                key_type = get_name_type(key)
-                if key_type in ['UPPER', 'NORMAL']:
-                    rlt.add_key_to_result(key)
-                elif key_type == 'NOPROCESS':
-                    rlt.add_key_to_result(descriptor[2:])
-                else:
-                    # NOTE:  key in ['PREAMBLE', 'FUNCTION'], so it is equivalent to a key/value pair
-                    res = self.make_json_descriptor(key)
-                    if 'descriptor' in res:
-                        rlt.add_key_value_pair_to_result(res['descriptor'], res)
-                    else:
-                        rlt.add_value_to_result(res)
-                if key_type in ['PREAMBLE', 'FUNCTION']:
-                    pass  # No value part in this case
-                elif not val:
-                    rlt.add_value_to_result(val)  # val is None - NEED TO ADD WHEN NOT PREAMBLE/FUNCTION
-                elif isinstance(val, str) or isinstance(val, int):  # THIS COULD BE TOO WEAK
-                    if key == 'descriptor':
-                        rlt.add_key_value_pair_to_result(key, val)
-                    elif isinstance(val, str):
-                        val_type = get_name_type(val)
-                        if val_type in ['UPPER', 'NORMAL']:
-                            rlt.add_value_to_result(val)
-                        else:
-                            # NOTE:  key in ['PREAMBLE', 'FUNCTION'], so it is equivalent to a key/value pair
-                            res = self.make_json_descriptor(val)
-                            if 'descriptor' in res:
-                                rlt.add_key_value_pair_to_result(res['descriptor'], res)
-                            else:
-                                rlt.add_value_to_result(res)
-                        if val_type in ['PREAMBLE', 'FUNCTION']:
-                            pass  # No key part in this case
-                        # self.make_json_descriptor(val, result_processor=rlt.add_value_to_result)
-                    else:
-                        rlt.add_key_value_pair_to_result(key, val)
-                elif isinstance(val, list):
-                    rel_list = []
-                    for list_item in val:
-                        rel_list.append(self.make_json_descriptor(list_item))
-                    rlt.add_value_to_result(rel_list)
-                elif isinstance(val, dict):
-                    self.make_json_descriptor(val, result_processor=rlt.add_value_to_result)
-                else:
-                    raise ValueError(f'Dictionary value type not recognized: {val}')
-        result = rlt.get_result()
-        if result_processor:
-            result_processor(result)
-        else:
-            return result
-
-    @staticmethod
-    def XXconvert_descriptor_list_to_dict(desc):
-        """Convert a descriptor in form of a list to a dictonary for use as a context object
-
-        Args:
-            desc: list: names of elements in descriptor
-
-        Returns:    dict: with elements of descriptor
-
-        """
-        res = dict()
-        for el in desc[1:]:  # first element of descriptor is type
-            res[el] = None
-        return res
-
-    def Xget_json_from_name(self, name):
-        res = self.table_manager.get_json_by_name(name)
-        if res:
-            json = jsn.loads(res.content)
-            return json
-        else:
-            return None
-
-    def XXget_json_from_id(self, id_nbr):
-        res = self.db_session.query(JSONStore).filter(JSONStore.id == id_nbr)
-        if res:
-            json = jsn.loads(res.first())
-            return json
-        else:
-            return None
-
-    def XXfind_instances(self, template, target):
-        """Create generator to find instances of target in template - depth first tree walk.
-
-        Args:
-            template: 'JSON' template to search
-            target: entry type expected in template
-
-        Returns: instance of dictionary of type target
-
-        """
-        if not template:
-            return None
-        if isinstance(template, dict):
-            if target in template:
-                yield template
-            for key, val in template.items():
-                if isinstance(val, dict):
-                    for x in self.find_instances(val, target):
-                        yield x
-                elif isinstance(val, list):
-                    for elem in val:
-                        for x in self.find_instances(elem, target):
-                            yield x
-                else:
-                    pass
-            return None
-        elif isinstance(template, list):
-            for elem in template:
-                for x in self.find_instances(elem, target):
-                    yield x
-        else:
-            return None
 
 class JSONStore(db.Model):
     __tablename__ = 'json_store'
