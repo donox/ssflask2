@@ -27,17 +27,17 @@ class PhotoManager(BaseTableManager):
         return photoframe
 
     def get_photo_from_slug(self, slug):
-        sql = f'select * from ssflask2.photo where image_slug="{slug}"'
+        sql = f'select * from photo where image_slug="{slug}"'
         return self._get_photo(sql)
 
     def get_photo_from_id(self, photo_id):
         if photo_id < 10000:
             # This is an old photo ID
             # TODO: Remove this leg of test when all photos have been imported and old links removed
-            sql = f'select * from ssflask2.photo ph join v_photo_picture pp '
+            sql = f'select * from photo ph join v_photo_picture pp '
             sql += f'where pp.photo_id = ph.id and pp.wp_picture_id = {photo_id};'
         else:
-            sql = f'select * from ssflask2.photo where id={photo_id};'
+            sql = f'select * from photo where id={photo_id};'
         return self._get_photo(sql)
 
     def _get_photo(self, sql):
