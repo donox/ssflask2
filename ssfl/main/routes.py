@@ -74,14 +74,14 @@ def sst_get_menu_page(page):
      Form: 
      Processor: build_page.py
     """
-    # Note:  CAN THIS BE REMOVED??????????????????????
-    db_session = create_session(get_engine())
-    bp = BuildPage(db_session, None)
-    context = bp.display_menu_page(page)
-    context['APP_ROOT'] = request.url_root
-    close_session(db_session)
-    return render_template('main/specific_page.jinja2', **context)
-
+    db_exec = DBExec()
+    try:
+        bp = BuildPage(db_exec, None)
+        context = bp.display_menu_page(page)
+        context['APP_ROOT'] = request.url_root
+        return render_template('main/specific_page.jinja2', **context)
+    finally:
+        db_exec.terminate()
 
 @main_bp.route('/index/<string:page>', methods=['GET'])
 @login_required

@@ -41,7 +41,7 @@ class DBJSONManageTemplatesForm(FlaskForm):
     json_name = StringField('JSON Template Name', validators=[Optional()],
                             render_kw={"class": "jcreate jedit jcal jdelete", "docs": docs['all']['name']})
     template_content = StringField('Name of JSON Template to Expand as Content', validators=[Optional()],
-                                   render_kw={"class": "jcreate", "docs": docs['jcreate']['template_content'] })
+                                   render_kw={"class": "jcreate jedit", "docs": docs['jcreate']['template_content'] })
     is_prototype = BooleanField('Template is prototype', default=False,
                                 render_kw={"class": "jcreate", "docs": docs['jcreate']['prototype']})
     compress = BooleanField('Remove excess whitespace and newlines?', default=False,

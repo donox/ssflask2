@@ -9,11 +9,12 @@ from .form_docs.manage_photo_doc import docs
 class DBPhotoManageForm(FlaskForm):
     """Edit or import database content."""
     """
-     Route: '/admin/json' => edit_json_file
-     Template: json_edit.jinja2
-     Form: edit_json_content_form.py
-     Processor: edit_json_file.py
+     Route: '/admin/manage_photos' => manage_photo_functions
+     Template: manage_photos.jinja2
+     Form: manage_photo_functions_form.py
+     Processor: manage_photo_functions.py
     """
+
 
     supported_functions = [('p_show', 'Create/Edit Slideshow and Snippet'),
                            ('jup', 'Upload JSON to Database'),

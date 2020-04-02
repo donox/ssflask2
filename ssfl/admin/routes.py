@@ -130,6 +130,8 @@ def get_image(image_path):
     db_exec = DBExec()
     try:
         path = Config.USER_DIRECTORY_IMAGES + image_path
+        return Response(open(path, 'rb'), direct_passthrough=True)
+        # No need to resize as browser seems to handle it just fine
         args = request.args
         width = 200
         height = 200
@@ -476,10 +478,10 @@ def sst_import_database():
 @login_required
 def manage_photos():
     """
-     Route: '/admin/json' => edit_json_file
-     Template: json_edit.jinja2
-     Form: edit_json_content_form.py
-     Processor: edit_json_file.py
+     Route: '/admin/manage_photos' => manage_photo_functions
+     Template: manage_photos.jinja2
+     Form: manage_photo_functions_form.py
+     Processor: manage_photo_functions.py
     """
     sst_admin_access_log.make_info_entry(f"Route: /admin/manage_photos/")
     form = DBPhotoManageForm()

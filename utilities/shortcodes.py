@@ -28,6 +28,8 @@ class Shortcode(object):
                                     }
         self.shortcode_string = string_to_match
         self.content_dict = None
+        self.page_mgr = db_exec.create_page_manager()
+        self.photo_mgr = db_exec.create_photo_manager()
 
     def parse_shortcode(self):
         # Need to verify/handle case where shortcode has contained string "[xx] yy [/xx]"
@@ -132,10 +134,8 @@ class Shortcode(object):
         file_path = gallery_rec.path_name + photo_file
         return photo_rec, gallery_rec, gallery_id, photo_file, photo_caption, alt_text, file_path
 
-    def _get_photo_list_by_gallery_id(self, gallery_id, old_id=True):
-        gallery_rec = self.session.query(PhotoGallery).filter(PhotoGallery.old_id == gallery_id).first()    #######################################################
-        photo_ids = [x.id for x in
-                     self.session.query(DBPhoto).filter(DBPhoto.old_gallery_id == gallery_rec.old_id).all()]
+    def _get_photo_list_by_gallery_id(self, gallery_id):
+        photo_ids = [x.id for x in self.photo_mgr.get_photos_in_gallery_with_id(gallery_id)]
         return photo_ids
 
     def _process_singlepic(self):

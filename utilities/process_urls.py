@@ -4,9 +4,10 @@ import db_mgt.setup as su
 from config import Config
 
 
-def find_page_from_url(db_session, url_string):
+def find_page_from_url(db_exec, url_string):
     # TODO: determine if there are "dupes" in db (ending with '_d') and handle here if needed.
     u = up.urlparse(url_string)
+    page_mgr = db_exec.create_page_manager()
     split_path = u.path.split('/')
     last_element = split_path[-1]
     if last_element == '' and len(split_path) > 1:          # Defend against url ending in '/'
@@ -16,7 +17,7 @@ def find_page_from_url(db_session, url_string):
             last_element = split_path[-2]
     if not last_element:
         raise ValueError('Invalid url: {}'.format(url_string))
-    target_page = db_session.query(Page).filter(Page.page_name == last_element.lower()).first()
+    target_page = page_mgr.fetch_page(None, last_element.lower())
     return target_page
 
 

@@ -46,13 +46,13 @@ class PhotoManager(BaseTableManager):
             gv = self.get_photo_field_value(res)
             photo = Photo(id=gv('id'), image_slug=gv('image_slug'), gallery_id=gv('gallery_id'),
                           file_name=gv('file_name'), caption=gv('caption'), alt_text=gv('alt_text'),
-                          image_date=gv('image_date'), meta_data=gv('meta_data'), old_gallery_id=0)
+                          image_date=gv('image_date'), meta_data=gv('meta_data'))
             return photo
         else:
             # Missing photo - return dummy
             photo = Photo(id=0, image_slug='no-slug', gallery_id=0,
                           file_name='no_such_file', caption='Photo Missing', alt_text='Photo Missing',
-                          image_date=None, meta_data=None, old_gallery_id=0)
+                          image_date=None, meta_data=None)
             return photo
 
     def get_photo_from_path(self, path):
@@ -89,10 +89,22 @@ class PhotoManager(BaseTableManager):
         if res:
             res = res.first()
             gv = self.get_gallery_field_value(res)
-            gallery = PhotoGallery(id=gv('id'), old_id=0, name=gv('name'),
+            gallery = PhotoGallery(id=gv('id'), name=gv('name'),
                                    slug_name=gv('slug_name'), path_name=gv('path_name'))
             return gallery
         return None
+
+    def get_photos_in_gallery_with_id(self, pid):
+        sql = f'select * from photo where gallery_id={pid}'
+        sql_res = self.db_session.execute(sql).all()
+        res = []
+        for row in sql_res:
+            gv = self.get_photo_field_value(row)
+            photo = Photo(id=gv('id'), image_slug=gv('image_slug'), gallery_id=gv('gallery_id'),
+                          file_name=gv('file_name'), caption=gv('caption'), alt_text=gv('alt_text'),
+                          image_date=gv('image_date'), meta_data=gv('meta_data'))
+            res.append(photo)
+        return res
 
     def get_photo_url(self, photo_id):
         try:
@@ -149,10 +161,8 @@ class PhotoManager(BaseTableManager):
 class Photo(db.Model):
     __tablename__ = 'photo'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    old_id = db.Column(db.Integer, nullable=False)
     image_slug = db.Column(db.String(), nullable=False)  # Name used in urls
     gallery_id = db.Column(db.Integer, db.ForeignKey('photo_gallery.id'), nullable=True)
-    old_gallery_id = db.Column(db.Integer)
     file_name = db.Column(db.String())
     caption = db.Column(db.String(512))
     alt_text = db.Column(db.String(256))  # Use if picture does not exist
@@ -201,7 +211,6 @@ class PhotoMeta(db.Model):
 class PhotoGallery(db.Model):
     __tablename__ = 'photo_gallery'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    old_id = db.Column(db.Integer)
     name = db.Column(db.String(), nullable=False)  # Name of gallery
     slug_name = db.Column(db.String(), nullable=False)  # Name used in urls
     path_name = db.Column(db.String(), nullable=False)  # File location (ends with '/'), append to top-level location

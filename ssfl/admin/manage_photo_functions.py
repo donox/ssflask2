@@ -28,11 +28,11 @@ def manage_photo_functions(db_exec, form):
     """Create, edit, modify photo related entries in JSONStore.
 
     """
-    """ 
-     Route: '/admin/manageTemplate' => make_story_json_template
-     Template: json_make_template.jinja2
-     Form: db_manage_templates_form.py
-     Processor: manage_json_template.py
+    """
+     Route: '/admin/manage_photos' => manage_photo_functions
+     Template: manage_photos.jinja2
+     Form: manage_photo_functions_form.py
+     Processor: manage_photo_functions.py
     """
     work_function = form.work_function.data
     slideshow_id = form.slideshow_id.data
