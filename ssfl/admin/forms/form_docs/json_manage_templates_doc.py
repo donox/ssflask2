@@ -98,5 +98,25 @@ x = """This is the width of the snippet display in pixels.  ****THIS SEEMS WRONG
 """
 entry['page_width'] = [x]
 
+# Fields associated with TOML
+entry = dict()
+docs['jtomlup'] = entry
+
+x = """This is file name for upload.
+"""
+entry['file_name'] = [x]
+
+x = """Overwrite an existing template.  Must be True to overwrite and the template must exist.  If the template
+does not exist, must be False. 
+"""
+entry['overwrite'] = [x]
+
+entry = dict()
+docs['jtomldn'] = entry
+
+x = """This is file name (without .toml extension) for the downloaded result.
+"""
+entry['out_file'] = [x]
+
 
 

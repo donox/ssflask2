@@ -1,4 +1,4 @@
-from wtforms import StringField, SubmitField, IntegerField, BooleanField, SelectField
+from wtforms import StringField, SubmitField, IntegerField, BooleanField, SelectField, FileField
 from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, Length, Optional
 import os
 from utilities.sst_exceptions import DataEditingSystemError
@@ -24,6 +24,8 @@ class DBJSONManageTemplatesForm(FlaskForm):
      Processor: manage_json_template.py
     """
     supported_functions = [('jcreate', 'Create New JSON DB entry'),
+                           ('jtomldn', 'Download as TOML'),
+                           ('jtomlup', 'Upload TOML file'),
                            ('jedit', 'Edit Story JSON'),
                            ('jcal', 'Edit Calendar JSON'),
                            ('jpage', 'Edit Page JSON'),
@@ -37,9 +39,10 @@ class DBJSONManageTemplatesForm(FlaskForm):
     work_function = SelectField(label='Select Function',
                                 choices=supported_functions, render_kw={"id": "js1"})
     json_id = IntegerField('JSON DB ID', validators=[Optional()],
-                           render_kw={"class": "jcreate jedit jcal jdelete", "docs": docs['all']['id']})
+                           render_kw={"class": "jcreate jtomldn jtomlup jedit jcal jdelete", "docs": docs['all']['id']})
     json_name = StringField('JSON Template Name', validators=[Optional()],
-                            render_kw={"class": "jcreate jedit jcal jdelete", "docs": docs['all']['name']})
+                            render_kw={"class": "jcreate jtomldn jtomlup jtoml jedit jcal jdelete",
+                                       "docs": docs['all']['name']})
     template_content = StringField('Name of JSON Template to Expand as Content', validators=[Optional()],
                                    render_kw={"class": "jcreate jedit", "docs": docs['jcreate']['template_content'] })
     is_prototype = BooleanField('Template is prototype', default=False,
@@ -79,6 +82,13 @@ class DBJSONManageTemplatesForm(FlaskForm):
                                         render_kw={"class": "jpage", "docs": docs['jpage']['page_content_template']})
     page_width = IntegerField('Width of snippet display (in pixels)', validators=[Optional()],
                               render_kw={"class": "jpage", "docs": docs['jpage']['page_width']})
+    toml_file_name = FileField('File Name', validators=[Optional()],
+                                 render_kw={"class": "jtomlup", "docs": docs['jtomlup']['file_name']})
+    toml_overwrite = BooleanField('Overwrite Existing Template', default=False,
+                             render_kw={"class": "jtomlup", "docs": docs['jtomlup']['overwrite']})
+    toml_download_name =StringField('File name for TOML Result', validators=[Optional()],
+                                render_kw={"class": "jpage jtomldn", "docs": docs['jtomldn']['out_file']})
+
     submit = SubmitField('Submit')
 
     def validate_on_submit(self):

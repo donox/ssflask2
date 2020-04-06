@@ -9,34 +9,44 @@
 {% extends 'base/layout.jinja2' %}
 
 {% block content %}
-<div class="container-fluid">
-    {% for row in PAGE.rows %} {# Each item corresponds to all stories horizontally across the page #}
-    <div class="row">
-        {% for col in row.ROW.columns %}
-        <div class="col col-md-6 col-lg-4 col-xl-3">
-            <div class="container-fluid">
-                {% for cell in col.cells %}
-                    {% if cell.element_type == 'CALENDAR_SNIPPET' %}
-                        {% set calendar = cell.element %}
-                        {% include 'main/snippet_calendar.jinja2' %}
-                    {% endif %}
-                    {% if cell.element_type == 'STORY_SNIPPET' %}
-                        {% set story = cell.element %}
-                        {% include 'main/snippet_story.jinja2' %}
-                    {% endif %}
-                    {% if cell.element_type == 'FULL_STORY' %}
-                        {% set story = cell.element %}
-                        {% include 'main/full_story.jinja2' %}
-                    {% endif %}
-                    {% if cell.element_type == 'SLIDESHOW_SNIPPET' %}
-                        {% set story = cell.element %}
-                        {% include 'main/snippet_slideshow.jinja2' %}
-                    {% endif %}
+    <div class="container-fluid">
+        {% for row in PAGE.rows %} {# Each item corresponds to all stories horizontally across the page #}
+            <div class="row">
+                {% for col in row.ROW.columns %}
+                    <div class="col col-md-6 col-lg-4 col-xl-3">
+                        <div class="container-fluid">
+                            {% for cell in col.cells %}
+                                <div class="{{ cell.classes }}" style="{{ cell.styles }}">
+                                    {% if cell.element_type == 'CALENDAR_SNIPPET' %}
+                                        {% set calendar = cell.element %}
+                                        {% include 'main/snippet_calendar.jinja2' %}
+                                    {% endif %}
+                                    {% if cell.element_type == 'STORY' %}
+                                        {% set story = cell.element.snippet %}
+                                        {% include 'main/snippet_story.jinja2' %}
+                                    {% endif %}
+                                    {% if cell.element_type == 'STORY_SNIPPET' %}
+                                        {% set story = cell.element %}
+                                        {% include 'main/snippet_story.jinja2' %}
+                                    {% endif %}
+                                    {% if cell.element_type == 'FULL_STORY' %}
+                                        {% set story = cell.element %}
+                                        {% include 'main/full_story.jinja2' %}
+                                    {% endif %}
+                                    {% if cell.element_type == 'SLIDESHOW_SNIPPET' %}
+                                        {% set story = cell.element %}
+                                        {% include 'main/snippet_slideshow.jinja2' %}
+                                    {% endif %}
+                                    {% if cell.element_type == 'SLIDESHOW' %}
+                                        {% set story = cell.element %}
+                                        {% include 'main/snippet_slideshow.jinja2' %}
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
                 {% endfor %}
             </div>
-        </div>
         {% endfor %}
     </div>
-    {% endfor %}
-</div>
 {% endblock %}

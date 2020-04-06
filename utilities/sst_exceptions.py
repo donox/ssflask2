@@ -42,6 +42,10 @@ class SsTSystemError(SSTException):
     """Base Exception Class for errors associated with unexpected system failures."""
     pass
 
+class SsTTOMLError(SSTException):
+    """Base Exception Class for errors associated with handling TOML documents."""
+    pass
+
 
 # ######################################################
 class PhotoHandlingError(SsTSystemError):
@@ -105,5 +109,9 @@ class WordRenderingError(SsTDocParseError):
 
 class WordContentFeatureExists(SsTDocParseError):
     """Error raised when a specific content feature is added more than once as a single feature."""
+    pass
+
+class NoSuchTOMLItem(SsTTOMLError):
+    """Error finding TOML item in JSON Tables"""
     pass
 

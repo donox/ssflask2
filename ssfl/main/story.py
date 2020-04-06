@@ -50,7 +50,7 @@ class Story(object):
         remain_len = max_length
         txt = ''
         for el in self.pb.body.iter():
-            if el.text:
+            if el.text and el.text.strip():
                 if remain_len < len(el.text):
                     txt += el.text[0:remain_len]
                 else:

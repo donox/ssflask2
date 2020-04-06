@@ -1,0 +1,5 @@
+# Save this file using Upload TOML as template 'user_config'
+CONFIG = "Parameters for easy end user specification"
+main_pageX = "f2page"
+main_page = "fp_test"
+

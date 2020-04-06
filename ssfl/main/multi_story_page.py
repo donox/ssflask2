@@ -195,7 +195,11 @@ class MultiStoryPage(object):
         #        loaded from the DB. This is equivalent to creating a Photo object and then calling
         #        the get_json_descriptor on it.
         photo_id = elem['id']
-        photo = self.photo_manager.get_photo_from_id(photo_id)
+        if type(photo_id) is str:
+            photo = self.photo_manager.get_photo_from_slug(photo_id)
+            photo_id = photo.id
+        else:
+            photo = self.photo_manager.get_photo_from_id(photo_id)
         if not photo:
             raise ValueError(f'No photo with id: {photo_id}')
         if not elem['caption']:
@@ -232,12 +236,58 @@ class MultiStoryPage(object):
         elem['events'] = content['events']
 
     def _fill_slideshow_snippet(self, elem):
-        """Fill slideshow snippet"""
+        """Fill slideshow snippet.
+
+        There are 2 cases:
+            (1) The snippet is already constructed in which case there is a 'slides' element.
+            (2) The descriptor is for a SLIDESHOW in which case the snippet element needs to
+                be created and added.  In this case, there is a pictures element containing a
+                list of picture identifies that need to be added to create a slideshow.
+        """
         # {"SLIDESHOW_SNIPPET": None, "id": None, "title": None, "text": None,
         # "slides": {"SLIDESHOW": None, "title": None, "title_class": None, "position": None,
         #                                    "width": None, "height": None, "rotation": None,
         #                                    "frame_title": None, "pictures": []}}
-        photo_list = elem['slides']['pictures']
+        if elem['descriptor'] == 'SLIDESHOW_SNIPPET':
+            pass
+            # photo_list = elem['slides']['pictures']
+        elif elem['descriptor'] == 'SLIDESHOW':
+            # Need to convert this element to be a proper 'SLIDESHOW_SNIPPET'
+            existing = elem.copy()
+            snip = self.storage_manager.get_json_from_name('P_SLIDESHOW_SNIPPET')
+            keys = [x for x in elem.keys()]  # this avoids the runtime error of dictionary size change during iterate
+            for key in keys:
+                del elem[key]
+            for key, val in snip.items():
+                elem[key] = val
+            # Should have properly formatted snippet - now fill it in
+            elem['title'] = existing['title']
+            elem_show = elem['slides']
+            # elem_show['title'] = existing['title']      # Displays as duplicate - are there reasons to have separate?
+            elem_show['title_class'] = existing['title_class']
+            elem_show['frame_title'] = existing['frame_title']  # Unneeded ??
+            elem_show['position'] = existing['position']
+            elem_show['width'] = existing['width']
+            elem_show['height'] = existing['height']
+            elem_show['rotation'] = existing['rotation']
+
+            res = list()
+            photo_list = existing['pictures'].split(',')
+            for photo_ident in photo_list:
+                pid = photo_ident.strip()
+                if pid.isdigit():
+                    photo = self.photo_manager.get_photo_from_id(int(pid))
+                else:
+                    photo = self.photo_manager.get_photo_from_slug(pid)
+                photo_json = self.storage_manager.make_json_descriptor('PICTURE')
+                photo_json['PICTURE']['id'] = photo.id
+                photo_json['PICTURE']['url'] = self.photo_manager.get_photo_url(photo.id)
+                photo_json['PICTURE']['caption'] = photo.caption
+                photo_json['PICTURE']['alt_text'] = photo.alt_text
+                res.append(photo_json['PICTURE'])
+            elem_show['pictures'] = res
+        else:
+            raise SystemError(f'Unrecognized descriptor {elem["descriptor"]} when expecting a slideshow element')
         foo = 3
 
 
@@ -249,20 +299,45 @@ class MultiStoryPage(object):
         """
         # descriptor_row_layout = ['columns']
         # descriptor_column_layout = ['cells', 'column_width']
-        # descriptor_cell_layout = ['element_type', 'element', 'width']
+        # descriptor_cell_layout = ['element_type', 'element', 'width', 'height']
         for i, row in enumerate(self.descriptor['PAGE']['rows']):
             for j, col in enumerate(row['ROW']['columns']):
                 for k, cell in enumerate(col['cells']):
                     width = cell['width']
+                    height = cell['height']
+                    styles = ""
+                    if width:
+                        styles += f'width:{width}px;'
+                    if height:
+                        styles += f'height:{height}px;'
+                    cell['styles'] = styles
+                    overflow = cell['overflow']
+                    extra_classes = cell['classes']
+                    classes = ""
+                    if overflow:
+                        classes += f'overflow-{overflow} '
+                    if extra_classes:
+                        classes += f'{extra_classes}'
+                    cell['classes'] = classes
                     elem = cell['element']
-                    if 'STORY_SNIPPET' in elem:
-                        self._fill_story_snippet(elem)
-                    elif 'STORY' in elem:
-                        self._fill_full_story(elem)
-                    elif 'CALENDAR_SNIPPET' in elem:
-                        self._fill_calendar_snippet(elem)
-                    elif 'SLIDESHOW_SNIPPET' in elem:
-                        self._fill_slideshow_snippet(elem)
+                    if cell['is-snippet']:
+                        if not elem:
+                            pass
+                        elif 'STORY' in elem:
+                            self._fill_story_snippet(elem['snippet'])
+                        elif 'STORY_SNIPPET' in elem:
+                            self._fill_story_snippet(elem)
+                        elif 'CALENDAR_SNIPPET' in elem:
+                            self._fill_calendar_snippet(elem)
+                        elif 'SLIDESHOW_SNIPPET' in elem:
+                            self._fill_slideshow_snippet(elem)
+                        elif 'SLIDESHOW' in elem:       # This is converted to a Snippet in processing
+                            self._fill_slideshow_snippet(elem)
+                            cell['element_type'] = 'SLIDESHOW_SNIPPET'
+                    else:
+                        if 'STORY' in elem:
+                            self._fill_full_story(elem)
+
         return self.descriptor
 
     def make_single_page_context(self, story: str) -> Dict[AnyStr, Any]:
@@ -270,6 +345,7 @@ class MultiStoryPage(object):
         res = mgr.make_json_descriptor(mgr.get_json_from_name('P_SINGLECELLROW'))
         res['ROW']['columns'][0]['cells'][0]['element'] = "S_STORY"
         res['ROW']['columns'][0]['cells'][0]['element_type'] = "STORY"
+        res['ROW']['columns'][0]['cells'][0]['is-snippet'] = False
         partial_descriptor = mgr.make_json_descriptor(res)
         if story.isdigit():
             partial_descriptor['ROW']['columns'][0]['cells'][0]['element']['id'] = story

@@ -8,6 +8,7 @@ from ssfl.admin.manage_index_pages import build_index_page_context
 from ssfl.main.build_page import BuildPage
 from ssfl.main.multi_story_page import MultiStoryPage
 from ssfl.main.views.calendar_view import RandomCalendarAPI
+from utilities.toml_support import dict_to_toml_file
 
 # Set up a Blueprint
 main_bp = Blueprint('main', __name__,
@@ -19,12 +20,19 @@ main_bp.add_url_rule('/cal/', defaults={'count': 6},
                      view_func=cal_view, methods=['GET'])
 
 
+def log_request(file, tag, context):
+    context['tag'] = tag
+    dict_to_toml_file(context, '/home/don/devel/temp/cmd_logs/' + file)
+
+
 @main_bp.route('/main/fullcalendar', methods=['GET'])
 @login_required
 def sst_main_calendar():
     context = dict()
     context['APP_ROOT'] = request.base_url
-    return render_template('main/calendar.jinja2', **context)
+    log_request('fullcalendar', 'fullcalendar', context)
+    foo = render_template('main/calendar.jinja2', **context)
+    return foo
 
 @main_bp.route('/main', methods=['GET'])
 @login_required
@@ -38,10 +46,13 @@ def sst_main():
     """
     db_exec = DBExec()
     try:
+        json_mgr = db_exec.create_json_manager()
+        usr_config = json_mgr.get_json_from_name('user_config')
         msp = MultiStoryPage(db_exec)
-        msp.load_descriptor_from_database('f2page')
+        msp.load_descriptor_from_database(usr_config['main_page'])
         context = msp.make_multi_element_page_context()
         context['APP_ROOT'] = request.base_url
+        log_request('main', 'main', context)
         res = render_template('main/main.jinja2', **context)
         return res
     finally:
@@ -60,6 +71,7 @@ def sst_get_specific_test_page(page_ident):
         context['story'] = context['element']
         context['story']['body'] = context['story']['content']
         context['APP_ROOT'] = request.base_url
+        log_request('page_ident', 'page_ident: ' + str(page_ident), context)
         return render_template('main/specific_page.jinja2', **context)
     finally:
         db_exec.terminate()

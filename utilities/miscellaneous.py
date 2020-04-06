@@ -21,6 +21,8 @@ def get_temp_file_name(temp_type, extension):
                 try:
                     if os.path.exists(full_path):
                         os.remove(full_path)
+                    else:
+                        try_count = 0
                 except FileNotFoundError as e:
                     try_count -= 1
                     if not try_count:

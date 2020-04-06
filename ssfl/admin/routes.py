@@ -1,5 +1,7 @@
 import os
 import sys
+import toml
+import json
 
 import dateutil.parser
 from flask import Blueprint, render_template, url_for, request, send_file, \
@@ -17,6 +19,7 @@ from ssfl.admin.manage_events.import_word_docx import import_docx_and_add_to_db
 from utilities.miscellaneous import get_temp_file_name
 from utilities.sst_exceptions import RequestInvalidMethodError
 from utilities.sst_exceptions import log_sst_error
+from utilities.toml_support import dict_to_toml_file
 from .edit_database_file import edit_database_file
 from .edit_json_file import edit_json_file
 from .forms.db_json_manage_templates_form import DBJSONManageTemplatesForm
@@ -48,43 +51,6 @@ def flash_errors(form):
     for field, errors in form.errors.items():
         for error in errors:
             flash(u"routes - Error in the %s field - %s" % (getattr(form, field).label.text, error), 'error')
-
-
-@admin_bp.route('/admin/manageTemplate', methods=['GET', 'POST'])
-@login_required
-def make_story_json_template():
-    """
-     Route: '/admin/manageTemplate' => make_story_json_template
-     Template: json_make_template.jinja2
-     Form: db_manage_templates_form.py
-     Processor: manage_json_template.py
-    """
-    sst_admin_access_log.make_info_entry(f"Route: /admin/make_story/")
-    db_exec = DBExec()
-    form = DBJSONManageTemplatesForm()
-    try:
-        if request.method == 'GET':
-            context = dict()
-            context['form'] = DBJSONManageTemplatesForm()
-        elif request.method == 'POST':
-            context = dict()
-            context['form'] = form
-            if form.validate_on_submit():
-                res = manage_json_templates(db_exec, form)
-                if res:
-                    flash(f'JSON template update successful.', 'success')
-                else:
-                    form.errors['submit'] = 'Error processing json_edit_page'
-                    flash_errors(form)
-        else:
-            raise RequestInvalidMethodError('Invalid method type: {}'.format(request.method))
-    except Exception as e:
-        log_sst_error(sys.exc_info(), get_traceback=True)
-        form.errors['submit'] = 'Error processing JSON_Manage_Templates'
-        flash_errors(form)
-    finally:
-        db_exec.terminate()
-        return render_template('admin/json_make_template.jinja2', **context)  # Executed in all cases
 
 
 @admin_bp.route('/downloads/<string:file_path>', methods=['GET'])
@@ -130,7 +96,11 @@ def get_image(image_path):
     db_exec = DBExec()
     try:
         path = Config.USER_DIRECTORY_IMAGES + image_path
-        return Response(open(path, 'rb'), direct_passthrough=True)
+        if os.path.exists(path):
+            return Response(open(path, 'rb'), direct_passthrough=True)
+        else:
+            return abort(404, f'File: {image_path} does not exist.')
+
         # No need to resize as browser seems to handle it just fine
         args = request.args
         width = 200
@@ -245,10 +215,10 @@ def sst_admin_calendar():
 def upload_form():
     # Used by upload_file below
     sst_admin_access_log.make_info_entry(f"Route: /admin/upload_form")
-    return render_template('admin/upload.html')
+    return render_template('admin/upload.jinja2')
 
 
-ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'docx', 'csv'])
+ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'docx', 'csv', 'toml'])
 
 
 def allowed_file(filename):
@@ -265,7 +235,7 @@ def upload_file():
     if request.method == 'POST':
         upload_type = request.form['upload_type']
         # check if the post request has the file part
-        if upload_type not in ['docx']:
+        if upload_type not in ['docx', 'toml']:
             flash('Improper file type', 'error')
             return redirect('/upload_form')
         if 'file' not in request.files:
@@ -405,6 +375,56 @@ def sst_import_page():
         return render_template('admin/import_docx.jinja2', **context)
 
 
+@admin_bp.route('/admin/manageTemplate', methods=['GET', 'POST'])
+@login_required
+def make_story_json_template():
+    """
+     Route: '/admin/manageTemplate' => make_story_json_template
+     Template: json_make_template.jinja2
+     Form: db_manage_templates_form.py
+     Processor: manage_json_template.py
+    """
+    sst_admin_access_log.make_info_entry(f"Route: /admin/make_story/")
+    db_exec = DBExec()
+    form = DBJSONManageTemplatesForm()
+    result = None
+    try:
+        if request.method == 'GET':
+            context = dict()
+            context['form'] = DBJSONManageTemplatesForm()
+            result = render_template('admin/json_make_template.jinja2', **context)
+        elif request.method == 'POST':
+            context = dict()
+            context['form'] = form
+            if form.validate_on_submit():
+                res = manage_json_templates(db_exec, form, request)
+                if res:
+                    if type(res) is tuple:
+                        file_path, json_store_obj, toml_download_name = res
+                        dict_to_toml_file(json.loads(json_store_obj.content), file_path)
+                        result = send_file(file_path, mimetype='application/octet', as_attachment=True,
+                                           attachment_filename=toml_download_name)
+                    else:
+                        flash(f'JSON template update successful.', 'success')
+                        result = render_template('admin/json_make_template.jinja2', **context)
+                else:
+                    form.errors['submit'] = 'Error processing json_edit_page'
+                    flash_errors(form)
+                    result = render_template('admin/json_make_template.jinja2', **context)
+            else:
+                result = render_template('admin/json_make_template.jinja2', **context)
+        else:
+            raise RequestInvalidMethodError('Invalid method type: {}'.format(request.method))
+    except Exception as e:
+        log_sst_error(sys.exc_info(), get_traceback=True)
+        form.errors['submit'] = 'Error processing JSON_Manage_Templates'
+        flash_errors(form)
+        result = render_template('admin/json_make_template.jinja2', None)
+    finally:
+        db_exec.terminate()
+        return result
+
+
 @admin_bp.route('/json', methods=['GET', 'POST'])
 @login_required
 def up_down_load_json_template():
@@ -473,6 +493,7 @@ def sst_import_database():
         return render_template('admin/import_database_functions.jinja2', **context)
     else:
         raise RequestInvalidMethodError('Invalid method type: {}'.format(request.method))
+
 
 @admin_bp.route('/manage_photos', methods=['GET', 'POST'])
 @login_required

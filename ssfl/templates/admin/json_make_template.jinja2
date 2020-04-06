@@ -16,7 +16,8 @@
 {% block content %}
     <section class="container">
         <div class="columns">
-            <form action="{{ url_for('admin_bp.make_story_json_template') }}" method="post">
+            <form action="{{ url_for('admin_bp.make_story_json_template') }}" method="post"
+                  enctype="multipart/form-data">
 
                 {#  Work Function          #}
                 {% with %}
@@ -100,12 +101,12 @@
                     {% include 'base/form_entry.jinja2' %}
                 {% endwith %}
 
-{#                {% with %}#}
-{#                    {% set el_name=form.json_name %}#}
-{#                    {% set el_class="input" %}#}
-{#                    {% set el_placeholder="" %}#}
-{#                    {% include 'base/form_entry.jinja2' %}#}
-{#                {% endwith %}#}
+                {#                {% with %}#}
+                {#                    {% set el_name=form.json_name %}#}
+                {#                    {% set el_class="input" %}#}
+                {#                    {% set el_placeholder="" %}#}
+                {#                    {% include 'base/form_entry.jinja2' %}#}
+                {#                {% endwith %}#}
 
                 {% with %}
                     {% set el_name=form.cal_display_count %}
@@ -150,6 +151,27 @@
                     {% include 'base/form_entry.jinja2' %}
                 {% endwith %}
 
+                {% with %}
+                    {% set el_name=form.toml_file_name %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="350" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
+                {% with %}
+                    {% set el_name=form.toml_overwrite %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="350" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
+                {% with %}
+                    {% set el_name=form.toml_download_name %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="350" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
                 <div class="button">
                     <input id="submit" type="submit" value="Submit">
                 </div>
@@ -173,10 +195,22 @@
             $('.jcal').parent().hide();
             $('.jdelete').parent().hide();
             $('.jreload').parent().hide();
+            $('.jtomlup').parent().hide();
+            $('.jtomldn').parent().hide();
             let opt = $('#js1 option:selected').val();
             $('.' + opt).parent().show();
+            localStorage.setItem('json_make_template', opt);
         });
+        $(document).ready(function(){
+        let opt_val = localStorage.getItem('json_make_template');
+        if (opt_val) {$('#js1 option:selected').val(opt_val);}
+        else {$('#js1 option:selected').val('jcreate');}
+        });
+        $(window).resize();
         //# sourceURL=json_make_template.js
+
+
+
 
         </script>
     </section>

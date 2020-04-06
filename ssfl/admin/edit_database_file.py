@@ -1,5 +1,5 @@
 from db_mgt.page_tables import Page
-from utilities.sst_exceptions import DataEditingSystemError,log_sst_error
+from utilities.sst_exceptions import DataEditingSystemError, log_sst_error
 from wtforms import ValidationError
 
 

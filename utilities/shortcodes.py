@@ -213,7 +213,7 @@ class Shortcode(object):
             if len(photo_ids) == 1:
                 for photo_id in photo_ids:  # retrieve single element from either list or set
                     break
-            photoframe = SlideShow(self.db_exec)
+            photoframe = SlideShow(None, self.db_exec)
             for p_id in photo_ids:
                 photoframe.add_photo(p_id)
             if 'h' in keys:

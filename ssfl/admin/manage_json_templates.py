@@ -3,6 +3,11 @@ from utilities.sst_exceptions import DataEditingSystemError, log_sst_error
 from db_mgt.page_tables import PageManager
 import sys
 from ssfl.main.calendar_snippet import Calendar, SelectedEvents
+from werkzeug.utils import secure_filename
+from utilities.miscellaneous import get_temp_file_name
+from utilities.toml_support import toml_to_dict, elaborate_toml_dict
+import toml, json
+from flask import send_file
 
 
 # supported_functions = [('jcreate', 'Create New JSON DB entry'),
@@ -36,11 +41,17 @@ from ssfl.main.calendar_snippet import Calendar, SelectedEvents
 # page_template = StringField('JSON Template for page layout', validators=[Optional()])
 # page_story_template = StringField('JSON Template of story to insert', validators=[Optional()])
 # page_width = IntegerField('Width of story display (in pixels)', validators=[Optional()])
+# toml_file_name = StringField('File Name', validators=[DataRequired()],
+#                                  render_kw={"class": "jtomldn", "docs": docs['jtomdnl']['file_name']})
+# toml_overwrite = BooleanField('Overwrite Existing Template', validators=[Optional()], default=False,
+#                              render_kw={"class": "jtomlup", "docs": docs['jtomlup']['overwrite']})
+# toml_download_name =StringField('File name for TOML Result', validators=[Optional()],
+#                                 render_kw={"class": "jpage jtomldn", "docs": docs['jtomldn']['out_file']})
 # submit = SubmitField('Submit')
 
 
 
-def manage_json_templates(db_exec, form):
+def manage_json_templates(db_exec, form, request):
     """Create, edit, modify JSON story entry in JSONStore.
 
     """
@@ -74,6 +85,10 @@ def manage_json_templates(db_exec, form):
     page_template = form.page_template.data
     page_content_template = form.page_content_template.data
     page_width = form.page_width.data
+
+    toml_file_name = form.toml_file_name.data
+    toml_overwrite = form.toml_overwrite.data
+    toml_download_name = form.toml_download_name.data
 
     submit = form.submit.data
 
@@ -174,13 +189,41 @@ def manage_json_templates(db_exec, form):
                         json_table_mgr.add_json(page_template, template)
                         return True
 
-
         elif work_function == 'jreset':
             json_table_mgr.update_db_with_descriptor_prototype()
             return True
 
         elif work_function == 'jreload':
             json_table_mgr.update_db_with_descriptor_prototype()
+            return True
+
+        elif work_function == 'jtomlup':
+            file = form.toml_file_name.data
+            secure_filename(file.filename)
+            file_path = get_temp_file_name('toml_file', 'toml')     # TODO: use system tempfile
+            file.save(file_path)
+            with open(file_path, 'r') as fl:
+                toml_dict = toml_to_dict(toml.load(fl, dict))
+                toml_dict_expanded = elaborate_toml_dict(db_exec, toml_dict)
+                json_obj = json.dumps(toml_dict_expanded)
+                existing_template = json_table_mgr.get_json_from_name(json_name)
+                if (existing_template and toml_overwrite) or (not existing_template and not toml_overwrite):
+                    json_table_mgr.add_json(json_name, json_obj)
+                else:
+                    if toml_overwrite:
+                        form.errors['toml_overwrite'] = [f'Existing template: {json_name} does not exist.']
+                    else:
+                        form.errors['toml_overwrite'] = [f'Existing template: {json_name} already exists.']
+            return True
+
+        elif work_function == 'jtomldn':
+            json_store_obj = json_table_mgr.get_json_record_by_name_or_id(json_id, json_name)
+            if json_store_obj is None:
+                form.errors['JSON Entry Not Found'] = ['There was no entry with that id/name.']
+                return False
+            if json_store_obj.content != '' and json_store_obj.content is not None:
+                file_path = get_temp_file_name('toml_file', 'toml')
+                return file_path, json_store_obj, toml_download_name + '.toml'
             return True
 
         else:

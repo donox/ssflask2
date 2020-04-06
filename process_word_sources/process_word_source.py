@@ -9,11 +9,6 @@ from db_mgt.photo_tables import SlideShow as sls
 import re
 import mammoth
 
-
-def get_temp_file_name(a, b):
-    return '/home/don/devel/temp/proto.html'
-
-
 class ParsedElement(object):
     """ Base class to represent elements of the parse and support expansion.
 

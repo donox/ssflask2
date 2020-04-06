@@ -1,6 +1,6 @@
 from ssfl import db
 import datetime as dt
-from sqlalchemy.orm import defer
+import toml
 import json as jsn
 from collections import defaultdict
 from.base_table_manager import BaseTableManager
@@ -111,29 +111,6 @@ class JSONTableManager(BaseTableManager):
         else:
             return result
 
-    @staticmethod
-    def Xconvert_descriptor_list_to_dict(desc):
-        """Convert a descriptor in form of a list to a dictonary for use as a context object
-
-        Args:
-            desc: list: names of elements in descriptor
-
-        Returns:    dict: with elements of descriptor
-
-        """
-        res = dict()
-        for el in desc[1:]:  # first element of descriptor is type
-            res[el] = None
-        return res
-
-    def Xget_json_from_name(self, name):
-        res = self.table_manager.get_json_by_name(name)
-        if res:
-            json = jsn.loads(res.content)
-            return json
-        else:
-            return None
-
     def get_json_from_id(self, id_nbr):
         res = self.db_session.query(JSONStore).filter(JSONStore.id == id_nbr)
         if res:
@@ -175,12 +152,9 @@ class JSONTableManager(BaseTableManager):
         else:
             return None
 
-    def get_json_by_name(self, name: str):
-        res = self.db_session.query(JSONStore).filter(JSONStore.name == name).first()
-        return res
-
     def get_json_from_name(self, name):
-        res = self.get_json_by_name(name)
+        sql = f'select * from json_store where name="{name}"'
+        res = self.db_session.execute(sql).first()
         if res:
             json = jsn.loads(res.content)
             return json
@@ -228,6 +202,10 @@ class JSONTableManager(BaseTableManager):
             self.db_session.query(JSONStore).filter(JSONStore.name == name).delete()
             self.db_session.commit()
 
+    def get_descriptor_as_toml(self, name):
+        desc = self.get_json_from_name(name)
+        toml_str = toml.dumps(desc.content)
+        return toml_str
 
 
 def get_name_type(name: str) -> int:
@@ -246,24 +224,6 @@ def get_name_type(name: str) -> int:
         return 'UPPER'
     else:
         return 'NORMAL'
-
-
-def xget_name_type(descriptor_name: str) -> int:
-    # Case 1: X_NAME for X = S, P
-    # Case 2: NAME
-    # Case 3: name
-    # Case 4: F_xxxx
-    name = descriptor_name
-    if len(name) > 1 and name[0:2] in ('P_', 'S_', 'F_'):
-        name = name[2:]
-        if name[0:2] == 'F_':
-            return 4
-        if name.upper() == name:
-            return 1
-    elif name.upper() == name:
-        return 2
-    else:
-        return 3
 
 
 class _KeepResult(object):
@@ -330,7 +290,8 @@ class JSONStorageManager(object):
     descriptor_page_layout = {"PAGE": None, "name": None, "rows": []}
     descriptor_row_layout = {"ROW": None, "columns": []}
     descriptor_column_layout = {"COLUMN": None, "cells": [], "column_width": None}
-    descriptor_cell_layout = {"CELL": None, "element_type": None, "element": None, "width": None}
+    descriptor_cell_layout = {"CELL": None, "element_type": None, "element": None, "is_snippet": None,
+                              "width": None, "height": None, "styles": None, "classes": None}
     descriptor_button_fields = {"BUTTON": None, "id": None, "button_type": None, "target": None, "text_content": None}
 
     # Content Types

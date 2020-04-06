@@ -22,9 +22,9 @@ class PhotoManager(BaseTableManager):
         self.get_photo_field_value = self.get_table_value('photo')
         self.get_gallery_field_value = self.get_table_value('photo_gallery')
 
-    def get_photoframe(self, show_name='NEED PHOTO NAME'):
-        photoframe = SlideShow(show_name, db_session=self.db_session)
-        return photoframe
+    def get_slideshow(self, show_name='NEED PHOTO NAME'):
+        slideshow = SlideShow(show_name, db_session=self.db_session)
+        return slideshow
 
     def get_photo_from_slug(self, slug):
         sql = f'select * from photo where image_slug="{slug}"'
@@ -265,6 +265,9 @@ class SlideShow(object):
     def add_photo(self, photo_id):
         new_photo = Picture(self.db_exec, photo_id)  # make call as self.photo_manager(photo_id)
         self.show_desc['pictures'].append(new_photo.get_picture_descriptor())
+
+    def add_existing_photo(self, photo):
+        self.show_desc['pictures'].append(photo.get_picture_descriptor())
 
     def add_title(self, title):
         self.show_desc['title'] = title
