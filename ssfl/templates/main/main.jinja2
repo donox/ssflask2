@@ -9,7 +9,7 @@
 {% extends 'base/layout.jinja2' %}
 
 {% block content %}
-    <div class="container-fluid">
+    <div class="container-fluid font-weight-bolder">
         {% for row in PAGE.rows %} {# Each item corresponds to all stories horizontally across the page #}
             <div class="row">
                 {% for col in row.ROW.columns %}

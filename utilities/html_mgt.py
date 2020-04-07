@@ -65,49 +65,85 @@ class PageBody(object):
                     facilitates shortcode handling.
 
             returns: etree div element with all content as children
+
+        A fragment is an element and/or string (generally element).   An element may contain text which occurs
+        inside the element tags.  It also may contain a tail which is text that occurs after the closing
+        tag, but before the next element.  For elements with a tail, we add a new span element that is a parent
+        of both the element (with tail removed) and a sibling span element containing the tail.
         """
-        # Replace line breaks  (1) remove those separating elements.
-        #                      (2)??needed? replace 2 consecutive breaks with one as that creates more space than wanted.
-        #                      (3)?? needed? replace single breaks as break.
         body = etree.Element(XHTML + "div", nsmap=NSMAP)
         # remove line breaks immediately following an element tag
         el_rep = target_page.page_content.replace('>\n', '>')
         body_list = hp.fragments_fromstring(el_rep)
-        # A fragment is an element and/or string (generally element).   An element may contain text which occurs
-        # inside the element tags.  It also may contain a tail which is text that occurs after the closing
-        # tag, but before the next element.   We remove all tails adding a new span element enclosing the tail
-        # string.  We also enclose non-empty strings in span element
+        res = []
         for el in body_list:
-            if type(el) is str:
-                if el != '':
-                    res = PageBody._break_text_string(el)
-                    for elnew in res:
-                        body.append(elnew)
-            elif el.text:
-                res = PageBody._break_text_string(el.text)
-                el.text = ''
-                res.reverse()
-                for elnew in res:
-                    el.insert(0, elnew)
-                body.append(el)
-            elif el.tail:
-                res = PageBody._break_text_string(el.tail)
-                el.tail = ''
-                for elnew in res:
-                    el.append(elnew)
-                body.append(el)
-            else:
-                body.append(el)
+            top_level = PageBody._normalize_help(el)
+            res += [x for x in top_level[0].iter()]
+        for x in res:
+            body.append(x)
+        PageBody._normalize_help_2(body)
         # foo = tostring(body, 'utf-8').decode('utf-8').replace('<html:', '<').replace('/html:', '/')
         return body
 
     @staticmethod
+    def _normalize_help(el: etree.Element or str):
+        res = []
+        if type(el) is str:
+            new_el = etree.Element(XHTML + "span", nsmap=NSMAP)
+            res.append(new_el)
+            el_break = PageBody._break_text_string(el)
+            for x in el_break:
+                new_el.append(x)
+        elif el.tail:
+            enclose_tail = etree.Element(XHTML + "span", nsmap=NSMAP)
+            el_break = PageBody._break_text_string(el.tail)
+            for x in el_break:
+                enclose_tail.append(x)
+            el.tail = None
+            new_top = etree.Element(XHTML + "span", nsmap=NSMAP)
+            new_top.append(el)
+            new_top.append(enclose_tail)
+            res.append(new_top)
+        elif len(el):
+            if el.text:
+                enclose = etree.Element(XHTML + "span", nsmap=NSMAP)
+                el_break = PageBody._break_text_string(el.text)
+                for x in reversed(el_break):
+                    el.insert(0, x)
+                if not el.tail:             # children, text, no tail
+                    res.append(el)
+                else:
+                    pass                    # children, text, tail
+            elif el.tail:                   # children no text, tail
+                pass
+        else:
+            if el.text and el.tail:         # no children text, tail
+                pass
+            elif not el.tail:               # no children, text or empty, no tail
+                res.append(el)
+        return res
+
+    @staticmethod
+    def _normalize_help_2(el: etree.Element):
+        if el.text or not len(el):
+            return
+        children = [x for x in list(el)]
+        for x in children:
+            el.remove(x)
+        for x in children:
+            res = PageBody._normalize_help(x)
+            for y in res:
+                el.append(y)
+        for x in list(el):
+            PageBody._normalize_help_2(x)
+
+    @staticmethod
     def _break_text_string(text_string):
-        """Convert text string to list of strings with <br> separators."""
-        ts1 = re.sub('[ \t]+', ' ', text_string)
-        ts2 = re.sub('\n ', '\n', ts1)
-        ts3 = re.sub('\n(\n)+', '\n', ts2)
-        tsl = ts3.split('\n')
+        """Convert text string to list of <p> elements."""
+        ts1 = re.sub('[ \t]+', ' ', text_string)        # Replace tabs
+        ts2 = re.sub('\n ', '\n', ts1)                  # Replace space following line feed
+        ts3 = re.sub('\n(\n)+', '\n', ts2)              # Replace multiple line feeds with single one
+        tsl = ts3.split('\n')                           # Break text into separate lines
         res = []
         for segment in tsl:
             el = etree.Element(XHTML + 'p', nsmap=NSMAP)

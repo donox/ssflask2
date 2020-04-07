@@ -12,7 +12,7 @@ class Shortcode(object):
     """Handler for a single shortcode.
 
     """
-    available_shortcodes = ['maxbutton', 'singlepic', 'includeme', 'ngg_images']
+    available_shortcodes = ['maxbutton', 'singlepic', 'src_singlepic', 'includeme', 'ngg_images']
     sc_re = re.compile(r'\[(\w+)( *.+)* *\]', re.I)
     sc_re_arg = re.compile(r'( *([A-Za-z0-9_]+) *= *"(.*)")+?')
 
@@ -20,6 +20,7 @@ class Shortcode(object):
         self.db_exec = db_exec
         self.specific_processors = {'maxbutton': self._process_maxbutton,
                                     'singlepic': self._process_singlepic,
+                                    'src_singlepic': self._process_singlepic,
                                     'ngg_images': self._process_ngg_images,
                                     'includeme': self._process_include_me,
                                     'caption': None,  # see 'steve-and-david'  not sure where it comes from
@@ -257,13 +258,3 @@ class Shortcode(object):
         if res:
             self.content_dict['result'] = '<div>' + res + '</div>'
 
-
-if __name__ == '__main__':
-    tests = [
-        r'[singlepic id="345"]',
-        r'[singlepic id="345" w="200" h="400" align="middle" title="asdfasdf" caption="qwerqwer"]',
-        r'[singlepic id="" w="200" h="ddf" align="lefty" title="asdfasdf" caption="qwerqwer"]'
-    ]
-    for test in tests:
-        sc = Shortcode(string_to_match=test)
-        sc.parse_shortcode()

@@ -303,21 +303,25 @@ class MultiStoryPage(object):
         for i, row in enumerate(self.descriptor['PAGE']['rows']):
             for j, col in enumerate(row['ROW']['columns']):
                 for k, cell in enumerate(col['cells']):
-                    width = cell['width']
-                    height = cell['height']
                     styles = ""
-                    if width:
-                        styles += f'width:{width}px;'
-                    if height:
-                        styles += f'height:{height}px;'
+                    if 'width' in cell:
+                        width = cell['width']
+                        if width:
+                            styles += f'width:{width}px;'
+                    if 'height' in cell:
+                        height = cell['height']
+                        if height:
+                            styles += f'height:{height}px;'
                     cell['styles'] = styles
-                    overflow = cell['overflow']
-                    extra_classes = cell['classes']
                     classes = ""
-                    if overflow:
-                        classes += f'overflow-{overflow} '
-                    if extra_classes:
-                        classes += f'{extra_classes}'
+                    if 'overflow' in cell:
+                        overflow = cell['overflow']
+                        if overflow:
+                            classes += f'overflow-{overflow} '
+                    if 'classes' in cell:
+                        extra_classes = cell['classes']
+                        if extra_classes:
+                            classes += f'{extra_classes}'
                     cell['classes'] = classes
                     elem = cell['element']
                     if cell['is-snippet']:
