@@ -345,8 +345,10 @@ def sst_import_page():
     context = dict()
     try:
         sst_admin_access_log.make_info_entry(f"Route: /admin/sst_import_page")
+        db_exec = DBExec()
+        form = ImportMSWordDocForm()
         if request.method == 'GET':
-            context['form'] = ImportMSWordDocForm()
+            context['form'] = form
             return render_template('admin/import_docx.jinja2', **context)
         elif request.method == 'POST':
             context['form'] = form
@@ -391,7 +393,7 @@ def make_story_json_template():
     try:
         if request.method == 'GET':
             context = dict()
-            context['form'] = DBJSONManageTemplatesForm()
+            context['form'] = form
             result = render_template('admin/json_make_template.jinja2', **context)
         elif request.method == 'POST':
             context = dict()

@@ -34,6 +34,7 @@ def sst_main_calendar():
     foo = render_template('main/calendar.jinja2', **context)
     return foo
 
+
 @main_bp.route('/main', methods=['GET'])
 @login_required
 def sst_main():
@@ -76,6 +77,7 @@ def sst_get_specific_test_page(page_ident):
     finally:
         db_exec.terminate()
 
+
 @main_bp.route('/menu/<string:page>', methods=['GET'])
 @login_required
 def sst_get_menu_page(page):
@@ -94,6 +96,7 @@ def sst_get_menu_page(page):
         return render_template('main/specific_page.jinja2', **context)
     finally:
         db_exec.terminate()
+
 
 @main_bp.route('/index/<string:page>', methods=['GET'])
 @login_required

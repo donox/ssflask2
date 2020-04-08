@@ -2,9 +2,28 @@ import '../css/mystyles.css';
 import '../css/calendar.css';
 
 $(document).ready(function () {
-    let $ = jQuery;
-    let myIndex = 0;
 
+    function run_slideshow(){
+        $('.slideshow').each(function(){
+        let slides = $(this).children();
+        let rotate = $(this).attr('interval') * 100;
+        let ndx = 0;
+        let rotator = function(){
+            $.each(slides, function(a,b){
+                    $(this).hide();
+                });
+                $(slides[ndx]).show();
+                ndx++;
+                if (ndx >= slides.length){ndx=0};
+                setTimeout(rotator, rotate);
+            };
+         rotator();
+        }
+        )
+    }
+    run_slideshow();
+
+    let myIndex = 0;
     function carousel() {
         let i;
         let x = document.getElementsByClassName("mySlides");
@@ -20,9 +39,7 @@ $(document).ready(function () {
             setTimeout(carousel, 5000); // Change image every 5 seconds
         }
     }
-
     carousel();
-
 });
 
 var button_state = (function () {
@@ -95,6 +112,8 @@ var button_state = (function () {
         },
     }
 })();
+
+//# sourceURL=sst_javascript.js
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
