@@ -13,7 +13,7 @@
         {% for row in PAGE.rows %} {# Each item corresponds to all stories horizontally across the page #}
             <div class="row">
                 {% for col in row.ROW.columns %}
-                    <div class="col col-md-6 col-lg-4 col-xl-3">
+                    <div class="col {{ col.classes }}">
                         <div class="container-fluid">
                             {% for cell in col.cells %}
                                 <div class="{{ cell.classes }}" style="{{ cell.styles }}">

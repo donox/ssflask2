@@ -29,7 +29,7 @@ class Story(object):
         self.json_store = db_exec.create_json_manager()
         self.story = dict()
         self.pb = None  # PageBody
-        self.snippet_width = width       # Width to display on front page in columns (1-12)
+        # self.snippet_width = width       # This should be overridden by cell width
         self.story['width'] = width
         self.story['width-class'] = None
         self.read_more = None

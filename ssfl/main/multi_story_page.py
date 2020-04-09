@@ -290,7 +290,6 @@ class MultiStoryPage(object):
             raise SystemError(f'Unrecognized descriptor {elem["descriptor"]} when expecting a slideshow element')
         foo = 3
 
-
     def make_multi_element_page_context(self) -> Dict[AnyStr, Any]:
         """Create context for a page based on current descriptor.
 
@@ -302,12 +301,14 @@ class MultiStoryPage(object):
         # descriptor_cell_layout = ['element_type', 'element', 'width', 'height']
         for i, row in enumerate(self.descriptor['PAGE']['rows']):
             for j, col in enumerate(row['ROW']['columns']):
+                classes = ""
+                if 'width' in col:  # The cell is the container (not the column) so width control is here
+                    width = col['width']
+                    if width:
+                        classes += f'col-sm-{width} col-md-{width} col-lg-{width}'
+                col['classes'] = classes
                 for k, cell in enumerate(col['cells']):
                     styles = ""
-                    if 'width' in cell:
-                        width = cell['width']
-                        if width:
-                            styles += f'width:{width}px;'
                     if 'height' in cell:
                         height = cell['height']
                         if height:
@@ -317,11 +318,11 @@ class MultiStoryPage(object):
                     if 'overflow' in cell:
                         overflow = cell['overflow']
                         if overflow:
-                            classes += f'overflow-{overflow} '
+                            classes += f' overflow-{overflow} '
                     if 'classes' in cell:
                         extra_classes = cell['classes']
                         if extra_classes:
-                            classes += f'{extra_classes}'
+                            classes += f' {extra_classes}'
                     cell['classes'] = classes
                     elem = cell['element']
                     if cell['is-snippet']:

@@ -3,7 +3,7 @@
   <component name="SshConfigs">
     <configs>
       <sshConfig authType="PASSWORD" host="ssh.pythonanywhere.com" id="feae54cf-29ca-4ba5-9583-06e5954f1673" port="22" customName="doxley@ssh.pythonanywhere.com" nameFormat="CUSTOM" username="doxley" />
-      <sshConfig authType="PASSWORD" host="ssh.pythonanywhere.com" id="b425a406-e952-449c-b4f4-6d27dedcfaf5" port="22" customName="doxley@ssh.pythonanywhere.com" nameFormat="CUSTOM" username="doxley" />
+      <sshConfig authType="PASSWORD" host="ssh.pythonanywhere.com" id="a2b428f2-e1fd-427e-9a48-f29fbc98c629" port="22" customName="doxley@ssh.pythonanywhere.com" nameFormat="CUSTOM" username="doxley" />
     </configs>
   </component>
 </project>
