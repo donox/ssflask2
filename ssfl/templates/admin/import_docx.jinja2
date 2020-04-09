@@ -38,10 +38,14 @@
                 </div>
                 {% if form.errors %}
                     <ul class="errors">
-                        {% for error in form.errors.keys() %}
-                            {% for specific in form.errors[error] %}
-                                <li>{{ error }} : {{ specific }}</li>
-                            {% endfor %}
+                        {% for error, val in form.errors.items() %}
+                            {% if val is iterable and val is string %}
+                                <li>{{ error }} : {{ val }}</li>
+                            {% else %}
+                                {% for val_el in val %}
+                                     <li>{{ error }} : {{ val_el }}</li>
+                                {% endfor %}
+                            {% endif %}
                         {% endfor %}
                     </ul>
                 {% endif %}
@@ -61,6 +65,7 @@
 {#            $('.' + opt).parent().show();#}
 {#        });#}
         //# sourceURL=import_word.js
+
         </script>
     </section>
 {% endblock %}

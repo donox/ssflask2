@@ -89,14 +89,18 @@
                     <input id="submit_item" type="submit" value="Submit">
                 </div>                     <!-- End Submit Item -->
                 <h4>Page Summary Errors</h4>
-                {% if form.errors %}
+                 {% if form.errors %}
                     <ul class="errors">
-                        {% for error in form.errors.keys() %}
-                            {% for specific in form.errors[error] %}
-                                <li>{{ error }} : {{ specific }}</li>
-                            {% endfor %}
+                        {% for error, val in form.errors.items() %}
+                            {% if val is iterable and val is string %}
+                                <li>{{ error }} : {{ val }}</li>
+                            {% else %}
+                                {% for val_el in val %}
+                                     <li>{{ error }} : {{ val_el }}</li>
+                                {% endfor %}
+                            {% endif %}
                         {% endfor %}
-                    </ul>                      <!-- End Overall Form Errors -->
+                    </ul>
                 {% endif %}
                 {{ form.csrf_token }}
             </form>

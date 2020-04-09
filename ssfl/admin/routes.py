@@ -50,7 +50,10 @@ def flash_errors(form):
     """Flashes form errors"""
     for field, errors in form.errors.items():
         for error in errors:
-            flash(u"routes - Error in the %s field - %s" % (getattr(form, field).label.text, error), 'error')
+            if hasattr(form, field):
+                flash(u"routes - Error in the %s field - %s" % (getattr(form, field).label.text, error), 'error')
+            else:
+                flash(u"%s error: %s" % (field, error))
 
 
 @admin_bp.route('/downloads/<string:file_path>', methods=['GET'])
@@ -347,24 +350,21 @@ def sst_import_page():
         sst_admin_access_log.make_info_entry(f"Route: /admin/sst_import_page")
         db_exec = DBExec()
         form = ImportMSWordDocForm()
+        db_exec.set_current_form(form)
         if request.method == 'GET':
             context['form'] = form
             return render_template('admin/import_docx.jinja2', **context)
         elif request.method == 'POST':
             context['form'] = form
-            db_session = create_session(get_engine())
-            if form.validate_on_submit(db_session):
+            if form.validate_on_submit(db_exec):
                 file = form.file_name.data
                 secure_filename(file.filename)
                 file_path = get_temp_file_name('word', 'docx')
                 file.save(file_path)
-                res = import_docx_and_add_to_db(db_session, form, file_path)
-                close_session(db_session)
+                res = import_docx_and_add_to_db(db_exec, form, file_path)
                 if res:
                     flash(f'You were successful in importing {file}', 'success')
                     return render_template('admin/import_docx.jinja2', **context)  # redirect to success url
-            else:
-                close_session(db_session)
             flash_errors(form)
             return render_template('admin/import_docx.jinja2', **context)
         else:
@@ -374,6 +374,7 @@ def sst_import_page():
     finally:
         form.errors['submit'] = 'Error processing sst_import_page'
         flash_errors(form)
+        db_exec.terminate()
         return render_template('admin/import_docx.jinja2', **context)
 
 

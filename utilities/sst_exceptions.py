@@ -38,6 +38,10 @@ class SsTDocParseError(SSTException):
     """Base Exception Class for errors associated with parsing Word Docs."""
     pass
 
+class SsTDocumentDoesNotExist(SSTException):
+    """Base Exception Class for errors when expected data is missing from the database."""
+    pass
+
 class SsTSystemError(SSTException):
     """Base Exception Class for errors associated with unexpected system failures."""
     pass
@@ -113,5 +117,9 @@ class WordContentFeatureExists(SsTDocParseError):
 
 class NoSuchTOMLItem(SsTTOMLError):
     """Error finding TOML item in JSON Tables"""
+    pass
+
+class PhotoOrGalleryMissing(SsTDocumentDoesNotExist):
+    """Missing Photo or Gallery"""
     pass
 

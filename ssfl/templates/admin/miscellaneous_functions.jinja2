@@ -8,78 +8,82 @@
 {% extends 'base/layout.jinja2' %}
 
 {% block content %}
-<section class="container">
-    <div class="XXX">
-        <h3>Miscellaneous Admin Functions</h3>
-        <p>Only required parameters for an action are required.</p>
-        <form action="{{ url_for('admin_bp.sst_miscellaneous') }}" method="post">
-                        {% with %}
+    <section class="container">
+        <div class="XXX">
+            <h3>Miscellaneous Admin Functions</h3>
+            <p>Only required parameters for an action are required.</p>
+            <form action="{{ url_for('admin_bp.sst_miscellaneous') }}" method="post">
+                {% with %}
                     {% set el_name=form.work_function %}
                     {% set el_class="input" %}
                     {% set el_placeholder="0000" %}
                     {% include 'base/form_entry.jinja2' %}
                 {% endwith %}
-{#            <div class="input">#}
-{#                {{ form.work_function.label }}#}
-{#                {{ form.work_function(placeholder='0000') }}#}
-{#                {% if form.work_function.errors %}#}
-{#                <ul class="errors">#}
-{#                    {% for error in form.work_function.errors %}#}
-{#                    <li>{{ error }}</li>#}
-{#                    {% endfor %}#}
-{#                </ul>#}
-{#                {% endif %}#}
-{#            </div>#}
-        {% with %}
+                {#            <div class="input">#}
+                {#                {{ form.work_function.label }}#}
+                {#                {{ form.work_function(placeholder='0000') }}#}
+                {#                {% if form.work_function.errors %}#}
+                {#                <ul class="errors">#}
+                {#                    {% for error in form.work_function.errors %}#}
+                {#                    <li>{{ error }}</li>#}
+                {#                    {% endfor %}#}
+                {#                </ul>#}
+                {#                {% endif %}#}
+                {#            </div>#}
+                {% with %}
                     {% set el_name=form.page_name %}
                     {% set el_class="input" %}
                     {% set el_placeholder="Page name (e.g., foo-bar-xx)" %}
                     {% include 'base/form_entry.jinja2' %}
                 {% endwith %}
-{#            <div class="input">#}
-{#                {{ form.page_name.label }}#}
-{#                {{ form.page_name(placeholder='Page name (e.g., foo-bar-xx)') }}#}
-{#                {% if form.page_name.errors %}#}
-{#                <ul class="errors">#}
-{#                    {% for error in form.page_name.errors %}#}
-{#                    <li>{{ error }}</li>#}
-{#                    {% endfor %}#}
-{#                </ul>#}
-{#                {% endif %}#}
-{#            </div>#}
-        {% with %}
+                {#            <div class="input">#}
+                {#                {{ form.page_name.label }}#}
+                {#                {{ form.page_name(placeholder='Page name (e.g., foo-bar-xx)') }}#}
+                {#                {% if form.page_name.errors %}#}
+                {#                <ul class="errors">#}
+                {#                    {% for error in form.page_name.errors %}#}
+                {#                    <li>{{ error }}</li>#}
+                {#                    {% endfor %}#}
+                {#                </ul>#}
+                {#                {% endif %}#}
+                {#            </div>#}
+                {% with %}
                     {% set el_name=form.filename %}
                     {% set el_class="file" %}
                     {% set el_placeholder="File to be translated" %}
                     {% include 'base/form_entry.jinja2' %}
                 {% endwith %}
-{#            <div class="file">#}
-{#                {{ form.filename.label }}#}
-{#                {{ form.filename(placeholder='File to be translated') }}#}
-{#                {% if form.filename.errors %}#}
-{#                <ul class="errors">#}
-{#                    {% for error in form.filename.errors %}#}
-{#                    <li>{{ error }}</li>#}
-{#                    {% endfor %}#}
-{#                </ul>#}
-{#                {% endif %}#}
-{#            </div>#}
-            <div class="button">
-                <input id="submit" type="submit" value="Submit">
-            </div>
-            {% if form.errors %}
-            <ul class="errors">
-                {% for error in form.errors.keys() %}
-                {% for specific in form.errors[error] %}
-                <li>{{ error }} : {{ specific }}</li>
-                {% endfor %}
-                {% endfor %}
-            </ul>
-            {% endif %}
-            {{ form.csrf_token }}
-        </form>
+                {#            <div class="file">#}
+                {#                {{ form.filename.label }}#}
+                {#                {{ form.filename(placeholder='File to be translated') }}#}
+                {#                {% if form.filename.errors %}#}
+                {#                <ul class="errors">#}
+                {#                    {% for error in form.filename.errors %}#}
+                {#                    <li>{{ error }}</li>#}
+                {#                    {% endfor %}#}
+                {#                </ul>#}
+                {#                {% endif %}#}
+                {#            </div>#}
+                <div class="button">
+                    <input id="submit" type="submit" value="Submit">
+                </div>
+                {% if form.errors %}
+                    <ul class="errors">
+                        {% for error, val in form.errors.items() %}
+                            {% if val is iterable and val is string %}
+                                <li>{{ error }} : {{ val }}</li>
+                            {% else %}
+                                {% for val_el in val %}
+                                    <li>{{ error }} : {{ val_el }}</li>
+                                {% endfor %}
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                {{ form.csrf_token }}
+            </form>
 
-    </div>
+        </div>
         <script>
         $ = jQuery;
         $('#js1').change(function(){
@@ -91,6 +95,7 @@
         });
         //# sourceURL=json_make_template.js
 
+
         </script>
-</section>
+    </section>
 {% endblock %}

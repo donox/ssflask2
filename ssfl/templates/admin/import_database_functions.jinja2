@@ -8,34 +8,38 @@
 {% extends 'base/layout.jinja2' %}
 
 {% block content %}
-<section class="container">
-    <div class="XXX">
-        <h3>Import Database Admin Functions</h3>
-        <p>Only required parameters for an action are required.</p>
-        <form action="{{ url_for('admin_bp.sst_import_database') }}" method="post">
-                        {% with %}
+    <section class="container">
+        <div class="XXX">
+            <h3>Import Database Admin Functions</h3>
+            <p>Only required parameters for an action are required.</p>
+            <form action="{{ url_for('admin_bp.sst_import_database') }}" method="post">
+                {% with %}
                     {% set el_name=form.work_function %}
                     {% set el_class="input" %}
                     {% set el_placeholder="0000" %}
                     {% include 'base/form_entry.jinja2' %}
                 {% endwith %}
 
-            <div class="button">
-                <input id="submit" type="submit" value="Submit">
-            </div>
-            {% if form.errors %}
-            <ul class="errors">
-                {% for error in form.errors.keys() %}
-                {% for specific in form.errors[error] %}
-                <li>{{ error }} : {{ specific }}</li>
-                {% endfor %}
-                {% endfor %}
-            </ul>
-            {% endif %}
-            {{ form.csrf_token }}
-        </form>
+                <div class="button">
+                    <input id="submit" type="submit" value="Submit">
+                </div>
+                {% if form.errors %}
+                    <ul class="errors">
+                        {% for error, val in form.errors.items() %}
+                            {% if val is iterable and val is string %}
+                                <li>{{ error }} : {{ val }}</li>
+                            {% else %}
+                                {% for val_el in val %}
+                                    <li>{{ error }} : {{ val_el }}</li>
+                                {% endfor %}
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                {{ form.csrf_token }}
+            </form>
 
-    </div>
+        </div>
         <script>
         $ = jQuery;
         $('#js1').change(function(){
@@ -47,6 +51,7 @@
         });
         //# sourceURL=import_database_template.js
 
+
         </script>
-</section>
+    </section>
 {% endblock %}

@@ -12,6 +12,16 @@ XHTML_NAMESPACE = 'http://www.w3.org/1999/xhtml'
 XHTML = "{%s}" % XHTML_NAMESPACE
 NSMAP = {None: XHTML_NAMESPACE}
 
+def find_null_elements(el: etree.Element):
+    """Make count of elements containing some text."""
+    count = 0
+    for elt in el.getchildren():
+        if elt.text or elt.tail:
+            count += 1
+        if len(elt):
+            count += find_null_elements(elt)
+    return count
+
 
 class PageBody(object):
     """Utility operations to organize and structure the body of an html page.
@@ -62,7 +72,7 @@ class PageBody(object):
                 (1) line breaks either removed or converted to <br/> elements.
                 (2) Any node containing both text and children to one with no text
                     where the text is embedded in a <span> element as first child. (this
-                    facilitates shortcode handling.
+                    facilitates shortcode handling).
 
             returns: etree div element with all content as children
 
@@ -75,67 +85,71 @@ class PageBody(object):
         # remove line breaks immediately following an element tag
         el_rep = target_page.page_content.replace('>\n', '>')
         body_list = hp.fragments_fromstring(el_rep)
-        res = []
         for el in body_list:
-            top_level = PageBody._normalize_help(el)
-            res += [x for x in top_level[0].iter()]
-        for x in res:
-            body.append(x)
-        PageBody._normalize_help_2(body)
+            if type(el) is str:
+                enclose_span = etree.Element(XHTML + "span", nsmap=NSMAP)
+                enclose_span.text = el
+                body.append(enclose_span)
+            else:
+                body.append(el)
+        # Note this fundamentally depends on side-effects - the parent node has its children modified appropriately
+        PageBody._normalize_remove_children_tails(body)
+        PageBody._covert_element_with_text(body)
+        PageBody._break_strings(body)
         # foo = tostring(body, 'utf-8').decode('utf-8').replace('<html:', '<').replace('/html:', '/')
         return body
 
     @staticmethod
-    def _normalize_help(el: etree.Element or str):
-        res = []
-        if type(el) is str:
-            new_el = etree.Element(XHTML + "span", nsmap=NSMAP)
-            res.append(new_el)
-            el_break = PageBody._break_text_string(el)
-            for x in el_break:
-                new_el.append(x)
-        elif el.tail:
-            enclose_tail = etree.Element(XHTML + "span", nsmap=NSMAP)
-            el_break = PageBody._break_text_string(el.tail)
-            for x in el_break:
-                enclose_tail.append(x)
-            el.tail = None
-            new_top = etree.Element(XHTML + "span", nsmap=NSMAP)
-            new_top.append(el)
-            new_top.append(enclose_tail)
-            res.append(new_top)
-        elif len(el):
-            if el.text:
-                enclose = etree.Element(XHTML + "span", nsmap=NSMAP)
-                el_break = PageBody._break_text_string(el.text)
-                for x in reversed(el_break):
-                    el.insert(0, x)
-                if not el.tail:             # children, text, no tail
-                    res.append(el)
-                else:
-                    pass                    # children, text, tail
-            elif el.tail:                   # children no text, tail
-                pass
-        else:
-            if el.text and el.tail:         # no children text, tail
-                pass
-            elif not el.tail:               # no children, text or empty, no tail
-                res.append(el)
-        return res
-
-    @staticmethod
-    def _normalize_help_2(el: etree.Element):
-        if el.text or not len(el):
+    def _normalize_remove_children_tails(el: etree.Element) -> None:
+        """Create new children element list with none having a tail."""
+        if not len(el):
             return
-        children = [x for x in list(el)]
+        children = [x for x in el.getchildren()]
+        new_children_list = []
+        for child in children:
+            new_children_list += PageBody._covert_element_with_tail(child)
         for x in children:
             el.remove(x)
-        for x in children:
-            res = PageBody._normalize_help(x)
-            for y in res:
-                el.append(y)
-        for x in list(el):
-            PageBody._normalize_help_2(x)
+        for x in new_children_list:
+            el.append(x)
+
+    @staticmethod
+    def _covert_element_with_tail(el: etree.Element) -> [etree.Element, etree.Element]:
+        """Make tail into span node and remove it from element, returning both"""
+        enclose_span = etree.Element(XHTML + "span", nsmap=NSMAP)
+        enclose_span.text = el.tail
+        el.tail = ''
+        return [el, enclose_span]
+
+    @staticmethod
+    def _covert_element_with_text(el: etree.Element) -> None:
+        """Convert an element with text to a child of a span."""
+        if not len(el):
+            return
+        if not el.text:
+            return
+        if el.tag == 'span':
+            return
+        enclose_span = etree.Element(XHTML + "span", nsmap=NSMAP)
+        enclose_span.text = el.text
+        el.insert(0, enclose_span)
+        el.text = ''
+
+    @staticmethod
+    def _break_strings(el: etree.Element) -> None:
+        """Break any strings containing latex elements into separate children, replacing text."""
+        if len(el):
+            children = [x for x in el.getchildren()]
+            for x in children:
+                PageBody._break_strings(x)
+            return
+        if el.text:
+            el_break = PageBody._break_text_string(el.text)
+            for x in el_break:
+                if x.text:
+                    el.append(x)
+            el.text = ''
+            return
 
     @staticmethod
     def _break_text_string(text_string):

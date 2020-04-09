@@ -5,6 +5,7 @@ from flask_wtf.file import FileField, FileRequired, FileStorage
 from flask_wtf import FlaskForm
 from flask import flash
 from db_mgt.page_tables import Page
+from db_mgt.db_exec import DBExec
 
 
 class ImportMSWordDocForm(FlaskForm):
@@ -23,13 +24,14 @@ class ImportMSWordDocForm(FlaskForm):
     author = StringField(label='Author', default='Not Available')       # Extract from document if it exists
     submit = SubmitField('Import Document')
 
-    def validate_on_submit(self, db_session):
+    def validate_on_submit(self, db_exec: DBExec):
+        page_mgr = db_exec.create_page_manager()
         res = super().validate_on_submit()
         file_storage = self.file_name.data
         file = file_storage.filename
         if not self.overwrite:
-            res = db_session.query(Page).filter(Page.page_name == self.page_name)
-            if res.count != 0:
+            res = page_mgr.get_page_if_exists(None, self.page_name)
+            if res:
                 flash(u'Specified page already exists in database, overwrite not specified.')
                 self.errors['page_name'] = ['Specified page already exists, no overwrite allowed.']
                 res = False

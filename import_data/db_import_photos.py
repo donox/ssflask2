@@ -12,7 +12,7 @@ class ImportPhotoData(object):
     Processor: db_import_pages.py
     """
 
-    def __init__(self, db_session):
+    def __init__(self, db_session):     # TODO:  MODIFY TO USE DBEXEC
         self.db_session = db_session
         self.wp_gallery_fields = self.get_table_fields('wp_ngg_gallery')
         self.wp_picture_fields = self.get_table_fields('wp_ngg_pictures')

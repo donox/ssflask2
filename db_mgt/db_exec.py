@@ -18,6 +18,7 @@ class DBExec(object):
     """
     def __init__(self, managers: list=[]):
         self.db_session = create_session(get_engine())
+        self.current_form = None
         self.available_managers = dict()
         self.available_managers['photo'] = (False, self.create_photo_manager)
         self.available_managers['page'] = (False, self.create_page_manager)
@@ -31,6 +32,18 @@ class DBExec(object):
                 raise SystemError(f'Attempt to create invalid model manager: {manager}')
             mgr = self.available_managers[manager][1](self.db_session)
             self.available_managers[manager] = (True, mgr)
+
+    def set_current_form(self, form):
+        self.current_form = form
+
+    def add_error_to_form(self, error_key, error_val):
+        if self.current_form:
+            if error_key in self.current_form.errors.keys():
+                self.current_form.errors[error_key].append(error_val)
+            else:
+                self.current_form.errors[error_key] = [error_val]
+        else:
+            raise SystemError(f'Attempt to add error to none existent form - {error_key} : {error_val}')
 
     def get_db_session(self):
         return self.db_session

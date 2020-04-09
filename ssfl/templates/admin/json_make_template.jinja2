@@ -175,10 +175,16 @@
                 <div class="button">
                     <input id="submit" type="submit" value="Submit">
                 </div>
-                {% if form.errors %}
+                 {% if form.errors %}
                     <ul class="errors">
                         {% for error, val in form.errors.items() %}
-                            <li>{{ error }} : {{ val }}</li>
+                            {% if val is iterable and val is string %}
+                                <li>{{ error }} : {{ val }}</li>
+                            {% else %}
+                                {% for val_el in val %}
+                                     <li>{{ error }} : {{ val_el }}</li>
+                                {% endfor %}
+                            {% endif %}
                         {% endfor %}
                     </ul>
                 {% endif %}

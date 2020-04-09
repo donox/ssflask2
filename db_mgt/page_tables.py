@@ -10,7 +10,7 @@ class PageManager(BaseTableManager):
     def __init__(self, db_session):
         super().__init__(db_session)
 
-    def _get_page_if_exists(self, page_id, page_name):
+    def get_page_if_exists(self, page_id, page_name):
         if page_id:
             target_page = self.db_session.query(Page).filter(Page.id == page_id).first()
             return target_page
@@ -23,7 +23,7 @@ class PageManager(BaseTableManager):
     def fetch_page(self, page_id, page_name):
         """Fetch page from database, using cached page if it exists and is current."""
         try:
-            target_page = self._get_page_if_exists(page_id, page_name)
+            target_page = self.get_page_if_exists(page_id, page_name)
             if target_page:
                 return target_page
             else:
@@ -41,8 +41,8 @@ class PageManager(BaseTableManager):
         return result
 
     def delete_page(self, page_id, page_name):
-        page = self._get_page_if_exists(page_id, page_name)
-        if not page:
+        page = self.get_page_if_exists(page_id, page_name)
+        if page:
             self.db_session.delete(page)
             self.db_session.commit()
             return True
@@ -68,46 +68,12 @@ class PageManager(BaseTableManager):
             page.page_cached_date = dt.datetime.now()
             # session.commit()
 
-
-
-class OLDPageManager(object):
-    def __init__(self, db_session):
-        self.db_session = db_session
-
-    def generate_page_records(self, key_list):
-        res = self.db_session.query(Page).options(defer('page_content'),
-                                                  defer('page_cached_content')).all()
-        for record in res:
-            rec = record.__dict__
-            rec_list = []
-            for key in key_list:
-                rec_list.append(rec[key])
-            yield rec_list
-
-    def get_page_from_name(self, name):
-        res = self.db_session.query(Page).filter(Page.page_name == name).first()
-        return res
-
-    def fetch_page(self, page_id, page_name):
-        """Fetch page from database, using cached page if it exists and is current."""
-        try:
-            if page_id:
-                target_page = self.db_session.query(Page).filter(Page.id == page_id).first()
-            elif page_name:
-                target_page = self.db_session.query(Page).filter(Page.page_name == page_name.lower()).first()
-            else:
-                raise SiteIdentifierError(None, None, 'No id or page_name provided')
-            if target_page:
-                return target_page
-            else:
-                raise SiteObjectNotFoundError(page_id, page_name, 'DB returned null result')
-        except Exception as e:
-            print(e.args)
-
-
-
-                      # commit handled at request completion
-
+    def add_page_to_database(self, page, overwrite):
+        if overwrite:
+            pg = self.get_page_if_exists(None, page.page_name)
+            if pg:
+                self.delete_page(pg.id, None)
+        page.add_to_db(self.db_session, commit=True)
 
 class Page(db.Model):
     __tablename__ = 'page'

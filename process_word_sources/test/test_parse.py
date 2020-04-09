@@ -1,18 +1,15 @@
-import unittest
-import re
-
-from io import StringIO
-import csv
+from test_base import BaseTestCase
+from db_mgt.db_exec import DBExec
 from process_word_sources.process_word_source import WordSourceDocument
 
 
-class TestParse(unittest.TestCase):
+class TestParse(BaseTestCase):
 
     def _body_of_test(self, test_string):
-        source_file = 'dummy'
+        db_exec = DBExec()
         logger = None
         try:
-            wsd = WordSourceDocument(source_file, logger)
+            wsd = WordSourceDocument(db_exec, logger)
             result = wsd._parse_whole_text(test_string)
             return result
         except Exception as e:
@@ -49,8 +46,26 @@ class TestParse(unittest.TestCase):
         test_string = test_string.replace('\\', '\a')
         try:
             result = self._body_of_test(test_string)
-            self.assertEqual(len(result), 175, 'Result list is wrong length')
+            self.assertEqual(len(result), 73, 'Result list is wrong length')
         except Exception as e:
             self.assertTrue(False, 'Exception occurred running test')
+
+    def test_create_doctype(self):
+        html = """<p>\\figure{TestFig}</p><p>\photoset{16817, 16231, 16647}</p>
+        <p>\photo{16742}{Woodshopw making cradles}</p><p>\phototitle{Try this for a slideshow}</p>
+        <p>\photoposition{right}</p><p>\photosize{width=300}{height=300}</p><p>\photorotation{4}</p>
+        <p>\endfigure{TestFig}</p><p>\placefigure{TestFig}</p><h1>\\title{Hickory Cove Chronicles} </h1>
+        <h2>\\byline{LUDDD CREEF}</h2><h2>8-11-18</h2><p>\subtitle{I GUESS I SHOWED HER…}</p>"""
+        html_only = '<html>' + html + '</html>'
+        db_exec = DBExec()
+        logger = None
+        try:
+            wsd = WordSourceDocument(db_exec, logger)
+            wsd.read_docs_from_string(html_only)
+            html = wsd.build_html_output_tree()
+            self.assertEqual(2609, len(html), "Didn't get right result")
+        except Exception as e:
+            foo = 3
+
 
 

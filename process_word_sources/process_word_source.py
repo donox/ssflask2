@@ -1,13 +1,18 @@
 from lxml import etree
 from xml.etree import ElementTree
 from utilities.sst_exceptions import WordHTMLExpressionError, WordLatexExpressionError, WordInputError, \
-    WordRenderingError, WordContentFeatureExists
+    WordRenderingError, WordContentFeatureExists, PhotoOrGalleryMissing
 from .photos import Photo
 from config import Config
-from db_mgt.photo_tables import SlideShow as sls
+from db_mgt.db_exec import DBExec
 
 import re
 import mammoth
+
+def verify(string_to_add):
+    if string_to_add.find('OCTY') != -1:
+        foo = 3
+    return string_to_add
 
 class ParsedElement(object):
     """ Base class to represent elements of the parse and support expansion.
@@ -60,11 +65,18 @@ class ParsedElement(object):
         ndx = 0
         max_ndx = len(self.source)
         this_el_type = ''
+        el_save = None
+        el_item = None
+        ndx_save = None
         try:
             while True:
                 if ndx >= max_ndx:
                     return ndx
                 el, item = self.source[ndx]
+                verify(item)
+                el_save = el
+                ndx_save = ndx
+                el_item = item
                 if el == 'Free':
                     free_el = FreeElement(item, self.source[ndx + 1:], self)
                     free_el.process_opening_node()
@@ -101,31 +113,40 @@ class ParsedElement(object):
                     return ndx + 1
                 else:
                     raise WordInputError(f'Invalid  parse_tree input: {self.source[ndx]}')
-
-
         except Exception as e:
-            foo = 3
+            self.top.db_exec.add_error_to_form('Except', f'{e.args}')
+            self.top.db_exec.add_error_to_form('ParseElement',
+                                               f'Element: {el_save}, "{self.source[ndx_save: ndx_save+20]}"')
+            raise e
 
     def render(self):
         res = ''
         for node in self.parsed_result:
             if type(node) == tuple:
-                el, item = node
-                if el == 'HSelf':
-                    res += str(item)
-                else:
-                    res += '<UndrendredElement>' + str(node) + '</UndrendredElement>'
+                try:
+                    el, item = node
+                    if el == 'HSelf':
+                        res += str(item)
+                    else:
+                        res += '<UndrendredElement>' + verify(str(node)) + '</UndrendredElement>'
+                except Exception as e:
+                    raise e
             else:
-                res += str(node.render())
+                try:
+                    res += verify(str(node.render()))
+                except Exception as e:
+                    self.top.db_exec.add_error_to_form('Render_fail', f'Node: {node}')
+                    raise e
         if self.element_type == 'Top':
             return res
         else:
-            return '<UndrendredElement>' + res + '</UndrendredElement>'
+            return '<UndrendredElement>' + verify(res) + '</UndrendredElement>'
 
 
 class TopElement(ParsedElement):
-    def __init__(self, source_list, db_session):
-        self.db_session = db_session
+    def __init__(self, source_list, db_exec: DBExec):
+        self.db_exec = db_exec
+        self.photo_mgr = db_exec.create_photo_manager()
         self.environment = []  # Environments that control interpretation set/cleared by latex expressions
         self.photo_frames = dict()
         self.current_photo_frame = None
@@ -150,14 +171,14 @@ class TopElement(ParsedElement):
     def add_photo_frame(self, name):
         if name in self.photo_frames.keys():
             raise WordLatexExpressionError(f'Photo Frame {name} exists.')
-        new_frame = sls.Slideshow(name, self.db_session)
+        new_frame = self.photo_mgr.get_slideshow(self.db_exec, name)
         self.photo_frames[name] = new_frame
         self.current_photo_frame = new_frame
         return new_frame
 
     def clear_current_frame(self, arg):
-        if self.current_photo_frame.name != arg:
-            raise WordLatexExpressionError(f'Attempt to clear wrong photo frame: {arg}')
+        # if self.current_photo_frame.name != arg:
+        #     raise WordLatexExpressionError(f'Attempt to clear wrong photo frame: {arg}')
         self.current_photo_frame = None
 
     def get_photo_frame(self, name):
@@ -183,6 +204,7 @@ class TopElement(ParsedElement):
         else:
             self.content_features[name] = [value]
 
+
 class FreeElement(ParsedElement):
     def __init__(self, item, source_list, parent):
         super().__init__('Free', source_list, parent)
@@ -192,15 +214,15 @@ class FreeElement(ParsedElement):
         parent_type = self.get_parent_type()
         if not renderer:
             if parent_type == 'HTML':
-                return '<scan>' + self.source_item + '</scan>'
+                return '<scan>' + verify( self.source_item) + '</scan>'
             elif parent_type == 'Latex':
-                return self.source_item
+                return verify( self.source_item)
             elif parent_type == 'Top':  # Free standing element not in expression => at start or end
-                return '<scan>' + self.source_item + '</scan>'
+                return '<scan>' + verify( self.source_item) + '</scan>'
             else:
                 raise WordInputError(f'Invalid element type: {parent_type}')
         else:
-            return renderer(self.source_item)
+            return renderer(verify( self.source_item))
 
 
 class LatexElement(ParsedElement):
@@ -230,7 +252,7 @@ class LatexElement(ParsedElement):
         self.command_processors['photorotation'] = self._latex_photo_rotation
         self.command_processors['placefigure'] = self._latex_place_figure
         self.command_processors['photosize'] = self._latex_photo_size
-        self.command_processors['bold'] = self._latex_photo
+        self.command_processors['XXX'] = self
 
     def process_opening_node(self):
         self.parsed_result.append(('Open', self.source_item[1:-1]))  # Remove backslash and left brace
@@ -254,20 +276,28 @@ class LatexElement(ParsedElement):
                         tmp = el_structure.render()
                         self.args[-1].append(tmp)
                     else:
-                        raise ValueError(f'System error - invalid length in args structure in Latex Element render')
+                        raise SystemError(f'System error - invalid length in args structure in Latex Element render')
             return res
+        except PhotoOrGalleryMissing as e:
+            raise e
         except Exception as e:
             raise WordLatexExpressionError(f'Error in Latex Element render: {el_structure}')
 
     def _render_from_args(self):
         """All args processed, so now can render properly."""
-        if self.command in self.command_processors:
-            cmd = self.command_processors[self.command]
-            tmp = cmd()
-            return tmp
-        else:
-            el = 'LATEXElement_' + self.command + '>'
-            return '<' + el + '>El:' + el + 'Has: ' + str(len(self.args)) + ' args</' + el
+        try:
+            if self.command in self.command_processors:
+                cmd = self.command_processors[self.command]
+                tmp = cmd()
+                return tmp
+            else:
+                el = 'LATEXElement_' + self.command + '>'
+                verify(el)
+                return '<' + el + '>El:' + el + 'Has: ' + str(len(self.args)) + ' args</' + el
+        except Exception as e:
+            self.top.db_exec.add_error_to_form('Render_from_Args', f'Exception: {e.args}')
+            self.top.db_exec.add_error_to_form('Render_from_Args', f'Command: {self.command}')
+            raise e
 
     def _latex_textbf(self):
         res = '<strong>'
@@ -275,7 +305,7 @@ class LatexElement(ParsedElement):
             raise WordLatexExpressionError(f'Latex Bold called with wrong args: {self.args}')
         arg = self.args[0][0]
         res += str(arg)
-        return res + '</strong>'
+        return verify(res + '</strong>')
 
     def _latex_textif(self):
         res = '<em>'
@@ -283,7 +313,7 @@ class LatexElement(ParsedElement):
             raise WordLatexExpressionError(f'Latex Italics called with wrong args: {self.args}')
         arg = self.args[0][0]
         res += str(arg)
-        return res + '</em>'
+        return verify(res + '</em>')
 
     def _latex_underline(self):
         res = '<span style="text-decoration:underline">'
@@ -291,7 +321,8 @@ class LatexElement(ParsedElement):
             raise WordLatexExpressionError(f'Latex Underline called with wrong args: {self.args}')
         arg = self.args[0][0]
         res += str(arg)
-        return res + '</span>'
+        res += '</span>'
+        return verify(res)
 
     def _latex_title(self):
         res = '<div class="title">'
@@ -300,7 +331,8 @@ class LatexElement(ParsedElement):
         arg = self.args[0][0]
         super().get_top().add_content_feature('title',  arg)
         res += str(arg)
-        return res + '</div>'
+        res += '</div>'
+        return verify(res)
 
     def _latex_byline(self):
         res = '<div class="byline">'
@@ -309,7 +341,8 @@ class LatexElement(ParsedElement):
         arg = self.args[0][0]
         super().get_top().add_content_feature('byline', arg)
         res += str(arg)
-        return res + '</div>'
+        res += '</div>'
+        return verify(res)
 
     def _latex_subtitle(self):
         res = '<div class="subtitle">'
@@ -317,7 +350,8 @@ class LatexElement(ParsedElement):
             raise WordLatexExpressionError(f'Latex subtitle called with wrong args: {self.args}')
         arg = self.args[0][0]
         res += str(arg)
-        return res + '</div>'
+        res += '</div>'
+        return verify(res)
 
     def _latex_begin_env(self):
         if len(self.args) != 1:
@@ -362,8 +396,8 @@ class LatexElement(ParsedElement):
             for photo_nbr in photo_list:
                 photo_id = int(photo_nbr.strip())
                 top_element.current_photo_frame.add_photo(photo_id)
-        except Exception as e:
-            pass
+        except PhotoOrGalleryMissing as e:
+            self.db_exec.add_error_to_form(f'Missing Photo(s) or Gallery: {photo_list_text}')
             raise e
         return ''
 
@@ -429,7 +463,7 @@ class LatexElement(ParsedElement):
             raise WordLatexExpressionError(f'Latex end figure called with wrong args: {self.args}')
         arg = self.args[0][0]
         frame = top_element.get_photo_frame(arg)
-        return frame.get_html()
+        return verify(frame.get_html())
 
     def _latex_x(self, item, start_end):
         if start_end == 'start':
@@ -458,9 +492,13 @@ class HTMLElement(ParsedElement):
         css classes, ..."""
         try:
             res = ''
+            el_save = None
+            el_item = None
             for el_structure in self.parsed_result:
                 if type(el_structure) == tuple:
                     el, item = el_structure
+                    el_save = el
+                    el_item = item
                     if el == 'Open':
                         res += str(item)  # Should not need str - unless there is an error
                     elif el == 'HSelf':
@@ -472,8 +510,10 @@ class HTMLElement(ParsedElement):
                 else:
                     tmp = el_structure.render()
                     res += tmp
-            return res
+            return verify(res)
         except Exception as e:
+            self.top.db_exec.add_error_to_form('Render_Fail_err', f'{e.args}')
+            self.top.db_exec.add_error_to_form('Render_Fail', f'Element: {el_save}, Item: {str(el_item)[0:30]}')
             raise WordRenderingError(f'Unspecified Error in Word Render')
 
 
@@ -482,10 +522,10 @@ class WordSourceDocument(object):
 
     """
 
-    def __init__(self, db_session, source_file, logger):
+    def __init__(self, db_exec: DBExec,logger):
         self.logger = logger
-        self.db_session = db_session
-        self.docx_source = source_file
+        self.db_exec = db_exec
+        self.docx_source = None
         self.content_features = None
         self.text_as_substrings = []
         self.html_etree = None
@@ -519,17 +559,24 @@ class WordSourceDocument(object):
         for entry in self.trace_list:
             print(entry.__repr__())
 
+    def set_source_path(self, path):
+        self.docx_source = path
+
     def read_docs_as_html(self):
         # Translate DOCX to HTML
         try:
             with open(self.docx_source, 'rb') as docx_file:
                 result = mammoth.convert_to_html(docx_file)
                 html = result.value
-                html_only = '<html>' + html + '</html>'
+                html_only = '<html>' + verify(html) + '</html>'
                 self.html_etree = etree.fromstring(html_only)
         except Exception as e:
             self.logger.make_error_entry(f'Fail to create HTML from {self.docx_source}')
             raise e
+
+    def read_docs_from_string(self, in_string):
+        """Set reader as if input is already html"""
+        self.html_etree = etree.fromstring(in_string)
 
     def _find_last_element_in_nested_list(self, res):
         if type(res) == list:
@@ -586,68 +633,25 @@ class WordSourceDocument(object):
     def _parse_whole_text(self, txt):
         try:
             txt_strings = self._create_delimited_strings(txt)
-            te = TopElement(txt_strings, self.db_session)
+            te = TopElement(txt_strings, self.db_exec)
             te.parse()
             res = te.render()
+            verify(res)
             self.content_features = te.get_content_features()
             return res
-
         except Exception as e:
+            self.db_exec.add_error_to_form('Parse_text', 'Error in WordSourceDocument._parse_whole_text')
+            self.db_exec.add_error_to_form('Parse_text', f'{e.args}')
             raise e
 
     def build_html_output_tree(self):
         all_text = ElementTree.tostring(self.html_etree).decode()
         try:
             res = self._parse_whole_text(all_text)
+            verify(res)
             return res.replace('\a', '\\')  # Replace ASCII BEL with backslash (reverse earlier translation)
         except Exception as e:
-            foo = 3
+            self.db_exec.add_error_to_form('Parse_text', 'Error in WordSourceDocument.build_html_output_tree')
+            self.db_exec.add_error_to_form('Parse_text', f'{e.args}')
+            raise e
 
-    # def _element_html(self, item):
-    #     """Body is our top level element.  The document is assumed to contain no header information."""
-    #     return '<body>'
-    #
-    # def _element_p(self, item):
-    #     return '<p>'
-    #
-    # def _element_span(self, item):
-    #     return '<span>'
-    #
-    # def _element_em(self, item):
-    #     return '<em>'
-    #
-    # def _element_strong(self, item):
-    #     return '<strong>'
-    #
-    # def _element_h1(self, item):
-    #     return '<h1>'
-    #
-    # def _element_h2(self, item):
-    #     return '<h2>'
-    #
-    # def _element_h3(self, item):
-    #     return '<h3>'
-    #
-    # def _element_h4(self, item):
-    #     return '<h4>'
-    #
-    # def _element_sup(self, item):
-    #     return '<sup>'
-    #
-    # def _element_img(self, item):
-    #     return '<h4>IMG NEEDED</h4>'
-    #
-    # def _element_x(self, item):
-    #     return '<x>'
-    #
-    # def _element_x(self, item):
-    #     return '<x>'
-    #
-    # def _element_x(self, item):
-    #     return '<x>'
-    #
-    # def _element_x(self, item):
-    #     return '<x>'
-    #
-    # def _element_a(self, item):
-    #     return f'<h2>Element "a" found: {item}</h2>'

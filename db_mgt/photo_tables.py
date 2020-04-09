@@ -10,6 +10,7 @@ from flask import url_for, render_template
 import os
 from io import BytesIO
 from .base_table_manager import BaseTableManager
+from utilities.sst_exceptions import PhotoOrGalleryMissing
 
 
 class PhotoManager(BaseTableManager):
@@ -22,8 +23,8 @@ class PhotoManager(BaseTableManager):
         self.get_photo_field_value = self.get_table_value('photo')
         self.get_gallery_field_value = self.get_table_value('photo_gallery')
 
-    def get_slideshow(self, show_name='NEED PHOTO NAME'):
-        slideshow = SlideShow(show_name, db_session=self.db_session)
+    def get_slideshow(self, db_exec, show_name='NEED PHOTO NAME'):
+        slideshow = SlideShow(show_name, db_exec)
         return slideshow
 
     def get_photo_from_slug(self, slug):
@@ -85,9 +86,8 @@ class PhotoManager(BaseTableManager):
     def get_gallery_by_id(self, pid):
         # This is new gallery_id
         sql = f'select * from photo_gallery where id={pid}'
-        res = self.db_session.execute(sql)
+        res = self.db_session.execute(sql).first()
         if res:
-            res = res.first()
             gv = self.get_gallery_field_value(res)
             gallery = PhotoGallery(id=gv('id'), name=gv('name'),
                                    slug_name=gv('slug_name'), path_name=gv('path_name'))
@@ -317,9 +317,9 @@ class Picture(object):
                 relative_path = '/static/gallery/' + path + file_name
                 self.picture_desc['url'] = relative_path
             else:
-                raise ValueError(f'PhotoGalley {gallery_id} for photo {photo_id} does not exist in database.')
+                raise PhotoOrGalleryMissing(f'PhotoGalley {gallery_id} for photo {photo_id} does not exist in database.')
         else:
-            raise ValueError(f'Photo {photo_id} does not exist in database.')
+            raise PhotoOrGalleryMissing(f'Photo {photo_id} does not exist in database.')
 
     def get_picture_location(self):
         return self.picture_desc['url']
