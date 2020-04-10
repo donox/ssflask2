@@ -9,17 +9,27 @@ from db_mgt.db_exec import DBExec
 import re
 import mammoth
 
+
 def verify(string_to_add):
     if string_to_add.find('OCTY') != -1:
         foo = 3
     return string_to_add
 
+
+def remove_useless_html(in_source: str) -> str:
+    """Remove HTML added by docx converter that is irrelevant for our use.
+
+    (1) <a id="__DdeLink..."/>  inserted after '{' of (some) Latex expressions.
+    """
+    re1 = re.compile(r'<a id="..DdeLink.+?"></a>')
+    return re.sub(re1, '', in_source)
+
+
 class ParsedElement(object):
     """ Base class to represent elements of the parse and support expansion.
-
     """
 
-    def __init__(self, element_type, source, parent):
+    def __init__(self, element_type, source, parent): # where is this initiated?
         self.element_type = element_type
         self.source = source
         self.parent = parent
@@ -206,6 +216,7 @@ class TopElement(ParsedElement):
 
 
 class FreeElement(ParsedElement):
+    """Represents elements containing neither HTML nor Latex structure."""
     def __init__(self, item, source_list, parent):
         super().__init__('Free', source_list, parent)
         self.source_item = item
@@ -248,10 +259,14 @@ class LatexElement(ParsedElement):
         self.command_processors['photoset'] = self._latex_photoset
         self.command_processors['photo'] = self._latex_photo
         self.command_processors['phototitle'] = self._latex_photo_title
-        self.command_processors['photoposition'] = self._latex_photo_postion
+        self.command_processors['photoposition'] = self._latex_photo_position
+        self.command_processors['position'] = self._latex_photo_position  # duplicate reflecting actual source
         self.command_processors['photorotation'] = self._latex_photo_rotation
+        self.command_processors['rotation'] = self._latex_photo_rotation
         self.command_processors['placefigure'] = self._latex_place_figure
         self.command_processors['photosize'] = self._latex_photo_size
+        self.command_processors['size'] = self._latex_photo_size
+
         self.command_processors['XXX'] = self
 
     def process_opening_node(self):
@@ -260,7 +275,7 @@ class LatexElement(ParsedElement):
     def render(self):
         try:
             res = ''
-            for el_structure in self.parsed_result:
+            for ndx, el_structure in enumerate(self.parsed_result):
                 if type(el_structure) == tuple:
                     el, item = el_structure
                     if el == 'Open':
@@ -270,7 +285,8 @@ class LatexElement(ParsedElement):
                     elif el == 'Close':
                         res += self._render_from_args()
                     else:
-                        raise WordLatexExpressionError(f'Invalid structure type in Latex node: {el}')
+                        source = self.parsed_result[ndx]
+                        raise WordLatexExpressionError(f'Invalid Latex node type: {el} with source: {source}')
                 else:
                     if len(self.args) > 0:
                         tmp = el_structure.render()
@@ -292,8 +308,7 @@ class LatexElement(ParsedElement):
                 return tmp
             else:
                 el = 'LATEXElement_' + self.command + '>'
-                verify(el)
-                return '<' + el + '>El:' + el + 'Has: ' + str(len(self.args)) + ' args</' + el
+                return '<' + el + ' El:' + el + 'Has: ' + str(len(self.args)) + ' args</' + el
         except Exception as e:
             self.top.db_exec.add_error_to_form('Render_from_Args', f'Exception: {e.args}')
             self.top.db_exec.add_error_to_form('Render_from_Args', f'Command: {self.command}')
@@ -397,18 +412,30 @@ class LatexElement(ParsedElement):
                 photo_id = int(photo_nbr.strip())
                 top_element.current_photo_frame.add_photo(photo_id)
         except PhotoOrGalleryMissing as e:
-            self.db_exec.add_error_to_form(f'Missing Photo(s) or Gallery: {photo_list_text}')
+            self.top.db_exec.add_error_to_form('Make Photoset', f'Missing Photo(s) or Gallery: {photo_list_text}')
             raise e
         return ''
 
     def _latex_photo(self):
         photo = self.args[0][0]
+        caption = None
+        if len(self.args) > 1:
+            caption = self.args[1][0]
         try:
             top_element = super().get_top()
-            photo_id = int(photo.strip())
+            tmp = photo.strip()
+            if tmp.isdigit():
+                photo_id = int(tmp)
+            else:
+                photo_mgr = self.top.db_exec.create_photo_manager()
+                photo_tmp = photo_mgr.get_photo_from_slug(tmp)
+                if photo_tmp:
+                    photo_id = photo_tmp.id
+            if caption:
+                top_element.current_photo_frame.add_caption(caption)
             top_element.current_photo_frame.add_photo(photo_id)
         except Exception as e:
-            pass
+            self.top.db_exec.add_error_to_form('Add Photo', f'Missing Photo(s) or Gallery: {photo}')
             raise e
         return ''
 
@@ -420,7 +447,7 @@ class LatexElement(ParsedElement):
         top_element.current_photo_frame.add_title(arg)
         return ''
 
-    def _latex_photo_postion(self):
+    def _latex_photo_position(self):
         top_element = super().get_top()
         if len(self.args) != 1:
             raise WordLatexExpressionError(f'Latex end figure called with wrong args: {self.args}')
@@ -451,10 +478,10 @@ class LatexElement(ParsedElement):
             raise WordLatexExpressionError(f'Latex end figure called with wrong args: {self.args}')
         arg = self.args[0][0]
         try:
-            arg_float = float(arg)
+            arg_int = int(arg)
         except Exception as e:
-            raise WordLatexExpressionError(f'Latex invalid value for photo frame rotation speed: {arg}')
-        top_element.current_photo_frame.set_rotation(arg_float)
+            raise WordLatexExpressionError(f'Latex invalid value for photo frame rotation speed: {int}')
+        top_element.current_photo_frame.set_rotation(arg_int)
         return ''
 
     def _latex_place_figure(self):
@@ -513,7 +540,7 @@ class HTMLElement(ParsedElement):
             return verify(res)
         except Exception as e:
             self.top.db_exec.add_error_to_form('Render_Fail_err', f'{e.args}')
-            self.top.db_exec.add_error_to_form('Render_Fail', f'Element: {el_save}, Item: {str(el_item)[0:30]}')
+            self.top.db_exec.add_error_to_form('Render_Fail', f'Element: {el_save}, Item: {str(el_item)[0:30]}...')
             raise WordRenderingError(f'Unspecified Error in Word Render')
 
 
@@ -568,9 +595,12 @@ class WordSourceDocument(object):
             with open(self.docx_source, 'rb') as docx_file:
                 result = mammoth.convert_to_html(docx_file)
                 html = result.value
+                html = remove_useless_html(html)
                 html_only = '<html>' + verify(html) + '</html>'
                 self.html_etree = etree.fromstring(html_only)
         except Exception as e:
+            self.db_exec.add_error_to_form('Read_docx_failure', 'Error converting docx to html')
+            self.db_exec.add_error_to_form('Read_docx_failure', f'{e.args}')
             self.logger.make_error_entry(f'Fail to create HTML from {self.docx_source}')
             raise e
 
@@ -633,6 +663,9 @@ class WordSourceDocument(object):
     def _parse_whole_text(self, txt):
         try:
             txt_strings = self._create_delimited_strings(txt)
+            for n, x in enumerate(txt_strings):
+                if x[0] == 'NewArg':
+                    foo = 3
             te = TopElement(txt_strings, self.db_exec)
             te.parse()
             res = te.render()

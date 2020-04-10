@@ -264,13 +264,23 @@ class SlideShow(object):
 
     def add_photo(self, photo_id):
         new_photo = Picture(self.db_exec, photo_id)  # make call as self.photo_manager(photo_id)
-        self.show_desc['pictures'].append(new_photo.get_picture_descriptor())
+        desc = new_photo.get_picture_descriptor()
+        # When the photo description is encountered, the picture descriptor does not exist.  However, it
+        # will exist before another photo is encountered.  Therefore, we use a caption field on the slideshow
+        # descriptor as a temporary location to pass the caption to the picture.
+        if 'caption' in self.show_desc and self.show_desc['caption']:
+            desc['caption'] = self.show_desc['caption']
+            self.show_desc['caption'] = None
+        self.show_desc['pictures'].append(desc)
 
     def add_existing_photo(self, photo):
         self.show_desc['pictures'].append(photo.get_picture_descriptor())
 
     def add_title(self, title):
         self.show_desc['title'] = title
+
+    def add_caption(self, caption):
+        self.show_desc['caption'] = caption
 
     def set_position(self, position):
         self.show_desc['position'] = position
@@ -309,7 +319,7 @@ class Picture(object):
             db_photo = res
             gallery_id = db_photo.gallery_id
             file_name = db_photo.file_name
-            self.picture_desc[''] = db_photo.alt_text
+            self.picture_desc['alt_text'] = db_photo.alt_text
             self.picture_desc['caption'] = db_photo.caption
             db_gallery = self.picture_manager.get_gallery_by_id(gallery_id)
             if db_gallery:
