@@ -22,6 +22,8 @@ class BaseTableManager(object):
             return fields
 
     def get_table_value(self, table):
+        """This is intended to get values for table fields from a database row for populating a structure such as
+        a corresponding table object."""
         fields = self.get_table_fields(table)
 
         def get_row_values(row_list):

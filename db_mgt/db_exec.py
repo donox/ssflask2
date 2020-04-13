@@ -1,5 +1,6 @@
 from .setup import get_engine, create_session, close_session
 from .photo_tables import PhotoManager
+from .sst_photo_tables import SSTPhotoManager
 from .page_tables import PageManager
 from .json_tables import JSONTableManager
 from .event_tables import EventManager
@@ -21,6 +22,7 @@ class DBExec(object):
         self.current_form = None
         self.available_managers = dict()
         self.available_managers['photo'] = (False, self.create_photo_manager)
+        self.available_managers['sstphoto'] = (False, self.create_sst_photo_manager)
         self.available_managers['page'] = (False, self.create_page_manager)
         self.available_managers['json'] = (False, self.create_json_manager)
         self.available_managers['user'] = (False, self.create_user_manager)
@@ -50,6 +52,10 @@ class DBExec(object):
 
     def create_photo_manager(self):
         mgr = PhotoManager(self.db_session)
+        return mgr
+
+    def create_sst_photo_manager(self):
+        mgr = SSTPhotoManager(self.db_session)
         return mgr
 
     def create_page_manager(self):

@@ -9,6 +9,7 @@
     "amdefine": ">=0.1.0",
     "babel-preset-env": "^1.7.0",
     "backbone": "^1.4.0",
+    "dropzone": "^5.7.0",
     "flask": "^0.2.10",
     "jquery": "^3.4.1",
     "react": "^16.12.0",

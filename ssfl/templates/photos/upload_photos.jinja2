@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<!--
+     Route: 'photo/upload_photos' => upload_photos
+     Template: photo/upload_photos.jinja2
+     Form: photo/upload_photos_form.py
+     Processor: photo/upload_photos.py
+-->
+{% extends 'base/layout.jinja2' %}
+
+{% block content %}
+    <section class="container">
+        <div class="row" style="max-width: 80%">
+            <h3 class="h3">Uploading Photos</h3>
+            <ol>
+                <li>
+                    Identify the photos by providing a name for the gallery/collection in the box below. Do this
+                    before adding any photos to the upload box. If the gallery/collection name exists, then the photos
+                    will be added to that collection.
+                </li>
+                <li>
+                    Add photos by dragging them into the upload box below. Photos should have names that will be used
+                    to identify them when associating them with a story. It is fine to differentiate a set of related
+                    photos with a name and number. Avoid names containing spaces - use a hyphen or underscore instead.
+
+                    As photos are uploaded, they will be removed from the upload window and placed in the completed
+                    pane.
+                    Each photo will have an indicator of whether it succeeded or failed.
+
+                    Multiple photos may be uploaded at a time by either dragging a group of photos (multiple selection)
+                    or
+                    a folder containing multiple photos into the upload pane.
+                </li>
+            </ol>
+            <div class="customA-font-size-title container pt-3">
+                <label class="h5" for="dropzonecollection">Collection: </label>
+                <input type="text" id="dropzonecollection" style="min-width: 400px; min-height: 40px"/>
+            </div>
+        </div>
+        <div class="row container mx-auto w-75 pt-3">
+            <div class="col">
+                <h4 class="h4">Drag Photos to Upload Here</h4>
+                <div id="ourdropzone"  class=".mh100 overflow-auto"
+                     style="min-width: 100px; max-width:250px; min-height: 100px; max-height: 600px; border: #0f0fff solid 2px;"></div>
+            </div>
+            <div class="col">
+                <h4 class="h4">Upload Results</h4>
+                <div id="resultdropzone" class=".mh100 overflow-auto"
+                     style="min-width: 100px; max-width:250px; min-height: 100px; max-height: 600px; border: #be2626 solid 2px;"></div>
+            </div>
+        </div>
+        </div>
+
+        <script>
+        $ = jQuery;
+        $(document).ready(function(){
+            Dropzone.options.ourdropzone = {
+
+              // Prevents Dropzone from uploading dropped files immediately
+              autoProcessQueue: true,
+              uploadMultiple: false,
+              acceptedFiles: '.jpg, .jpeg, .toml',
+              params: {gallery: $('#dropzonecollection').val()},
+
+              init: function() {
+                var submitButton = document.querySelector("#imgsubbut")
+                    myDropzone = this; // closure
+
+{#                submitButton.addEventListener("click", function() {#}
+{#                        myDropzone.processQueue(); // Tell Dropzone to process all queued files.#}
+{#                    });#}
+
+                // You might want to show the submit button only when
+                // files are dropped here:
+                this.on("addedfile", function() {
+                    let gal = $('#dropzonecollection').val();
+                    Dropzone.options.ourdropzone.params['gallery'] = gal;
+                  // Show submit button here and/or inform user to click it.
+                });
+                this.on("error", function(file, response){
+                    $('#resultdropzone').each(function(){
+                        ourdropzone.dropzone.removeFile(file);
+                        $(this).append('<p style="font-color:red">Failure: ' + file.name + "</p>")
+                    });
+                });
+                this.on("success", function(file, response){
+                    $('#resultdropzone').each(function(){
+                        ourdropzone.dropzone.removeFile(file);
+                        $(this).append("<p>Success: " + file.name + "</p>")
+                    });
+                });
+            }};
+            $("#ourdropzone").dropzone({url: "http://localhost:5000/photos/upload_photos"});
+
+        });
+        //# sourceURL=upload_photos.js
+
+
+
+
+        </script>
+    </section>
+{% endblock %}

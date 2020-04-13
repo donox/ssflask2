@@ -1,16 +1,17 @@
-from sqlalchemy import UnicodeText
-from sqlalchemy.exc import InterfaceError
-from ssfl import db
-from config import Config
-from PIL import Image
-from utilities.miscellaneous import get_temp_file_name, run_jinja_template
-from utilities.sst_exceptions import PhotoHandlingError
-from .json_tables import JSONStorageManager as jsm
-from flask import url_for, render_template
 import os
 from io import BytesIO
-from .base_table_manager import BaseTableManager
+
+from PIL import Image
+from flask import url_for, render_template
+from sqlalchemy import UnicodeText
+
+from config import Config
+from ssfl import db
+from utilities.miscellaneous import run_jinja_template
+from utilities.sst_exceptions import PhotoHandlingError
 from utilities.sst_exceptions import PhotoOrGalleryMissing
+from .base_table_manager import BaseTableManager
+from .json_tables import JSONStorageManager as jsm
 
 
 class PhotoManager(BaseTableManager):

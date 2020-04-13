@@ -102,8 +102,11 @@ style="position: sticky">
                         <a class="navbar-item" href="{{ url_for('admin_bp.make_story_json_template') }}">
                             Manage JSON templates
                         </a>
+                        <a class="navbar-item" href="{{ url_for('photo_bp.upload_photos') }}">
+                            Upload New Photos
+                        </a>
                         <a class="navbar-item" href="{{ url_for('admin_bp.manage_photos') }}">
-                            Manage Photos
+                            Manage Existing Photos
                         </a>
                         <hr class="navbar-divider">
                         <a class="navbar-item" href="{{ url_for('admin_bp.sst_import_database') }}">

@@ -91,35 +91,3 @@ def manage_photo_functions(db_exec, form):
         # TODO: handle error/log, and return useful message to user
         form.errors['Exception'] = 'Exception occurred processing page'
         return False
-
-# {"SLIDESHOW_SNIPPET": None, "id": None, "title": None, "text": None,
-#                                            "slides": "S_SLIDESHOW"}
-# {"SLIDESHOW": None, "title": None, "title_class": None, "position": None,
-#                                    "width": None, "height": None, "rotation": None,
-#                                    "frame_title": None, "pictures": []}
-{"PICTURE": None, "id": None, "url": None, "title": None, "caption": None,
-                                 "width": None, "height": None, "alignment": None, "alt_text": None,
-                                 "css_style": None, "css_class": None, "title_class": None,
-                                 "caption_class": None, "image_class": None}
-#     {% if slideshow.title and slideshow.title != 'NO NAME' %}
-#         <figcaption class="{{ slideshow.title_class }}">{{ slideshow.title }}</figcaption>
-#     {% endif %}
-#     <div class="slideshow" interval="{{ slideshow.rotation }}">
-#         {% for photo in slideshow.pictures %}
-#             {% include 'base/picture.jinja2' %}
-#         {% endfor %}
-#     </div>
-# </div>
-# <div class="{{ photo.css_class }} float-left px-3" style="max-width: {{ photo.width }}px">
-#     <figure class="figure">
-#         {%  if photo.title %}
-#             <figcaption class="figure-caption has-text-black {{ photo.title_class }}">{{ photo.title }}</figcaption>
-#         {% endif %}
-#         <img class="{{ photo.image_class }} figure-img img-fluid rounded"
-#              src="{{ photo.url }}?h={{ photo.height }}&w={{ photo.width }}"
-#              align="{{ photo.alignment }}"
-#              height="{{ photo.height }}"
-#              width="{{ photo.width }}"
-#              alt="{{ photo.alt_text }}"/>
-#         <figcaption class="figure-caption has-text-black photo.caption_class }}">{{ photo.caption }}</figcaption>
-#     </figure>
