@@ -1,13 +1,14 @@
-from db_mgt.json_tables import JSONStore, JSONStorageManager
-from utilities.sst_exceptions import DataEditingSystemError, log_sst_error
-from db_mgt.page_tables import PageManager
 import sys
-from ssfl.main.calendar_snippet import Calendar, SelectedEvents
+
+import json
+import toml
 from werkzeug.utils import secure_filename
+
+from db_mgt.json_tables import JSONStorageManager
+from ssfl.main.calendar_snippet import Calendar
 from utilities.miscellaneous import get_temp_file_name
+from utilities.sst_exceptions import log_sst_error
 from utilities.toml_support import toml_to_dict, elaborate_toml_dict
-import toml, json
-from flask import send_file
 
 
 # supported_functions = [('jcreate', 'Create New JSON DB entry'),

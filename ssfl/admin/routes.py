@@ -266,7 +266,7 @@ def sst_miscellaneous():
     """
      Route: '/admin/sst_miscellaneous' => miscellaneous_functions
      Template: miscellaneous_functions.jinja2
-     Form: miscellaneous_functions_form.py
+     Form: manage_photos_form.py
      Processor: miscellaneous_functions.py
     """
     sst_admin_access_log.make_info_entry(f"Route: /admin/translate_to_html")

@@ -20,6 +20,7 @@ from .photo_tables import SlideShow
 json_metadata_descriptor = {"title": None, "photographer": None, "people": [],
                             "keywords": None, "xxx": None}
 
+
 class SSTPhotoManager(BaseTableManager):
     """Manager to control access to Photos, Slideshows, and Galleries
 
@@ -49,6 +50,26 @@ class SSTPhotoManager(BaseTableManager):
                 return False
         except Exception as e:
             raise e
+
+    def get_photos_by_time_and_folder(self, folder, early_date, latest_date):
+        ed = str(early_date)
+        ld = str(latest_date)
+        if folder and not early_date:
+            res = self.db_session.query(SSTPhoto).filter(SSTPhoto.folder_name == folder).all()
+        elif folder and early_date and not latest_date:
+            res = self.db_session.query(SSTPhoto).filter(SSTPhoto.folder_name == folder). \
+                filter(SSTPhoto.image_date >= ed).all()
+        elif folder and early_date and latest_date:
+            res = self.db_session.query(SSTPhoto).filter(SSTPhoto.folder_name == folder). \
+                filter(SSTPhoto.image_date >= ed).filter(SSTPhoto.image_date <= ld).all()
+        elif not folder and early_date and not latest_date:
+            res = self.db_session.query(SSTPhoto).filter(SSTPhoto.image_date >= ed).all()
+        elif not folder and early_date and latest_date:
+            res = self.db_session.query(SSTPhoto).filter(SSTPhoto.image_date >= ed).filter(
+                SSTPhoto.image_date <= ld).all()
+        else:
+            return None
+        return res
 
     def get_empty_json(self):
         return json_metadata_descriptor

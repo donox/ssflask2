@@ -13,8 +13,8 @@ class MiscellaneousFunctionsForm(FlaskForm):
     """
      Route: '/admin/sst_miscellaneous' => miscellaneous_functions
      Template: miscellaneous_functions.jinja2
-     Form: miscellaneous_functions_form.py
-     Processor: miscellaneous_functions.py
+     Form: manage_photos_form.py
+     Processor: upload_photos.py
     """
     supported_functions = [('dpdb', 'Delete Page from Database'),
                            ('dp', 'Download Page Directory'),
