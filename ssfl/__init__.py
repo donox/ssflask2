@@ -1,11 +1,14 @@
+from werkzeug.urls import url_encode
 from flask import Flask
-from flask_babelex import Babel
 from flask_sqlalchemy import SQLAlchemy
 from flask_assets import Environment, Bundle
 from flask_user import UserManager
 from flask_migrate import Migrate
+# from flask_import UploadSet, configure_uploads, IMAGES, patch_request_class
 from pathlib import Path
 from dotenv import load_dotenv
+from flask_dropzone import Dropzone
+from flask_babelex import Babel
 
 
 from sqlalchemy.ext.declarative import declarative_base
@@ -71,14 +74,22 @@ def create_app():
     # Set up User Manager and (implicitly) Login Manager
     user_manager = UserManager(app, db, User, RoleClass=Role)
 
+    # Initialize DropZone photo/file uploading
+    dropzone = Dropzone(app)
+    # photos = UploadSet('photos', IMAGES)
+    # configure_uploads(app, photos)
+    # patch_request_class(app)  # set maximum file size, default is 16MB
+
     from .admin import routes as admin_routes
     from .main import routes as main_routes
     from login import routes as login_routes
+    from .photos import routes as photo_routes
 
     # Register Blueprints
     app.register_blueprint(main_routes.main_bp)
     app.register_blueprint(admin_routes.admin_bp)
     app.register_blueprint(login_routes.login_bp)
+    app.register_blueprint(photo_routes.photo_bp)
 
     # Create Static Bundles
     js_bundle = Bundle('js/*', 'dist/bundle.js', output='gen/packed.js')
