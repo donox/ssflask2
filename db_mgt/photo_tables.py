@@ -307,7 +307,12 @@ class SlideShow(object):
 
 
 class Picture(object):
-    def __init__(self, db_exec, photo_id):
+    """Access picture information from descriptor.
+
+    The notion of a picture vs a photo is that the photo refers to the actual image
+    as stored in the database and managed by the class Photo above.  A picture is intended
+    to apply to its usage on the web (though the distinction is not maintained carefully. :-("""
+    def __init__(self, db_exec, photo_id: int):
         # ['PICTURE', 'id', 'url', 'title', 'caption', 'width', 'height', 'alignment', 'alt_text',
         #             'css_style', 'css_class', 'title_class', 'caption_class', 'image_class']
         self.json_store = db_exec.create_json_manager()
@@ -337,3 +342,6 @@ class Picture(object):
 
     def get_picture_descriptor(self):
         return self.picture_desc
+
+
+
