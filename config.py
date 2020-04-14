@@ -58,6 +58,7 @@ class Config:
     UPLOAD_FOLDER = USER_DIRECTORY_BASE + 'uploads/'
     # Storage for docx pages that master for html pages  -- Believe this is no longer used
     USER_PAGE_MASTERS = UPLOAD_FOLDER + 'page_masters/'
+    UPLOADED_PHOTOS_DEST = USER_DIRECTORY_BASE + 'photo_uploads/'
 
     USER_DIRECTORY_STATIC = os.environ.get('USER_DIRECTORY_STATIC')
     USER_DIRECTORY_IMAGES = os.environ.get('USER_DIRECTORY_IMAGES')
@@ -70,6 +71,12 @@ class Config:
     STORAGE_CONTAINER = os.environ.get('STORAGE_CONTAINER')
     STORAGE_SECRET = ""
     STORAGE_SERVER = True
+
+    # NEEDED FOR DROPZONE
+    DROPZONE_UPLOAD_MULTIPLE = True
+    DROPZONE_ALLOWED_FILE_CUSTOM = True
+    DROPZONE_ALLOWED_FILE_TYPE = 'image/*'
+    DROPZONE_REDIRECT_VIEW = 'photo_bp.dropzone_results'
 
     # Admin
     FLASK_ADMIN_SWATCH = 'cerulean'
