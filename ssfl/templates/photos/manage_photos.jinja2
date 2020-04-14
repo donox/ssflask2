@@ -46,6 +46,13 @@
                     {% include 'base/form_entry.jinja2' %}
                 {% endwith %}
 
+                {% with %}
+                    {% set el_name=form.upload_filename %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="date" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
                 <div class="button">
                     <input id="submit" type="submit" value="Submit">
                 </div>
@@ -70,12 +77,13 @@
         $ = jQuery;
         $('#js1').change(function(){
             $('.ph_tml').parent().hide();
-            $('.dp').parent().hide();
+            $('.ph_up').parent().hide();
             $('.df').parent().hide();
             let opt = $('#js1 option:selected').val();
             $('.' + opt).parent().show();
         });
         //# sourceURL=manage_photos.js
+
 
 
 

@@ -1,4 +1,5 @@
-from wtforms import Form, StringField, validators, SubmitField, IntegerField, BooleanField, SelectField, DateField
+from wtforms import Form, StringField, validators, SubmitField, IntegerField, BooleanField, SelectField, DateField, \
+    FileField
 from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, Length, Optional
 import os
 from utilities.sst_exceptions import DataEditingSystemError
@@ -18,8 +19,8 @@ class ManagePhotosForm(FlaskForm):
      Form: photo/manage_photos_form.py
      Processor: photo/manage_photos.py
     """
-    supported_functions = [('ph_tml', 'Get Metadata to Edit'),
-                           ('ph_xx', 'Net Yet Implemented'),
+    supported_functions = [('ph_tml', 'Get Photo Metadata to Edit'),
+                           ('ph_up', 'Upload Edited Photo Metadata'),
                            ('ph_yy', 'Net Yet Implemented')]
     work_function = SelectField(label='Select Function',
                                 choices=supported_functions,
@@ -30,8 +31,10 @@ class ManagePhotosForm(FlaskForm):
                            render_kw={"class": "ph_tml"})
     latest_date = DateField(label='Latest Date', default=(dt.now() + td(days=1)).date(),
                             render_kw={"class": "ph_tml"})
-    download_filename = StringField('File Name to Download Metadata', validators=[Optional()],
+    download_filename = StringField('Metadata DownloadFile Name', validators=[Optional()],
                                     render_kw={"class": "ph_tml"})
+    upload_filename = FileField('Metadata Upload File Name', validators=[Optional()],
+                                render_kw={"class": "ph_up"})
 
     def validate_on_submit(self):
         res = super().validate_on_submit()
@@ -39,7 +42,7 @@ class ManagePhotosForm(FlaskForm):
             return False
         if self.work_function.data == 'ph_tml':
             return True
-        elif self.work_function.data == 'ph_xx':
+        elif self.work_function.data == 'ph_up':
             return True
         elif self.work_function.data == 'ph_yy':
             return True

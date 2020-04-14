@@ -6,7 +6,7 @@ from config import Config
 from PIL import Image
 import exifread
 from flask import url_for, render_template
-from sqlalchemy import UnicodeText
+from sqlalchemy import UnicodeText, text
 
 from config import Config
 from ssfl import db
@@ -73,6 +73,16 @@ class SSTPhotoManager(BaseTableManager):
 
     def get_empty_json(self):
         return json_metadata_descriptor
+
+    def update_metadata(self, photo_id: int, caption: str, alt_text: str,  new_metadata: str) -> bool:
+        sql = text(f'update sst_photos set json_metadata = :j, caption = :c, alt_text = :a where id= {photo_id}')
+        try:
+            self.db_session.execute(sql, params=dict(j=new_metadata, c=caption, a=alt_text))
+            self.db_session.commit()
+            return True
+        except Exception as e:
+            # LOG ERROR
+            return False
 
     def get_photo_from_slug(self, slug):
         sql = f'select * from sst_photo where slug="{slug}"'
