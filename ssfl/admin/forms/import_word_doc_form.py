@@ -1,4 +1,4 @@
-from wtforms import Form, StringField,  SubmitField, BooleanField
+from wtforms import Form, StringField, SubmitField, BooleanField
 from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, Length, Optional
 from flask_wtf.file import FileField, FileRequired, FileStorage
 
@@ -6,6 +6,7 @@ from flask_wtf import FlaskForm
 from flask import flash
 from db_mgt.page_tables import Page
 from db_mgt.db_exec import DBExec
+from .form_docs.import_word_doc_doc import docs
 
 
 class ImportMSWordDocForm(FlaskForm):
@@ -18,17 +19,19 @@ class ImportMSWordDocForm(FlaskForm):
      Form: import_docx_form.py
      Processor: import_word_docx.py
     """
-    file_name = FileField('Word Document')
-    page_name = StringField('Page Name', validators=[Optional()])
-    overwrite = BooleanField('Overwrite Existing Page', default=True)
-    author = StringField(label='Author', default='Not Available')       # Extract from document if it exists
+    file_name = FileField('Word Document', render_kw={"class": "edit", "docs": docs['import']['file_name']})
+    page_name = StringField('Page Name', validators=[Optional()],
+                            render_kw={"class": "edit", "docs": docs['import']['page_name']})
+    overwrite = BooleanField('Overwrite Existing Page', default=True,
+                             render_kw={"class": "edit", "docs": docs['import']['overwrite']})
+    author = StringField(label='Author', default='Not Available', render_kw={"class": "edit", "docs": docs['import'][
+        'author']})  # Extract from document if it exists
     submit = SubmitField('Import Document')
 
     def validate_on_submit(self, db_exec: DBExec):
         page_mgr = db_exec.create_page_manager()
         res = super().validate_on_submit()
         file_storage = self.file_name.data
-        file = file_storage.filename
         if not self.overwrite:
             res = page_mgr.get_page_if_exists(None, self.page_name)
             if res:

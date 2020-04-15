@@ -9,9 +9,10 @@ from ssfl import sst_syslog
 import csv
 from db_mgt.db_exec import DBExec
 from process_word_sources.process_word_source import verify
+from werkzeug.utils import secure_filename
 
 
-def import_docx_and_add_to_db(db_exec: DBExec, form, filename):
+def import_docx_and_add_to_db(db_exec: DBExec, form):
     """Import docx file to html and add to database"""
     """
      Route: '/admin/sst_import_page' => import_word_docx
@@ -21,12 +22,16 @@ def import_docx_and_add_to_db(db_exec: DBExec, form, filename):
     """
     page_title = 'Default Title'
     page_name = form.page_name.data
+    file = form.file_name.data
     author = form.author.data
     overwrite = form.overwrite.data
     page_mgr = db_exec.create_page_manager()
     try:
+        secure_filename(file.filename)
+        file_path = get_temp_file_name('word', 'docx')
+        file.save(file_path)
         wsd = WordSourceDocument(db_exec, sst_syslog)
-        wsd.set_source_path(filename)
+        wsd.set_source_path(file_path)
         wsd.read_docs_as_html()
         html = wsd.build_html_output_tree()
         if not html:

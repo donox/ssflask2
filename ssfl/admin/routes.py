@@ -55,6 +55,7 @@ def flash_errors(form):
             else:
                 flash(u"%s error: %s" % (field, error), 'error')
 
+
 # These functions are not directly called by the user but support calls from the client
 # that were initiated from another route.
 @admin_bp.route('/downloads/<string:file_path>', methods=['GET'])
@@ -323,43 +324,13 @@ def manage_index_page():
 def sst_import_page():
     """Import Word Document, translate it and store in database."""
     """
-     Route: '/admin/sst_import_page' => import_word_docx
+     Route: '/admin/sst_import_page' => import_docx_and_add_to_db
      Template: import_docx.jinja2
      Form: import_docx_form.py
-     Processor: import_word_docx.py
+     Processor: import_docx_and_add_to_db.py
     """
-    form = ImportMSWordDocForm()
-    context = dict()
-    try:
-        sst_admin_access_log.make_info_entry(f"Route: /admin/sst_import_page")
-        db_exec = DBExec()
-        form = ImportMSWordDocForm()
-        db_exec.set_current_form(form)
-        if request.method == 'GET':
-            context['form'] = form
-            return render_template('admin/import_docx.jinja2', **context)
-        elif request.method == 'POST':
-            context['form'] = form
-            if form.validate_on_submit(db_exec):
-                file = form.file_name.data
-                secure_filename(file.filename)
-                file_path = get_temp_file_name('word', 'docx')
-                file.save(file_path)
-                res = import_docx_and_add_to_db(db_exec, form, file_path)
-                if res:
-                    flash(f'You were successful in importing {file}', 'success')
-                    return render_template('admin/import_docx.jinja2', **context)  # redirect to success url
-            flash_errors(form)
-            return render_template('admin/import_docx.jinja2', **context)
-        else:
-            raise RequestInvalidMethodError('Invalid method type: {}'.format(request.method))
-    except Exception as e:
-        log_sst_error(sys.exc_info(), get_traceback=True)
-    finally:
-        form.errors['submit'] = 'Error processing sst_import_page'
-        flash_errors(form)
-        db_exec.terminate()
-        return render_template('admin/import_docx.jinja2', **context)
+    return build_route('admin/import_docx.jinja2', ImportMSWordDocForm(), import_docx_and_add_to_db,
+                       '/admin/sst_import_page')()
 
 
 @admin_bp.route('/admin/manageTemplate', methods=['GET', 'POST'])
@@ -531,7 +502,7 @@ def build_route(template, processing_form, processing_function, route_name):
             elif request.method == 'POST':
                 context = dict()
                 context['form'] = processing_form
-                if processing_form.validate_on_submit():
+                if processing_form.validate_on_submit(db_exec):
                     result = processing_function(db_exec, processing_form)
                     if type(result) is Response:
                         # This allows the response to be created in the support code - such as send_file.
@@ -555,4 +526,5 @@ def build_route(template, processing_form, processing_function, route_name):
                 result = render_template(result[2], **result[3])
             db_exec.terminate()
             return result
+
     return route

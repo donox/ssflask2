@@ -27,7 +27,8 @@ class BaseTableManager(object):
     def update_table(self, new_obj, old_obj, table):
         try:
             for column in self.get_table_fields(table):
-                setattr(old_obj, column, getattr(new_obj, column))
+                if column != 'id':
+                    setattr(old_obj, column, getattr(new_obj, column))
             self.db_session.commit()
         except Exception as e:
             raise RecordUpdateError(f'BaseTableManager error trying to update table: {table}')

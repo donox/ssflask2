@@ -4,6 +4,7 @@ import os
 from utilities.sst_exceptions import DataEditingSystemError
 from flask_wtf import FlaskForm
 from .form_docs.edit import docs
+from db_mgt.db_exec import DBExec
 
 
 class DBContentEditForm(FlaskForm):
@@ -22,7 +23,7 @@ class DBContentEditForm(FlaskForm):
 
     submit = SubmitField('Save to File')
 
-    def validate_on_submit(self):
+    def validate_on_submit(self, db_exec: DBExec):
         res = super().validate_on_submit()
         page = self.page_id
         title = self.page_name
