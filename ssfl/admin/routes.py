@@ -162,41 +162,7 @@ def sst_admin_edit():
      Form: edit_db_content_form.py
      Processor: edit_database_file.py
     """
-    db_exec = DBExec()
-    sst_admin_access_log.make_info_entry(f"Route: /admin/ss_admin_edit")
-    try:
-        form = DBContentEditForm()
-        if request.method == 'GET':
-            context = dict()
-            context['form'] = form
-            result = ('GET', 'succeed', 'admin/edit.jinja2', context)
-        elif request.method == 'POST':
-            context = dict()
-            context['form'] = form
-            if form.validate_on_submit():
-                result = edit_database_file(db_exec, form)
-                if type(result) is Response:
-                    # This allows the response to be created in the support code - such as send_file.
-                    pass
-                elif result:
-                    result = ('POST', 'succeed', 'admin/edit.jinja2', context)
-                else:
-                    result = ('POST', 'fail', 'admin/edit.jinja2', context)
-            else:
-                result = ('POST', 'fail', 'admin/edit.jinja2', context)
-        else:
-            raise RequestInvalidMethodError('System Error: Invalid method type: {}'.format(request.method))
-    finally:
-        if type(result) == Response:
-            pass                        # Actual result generally from lower code such as making a send-file
-        elif result[0] == 'GET' or form.errors:
-            flash_errors(form)
-            result = render_template(result[2], **result[3])
-        else:
-            flash('Successful', 'success')
-            result = render_template(result[2], **result[3])
-        db_exec.terminate()
-        return result
+    return build_route('admin/edit.jinja2', DBContentEditForm(), edit_database_file, '/admin/edit')()
 
 
 @admin_bp.route('/admin/calendar', methods=['GET', 'POST'])
@@ -551,3 +517,42 @@ def manage_photos():
     finally:
         db_exec.terminate()
         return render_template('admin/manage_photos.jinja2', **context)  # Executed in all cases
+
+
+def build_route(template, processing_form, processing_function, route_name):
+    def route():
+        db_exec = DBExec()
+        sst_admin_access_log.make_info_entry(f"Route: {route_name}")
+        try:
+            if request.method == 'GET':
+                context = dict()
+                context['form'] = processing_form
+                result = ('GET', 'succeed', template, context)
+            elif request.method == 'POST':
+                context = dict()
+                context['form'] = processing_form
+                if processing_form.validate_on_submit():
+                    result = processing_function(db_exec, processing_form)
+                    if type(result) is Response:
+                        # This allows the response to be created in the support code - such as send_file.
+                        pass
+                    elif result:
+                        result = ('POST', 'succeed', template, context)
+                    else:
+                        result = ('POST', 'fail', template, context)
+                else:
+                    result = ('POST', 'fail', template, context)
+            else:
+                raise RequestInvalidMethodError('System Error: Invalid method type: {}'.format(request.method))
+        finally:
+            if type(result) == Response:
+                pass  # Actual result generally from lower code such as making a send-file
+            elif result[0] == 'GET' or processing_form.errors:
+                flash_errors(processing_form)
+                result = render_template(result[2], **result[3])
+            else:
+                flash('Successful', 'success')
+                result = render_template(result[2], **result[3])
+            db_exec.terminate()
+            return result
+    return route
