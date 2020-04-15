@@ -6,6 +6,7 @@ from db_mgt.sst_photo_tables import SSTPhoto, PhotoExif
 from utilities.miscellaneous import get_temp_file_name
 import csv
 from config import Config
+import PIL
 from utilities.toml_support import toml_to_dict, elaborate_toml_dict, dict_to_toml_file
 
 exif_to_meta = dict()
@@ -42,8 +43,13 @@ def upload_photo_file(db_exec, gallery, file):
 
         exif = PhotoExif(db_exec, 0, filepath=filepath)
         tags = exif.get_tags()
-        # dict_to_toml_file(tags, '/home/don/devel/exif.toml')
-
+        dict_to_toml_file(tags, '/home/don/devel/exif.toml')
+        #
+        # imag = PIL.Image.open(filepath)
+        # for segment, content in imag.applist:
+        #     marker, body = content.split(b'\x00', 1)
+        #     if segment == 'APP1' and marker == b'http://ns.adobe.com/xap/1.0/':
+        #         foo = 3
         metadata = photo_mgr.get_empty_json()
         metadata_str = json.dumps(metadata)
 

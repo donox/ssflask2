@@ -91,7 +91,7 @@ class DBJSONManageTemplatesForm(FlaskForm):
 
     submit = SubmitField('Submit')
 
-    def validate_on_submit(self):
+    def validate_on_submit(self, db_exec):
         res = super().validate_on_submit()
         if self.work_function.data == 'jcreate':
             if self.json_name.data == '':

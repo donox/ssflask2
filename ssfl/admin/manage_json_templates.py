@@ -3,12 +3,13 @@ import sys
 import json
 import toml
 from werkzeug.utils import secure_filename
+from flask import send_file
 
 from db_mgt.json_tables import JSONStorageManager
 from ssfl.main.calendar_snippet import Calendar
 from utilities.miscellaneous import get_temp_file_name
 from utilities.sst_exceptions import log_sst_error
-from utilities.toml_support import toml_to_dict, elaborate_toml_dict
+from utilities.toml_support import toml_to_dict, elaborate_toml_dict, dict_to_toml_file
 
 
 # supported_functions = [('jcreate', 'Create New JSON DB entry'),
@@ -52,7 +53,7 @@ from utilities.toml_support import toml_to_dict, elaborate_toml_dict
 
 
 
-def manage_json_templates(db_exec, form, request):
+def manage_json_templates(db_exec, form):
     """Create, edit, modify JSON story entry in JSONStore.
 
     """
@@ -224,6 +225,10 @@ def manage_json_templates(db_exec, form, request):
                 return False
             if json_store_obj.content != '' and json_store_obj.content is not None:
                 file_path = get_temp_file_name('toml_file', 'toml')
+                # file_path, json_store_obj, toml_download_name = res
+                dict_to_toml_file(json.loads(json_store_obj.content), file_path)
+                return send_file(file_path, mimetype='application/octet', as_attachment=True,
+                                   attachment_filename=toml_download_name)
                 return file_path, json_store_obj, toml_download_name + '.toml'
             return True
 
