@@ -53,9 +53,10 @@ def flash_errors(form):
             if hasattr(form, field):
                 flash(u"routes - Error in the %s field - %s" % (getattr(form, field).label.text, error), 'error')
             else:
-                flash(u"%s error: %s" % (field, error))
+                flash(u"%s error: %s" % (field, error), 'error')
 
-
+# These functions are not directly called by the user but support calls from the client
+# that were initiated from another route.
 @admin_bp.route('/downloads/<string:file_path>', methods=['GET'])
 @login_required
 def get_download(file_path):
@@ -161,24 +162,41 @@ def sst_admin_edit():
      Form: edit_db_content_form.py
      Processor: edit_database_file.py
     """
+    db_exec = DBExec()
     sst_admin_access_log.make_info_entry(f"Route: /admin/ss_admin_edit")
-    if request.method == 'GET':
-        context = dict()
-        context['form'] = DBContentEditForm()
-        return render_template('admin/edit.jinja2', **context)
-    elif request.method == 'POST':
+    try:
         form = DBContentEditForm()
-        context = dict()
-        context['form'] = form
-        if form.validate_on_submit():
-            db_session = create_session(get_engine())
-            res = edit_database_file(db_session, form)
-            close_session(db_session)
-            if res:
-                return render_template('admin/edit.jinja2', **context)  # redirect to success url
-        return render_template('admin/edit.jinja2', **context)
-    else:
-        raise RequestInvalidMethodError('Invalid method type: {}'.format(request.method))
+        if request.method == 'GET':
+            context = dict()
+            context['form'] = form
+            result = ('GET', 'succeed', 'admin/edit.jinja2', context)
+        elif request.method == 'POST':
+            context = dict()
+            context['form'] = form
+            if form.validate_on_submit():
+                result = edit_database_file(db_exec, form)
+                if type(result) is Response:
+                    # This allows the response to be created in the support code - such as send_file.
+                    pass
+                elif result:
+                    result = ('POST', 'succeed', 'admin/edit.jinja2', context)
+                else:
+                    result = ('POST', 'fail', 'admin/edit.jinja2', context)
+            else:
+                result = ('POST', 'fail', 'admin/edit.jinja2', context)
+        else:
+            raise RequestInvalidMethodError('System Error: Invalid method type: {}'.format(request.method))
+    finally:
+        if type(result) == Response:
+            pass                        # Actual result generally from lower code such as making a send-file
+        elif result[0] == 'GET' or form.errors:
+            flash_errors(form)
+            result = render_template(result[2], **result[3])
+        else:
+            flash('Successful', 'success')
+            result = render_template(result[2], **result[3])
+        db_exec.terminate()
+        return result
 
 
 @admin_bp.route('/admin/calendar', methods=['GET', 'POST'])

@@ -1,11 +1,9 @@
-<!DOCTYPE html>
-    {% with messages = get_flashed_messages(category_filter=[flash_message_type]) %}
-        {% if messages and False %}
-            <ul class=flashes>
-                {%- for  message in messages %}
+{% with messages = get_flashed_messages(category_filter=[flash_message_type]) %}
+    {% if messages %}
+        <ul class=flashes>
+            {%- for  message in messages %}                 {# the '-' suppresses extra vertical spacing #}
                 <li class="alert-error">{{ message }}</li>
-                {% endfor %}
-            </ul>
-        {% endif %}
-    {% endwith %}
-    {% block content %}{% endblock %}
+            {% endfor %}
+        </ul>
+    {% endif %}
+{% endwith %}

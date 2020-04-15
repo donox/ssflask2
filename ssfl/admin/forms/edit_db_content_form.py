@@ -1,18 +1,24 @@
-from wtforms import Form, StringField, PasswordField, validators, SubmitField, IntegerField, BooleanField
+from wtforms import Form, StringField, PasswordField, validators, SubmitField, IntegerField, BooleanField, FileField
 from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, Length, Optional
 import os
 from utilities.sst_exceptions import DataEditingSystemError
 from flask_wtf import FlaskForm
+from .form_docs.edit import docs
 
 
 class DBContentEditForm(FlaskForm):
     """Edit database content."""
 
-    page_id = IntegerField('Page DB ID', validators=[Optional()])
-    page_name = StringField('Page Name', validators=[Optional()])
-    directory = StringField('Directory', validators=[DataRequired()], default=os.path.abspath(os.getcwd()))
-    file_name = StringField('Save File Name', validators=[DataRequired()])
-    direction = BooleanField('Transfer to file', default=True)
+    page_id = IntegerField('Page DB ID', validators=[Optional()],
+                           render_kw={"class": "edit", "docs": docs['edit']['page_id']})
+    page_name = StringField('Page Name', validators=[Optional()],
+                            render_kw={"class": "edit", "docs": docs['edit']['page_name']})
+    file_name = StringField('Name for Downloaded File', validators=[Optional()],
+                            render_kw={"class": "edit", "docs": docs['edit']['file_name']})
+    upload_file = FileField('Select File to Be Uploaded', validators=[Optional()],
+                            render_kw={"class": "edit", "docs": docs['edit']['upload_file']})
+    direction = BooleanField('Transfer Direction (download=checked)', default=True,
+                             render_kw={"class": "edit", "docs": docs['edit']['direction']})
 
     submit = SubmitField('Save to File')
 
@@ -23,8 +29,5 @@ class DBContentEditForm(FlaskForm):
         if page.data is None and title.data == '':
             self.errors['Title or Page'] = ['Must specify at least one of a page_id or page_name']
             res = False
-        direct = self.directory
-        if not os.path.exists(direct.data) or os.path.isfile(direct.data):
-            self.errors['File Directory'] = ['Specified directory does not exist']
-            res = False
+        direct = self.direction
         return res

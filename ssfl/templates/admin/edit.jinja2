@@ -10,7 +10,8 @@
 {% block content %}
     <section class="container">
         <div class="columns">
-            <form action="{{ url_for('admin_bp.sst_admin_edit') }}" method="post">
+            <form action="{{ url_for('admin_bp.sst_admin_edit') }}" method="post"
+                  enctype="multipart/form-data">
                 {% with %}
                     {% set el_name=form.page_id %}
                     {% set el_class="input" %}
@@ -26,14 +27,14 @@
                 {% endwith %}
 
                 {% with %}
-                    {% set el_name=form.directory %}
+                    {% set el_name=form.file_name %}
                     {% set el_class="input" %}
                     {% set el_placeholder=form.default_directory %}
                     {% include 'base/form_entry.jinja2' %}
                 {% endwith %}
 
                 {% with %}
-                    {% set el_name=form.file_name %}
+                    {% set el_name=form.upload_file %}
                     {% set el_class="file" %}
                     {% set el_placeholder="Path name to store data" %}
                     {% include 'base/form_entry.jinja2' %}
@@ -56,7 +57,7 @@
                                 <li>{{ error }} : {{ val }}</li>
                             {% else %}
                                 {% for val_el in val %}
-                                     <li>{{ error }} : {{ val_el }}</li>
+                                    <li>{{ error }} : {{ val_el }}</li>
                                 {% endfor %}
                             {% endif %}
                         {% endfor %}

@@ -10,6 +10,7 @@ class PageManager(BaseTableManager):
     def __init__(self, db_session):
         super().__init__(db_session)
 
+
     def get_page_if_exists(self, page_id, page_name):
         if page_id:
             target_page = self.db_session.query(Page).filter(Page.id == page_id).first()
@@ -69,11 +70,15 @@ class PageManager(BaseTableManager):
             # session.commit()
 
     def add_page_to_database(self, page, overwrite):
-        if overwrite:
-            pg = self.get_page_if_exists(None, page.page_name)
-            if pg:
-                self.delete_page(pg.id, None)
-        page.add_to_db(self.db_session, commit=True)
+        pg = self.get_page_if_exists(None, page.page_name)
+        if pg:
+            if overwrite:
+                self.update_table(page, pg, 'Page')
+            else:
+                raise ValueError(f'Page {pg.id} already exists')   # Replace with SsT Error
+        else:
+            page.add_to_db(self.db_session, commit=True)
+
 
 class Page(db.Model):
     __tablename__ = 'page'

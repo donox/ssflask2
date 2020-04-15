@@ -91,6 +91,9 @@ class DevConfig:
     SQLALCHEMY_ECHO = True
     ASSETS_DEBUG = True
     MAIL_DEBUG = 1
+    # All galleries and photos with lower ID's have been imported from Wordpress
+    MAX_GALLERY_ID = 0
+    MAX_PHOTO_ID = 0
 
 
 class ProdConfig:

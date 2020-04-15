@@ -1,3 +1,6 @@
+from utilities.sst_exceptions import RecordUpdateError
+
+
 class BaseTableManager(object):
     def __init__(self, db_session):
         self.db_session = db_session
@@ -15,11 +18,20 @@ class BaseTableManager(object):
         if table in self.table_field_list:
             return self.table_field_list[table]
         else:
-            sql = f'DESCRIBE {table};'
+            sql = f'DESCRIBE {table.lower()};'
             res = self.db_session.execute(sql)
             fields = [x[0].lower() for x in res.fetchall()]
             self.table_field_list[table] = fields
             return fields
+
+    def update_table(self, new_obj, old_obj, table):
+        try:
+            for column in self.get_table_fields(table):
+                setattr(old_obj, column, getattr(new_obj, column))
+            self.db_session.commit()
+        except Exception as e:
+            raise RecordUpdateError(f'BaseTableManager error trying to update table: {table}')
+
 
     def get_table_value(self, table):
         """This is intended to get values for table fields from a database row for populating a structure such as

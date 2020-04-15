@@ -123,3 +123,7 @@ class PhotoOrGalleryMissing(SsTDocumentDoesNotExist):
     """Missing Photo or Gallery"""
     pass
 
+class RecordUpdateError(DataMgtModuleError):
+    """Error attempting to update an existing DB record."""
+    pass
+
