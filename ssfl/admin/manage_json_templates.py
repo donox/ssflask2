@@ -205,7 +205,8 @@ def manage_json_templates(db_exec, form):
             file_path = get_temp_file_name('toml_file', 'toml')     # TODO: use system tempfile
             file.save(file_path)
             with open(file_path, 'r') as fl:
-                toml_dict = toml_to_dict(toml.load(fl, dict))
+                toml_load = toml.load(fl, dict)
+                toml_dict = toml_to_dict(toml_load)
                 toml_dict_expanded = elaborate_toml_dict(db_exec, toml_dict)
                 json_obj = json.dumps(toml_dict_expanded)
                 existing_template = json_table_mgr.get_json_from_name(json_name)

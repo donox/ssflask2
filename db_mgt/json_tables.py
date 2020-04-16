@@ -3,7 +3,7 @@ import datetime as dt
 import toml
 import json as jsn
 from collections import defaultdict
-from.base_table_manager import BaseTableManager
+from .base_table_manager import BaseTableManager
 
 
 class JSONTableManager(BaseTableManager):
@@ -161,7 +161,7 @@ class JSONTableManager(BaseTableManager):
         else:
             return None
 
-    def get_json_record_by_name_or_id(self, json_id, json_name ):
+    def get_json_record_by_name_or_id(self, json_id, json_name):
         if json_id:
             json_store_obj = self.db_session.query(JSONStore).filter(JSONStore.id == json_id).first()
         else:
@@ -209,6 +209,8 @@ class JSONTableManager(BaseTableManager):
 
 
 def get_name_type(name: str) -> int:
+    """Converts a JSON descriptor name to a type to drive the parser.
+    """
     # Case 1: X_NAME for X = S, P
     # Case 2: NAME
     # Case 3: name
@@ -314,6 +316,8 @@ class JSONStorageManager(object):
     descriptor_slideshow_snippet_fields = {"SLIDESHOW_SNIPPET": None, "id": None, "title": None, "text": None,
                                            "slides": "S_SLIDESHOW"}
     descriptor_event_snippet_fields = {"EVENT_SNIPPET": None, "name": None, "date": None, "time": None, "venue": None}
+    descriptor_sign_snippet_fields = {"SIGN_SNIPPET": None, "name": None, "content_type": None, "content": None,
+                                      "styling": None}
 
     # Complex/predefined types
     descriptor_row_with_single_cell_fields = {"SINGLECELLROW": "REMOVE",
@@ -355,11 +359,13 @@ class JSONStorageManager(object):
     json_field_dictionary['STORY_SNIPPET'] = descriptor_story_snippet_fields
     json_field_dictionary['CALENDAR_SNIPPET'] = descriptor_calendar_snippet_fields
     json_field_dictionary['EVENT_SNIPPET'] = descriptor_event_snippet_fields
+    json_field_dictionary['SIGN_SNIPPET'] = descriptor_sign_snippet_fields
     json_field_dictionary['SLIDESHOW_SNIPPET'] = descriptor_slideshow_snippet_fields
     json_field_dictionary['SINGLECELLROW'] = descriptor_row_with_single_cell_fields
     json_field_dictionary['ONECELL'] = descriptor_single_cell_table_fields
     json_field_dictionary['THREECELLROW'] = descriptor_three_cell_row_fields
     json_field_dictionary['FRONTPAGE'] = descriptor_front_page_fields
+
     # json_field_dictionary[''] = cls.
 
     def __init__(self, db_exec):
@@ -367,7 +373,6 @@ class JSONStorageManager(object):
         self.all_fields = JSONStorageManager.json_field_dictionary
         self.table_manager = self.db_exec.create_json_manager()
         self.template_functions = dict()
-
 
 
 class JSONStore(db.Model):

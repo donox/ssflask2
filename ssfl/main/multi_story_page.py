@@ -290,6 +290,14 @@ class MultiStoryPage(object):
             raise SystemError(f'Unrecognized descriptor {elem["descriptor"]} when expecting a slideshow element')
         foo = 3
 
+    def _fill_sign_snippet(self, elem):
+        pass
+        # content = elem['content']
+        # name = elem['name']
+        # content_type = elem['content_type']
+        # styling = elem['styling']
+
+
     def make_multi_element_page_context(self) -> Dict[AnyStr, Any]:
         """Create context for a page based on current descriptor.
 
@@ -336,6 +344,8 @@ class MultiStoryPage(object):
                             self._fill_calendar_snippet(elem)
                         elif 'SLIDESHOW_SNIPPET' in elem:
                             self._fill_slideshow_snippet(elem)
+                        elif 'SIGN_SNIPPET' in elem:
+                            self._fill_sign_snippet(elem)
                         elif 'SLIDESHOW' in elem:       # This is converted to a Snippet in processing
                             self._fill_slideshow_snippet(elem)
                             cell['element_type'] = 'SLIDESHOW_SNIPPET'

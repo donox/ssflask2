@@ -1,0 +1,29 @@
+<!--
+    This is a container to manage the content of an individual snippet which
+    will have its own definition.  Styling for all snippets is controlled here
+    realizing that there may be multiple snippets in any single cell (row/col)
+    of the parent container.
+
+    This may also be included as a component of a story or other higher level
+    element in which case it will provide the surrounding structure.
+-->
+<div class="container-fluid">
+    {% if item.cell_type=='story' %}
+        {% set item2 = item.story %}
+        <div class="col">
+            {% include 'main/snippet_story.jinja2' %}
+        </div>
+    {% endif %}
+    {% if item.cell_type=='calendar' %}
+        {% set item2 = item.calendar.cal_data %}
+        <div class="col ">
+            {% include 'main/calendar_plugin.jinja2' %}
+        </div>
+    {% endif %}
+    {% if item.cell_type=='sign' %}
+        {% set item2 = item.sign.data %}
+        <div class="col ">
+            {% include 'base/snippet_sign.jinja2' %}
+        </div>
+    {% endif %}
+</div>
