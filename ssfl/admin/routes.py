@@ -371,10 +371,21 @@ def sst_import_database():
     else:
         raise RequestInvalidMethodError('Invalid method type: {}'.format(request.method))
 
-
+#  THIS IS EDIT SLIDESHOW  Need it???
 @admin_bp.route('/manage_photos', methods=['GET', 'POST'])
 @login_required
 def manage_photos():
+    """
+     Route: '/admin/manage_photos' => manage_photo_functions
+     Template: manage_photos.jinja2
+     Form: manage_photo_functions_form.py
+     Processor: manage_photo_functions.py
+    """
+    return build_route('admin/manage_photos.jinja2', DBPhotoManageForm(), manage_photo_functions, '/manage_photos')()
+
+@admin_bp.route('/manage_photosx', methods=['GET', 'POST'])
+@login_required
+def manage_photosx():
     """
      Route: '/admin/manage_photos' => manage_photo_functions
      Template: manage_photos.jinja2
@@ -421,6 +432,7 @@ def build_route(template, processing_form, processing_function, route_name):
             elif request.method == 'POST':
                 context = dict()
                 context['form'] = processing_form
+                result = ('POST', 'fail', template, context)        # In case of execption in validation
                 if processing_form.validate_on_submit(db_exec):
                     result = processing_function(db_exec, processing_form)
                     if type(result) is Response:
@@ -439,6 +451,9 @@ def build_route(template, processing_form, processing_function, route_name):
                 pass  # Actual result generally from lower code such as making a send-file
             elif result[0] == 'GET' or processing_form.errors:
                 flash_errors(processing_form)
+                result = render_template(result[2], **result[3])
+            elif result[1] == 'fail' and not processing_form.errors:
+                flash('Failed - no message given', 'error')
                 result = render_template(result[2], **result[3])
             else:
                 flash('Successful', 'success')

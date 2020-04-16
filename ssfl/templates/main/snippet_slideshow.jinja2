@@ -1,9 +1,8 @@
-<!DOCTYPE html>
 {% if story.title %}
     <div class="title">{{ story.title | safe }}</div>
 {% endif %}
 {#<div style="max-width:{{ story.photo.width }}px; float:{{ story.photo.alignment }}">#}
-<div >
+<div>
     {% with %}
         {% set slideshow = story.slides %}
         {% include 'base/slideshow.jinja2' %}

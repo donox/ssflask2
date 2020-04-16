@@ -7,9 +7,10 @@ from utilities.miscellaneous import get_temp_file_name
 from utilities.toml_support import toml_to_dict, elaborate_toml_dict
 import toml, json
 from datetime import datetime as dt
+from flask import send_file
 
 
-def manage_photo_metadata(db_exec, form, request):
+def manage_photo_metadata(db_exec, form):
     """Functions to manage photos.
 
     """
@@ -32,7 +33,7 @@ def manage_photo_metadata(db_exec, form, request):
         if work_function == 'ph_tml':
             photo_list = photo_mgr.get_photos_by_time_and_folder(folder, early_date, latest_date)
             if photo_list:
-                res = {"Photo_Metadata":[]}
+                res = {"Photo_Metadata": []}
                 for photo in photo_list:
                     metadata = json.loads(photo.json_metadata)
                     metadata['id'] = photo.id
@@ -44,7 +45,11 @@ def manage_photo_metadata(db_exec, form, request):
                     metadata['image_upload'] = photo.image_date.isoformat()
                     res["Photo_Metadata"].append(metadata)
                 file_path = get_temp_file_name('toml_file', 'toml')
-                return file_path, res, download_filename + '.toml'
+                dict_to_toml_file(res, file_path)
+                return send_file(file_path, mimetype='application/octet', as_attachment=True,
+                                 attachment_filename=download_filename + '.toml')
+            else:
+                form.errors['work_function'] = [f'No photos meet given selection criteria']
         elif work_function == 'ph_up':
             file = form.upload_filename.data
             secure_filename(file.filename)

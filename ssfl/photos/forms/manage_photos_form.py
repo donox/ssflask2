@@ -7,6 +7,7 @@ from flask_wtf import FlaskForm
 from config import Config
 from datetime import datetime as dt
 from datetime import timedelta as td
+from .form_docs.manage_photos_doc import docs
 
 
 class ManagePhotosForm(FlaskForm):
@@ -19,24 +20,25 @@ class ManagePhotosForm(FlaskForm):
      Form: photo/manage_photos_form.py
      Processor: photo/manage_photos.py
     """
-    supported_functions = [('ph_tml', 'Get Photo Metadata to Edit'),
+    supported_functions = [('xx', '**Select a function**'),
+                           ('ph_tml', 'Get Photo Metadata to Edit'),
                            ('ph_up', 'Upload Edited Photo Metadata'),
                            ('ph_yy', 'Net Yet Implemented')]
     work_function = SelectField(label='Select Function',
                                 choices=supported_functions,
-                                render_kw={"id": "js1"})
+                                render_kw={"id": "js1",  "docs": docs['all']['ph_all']})
     folder = StringField('Gallery/Folder', validators=[Optional()],
-                         render_kw={"class": "ph_tml"})
+                         render_kw={"class": "ph_tml ph_up", "docs": docs['all']['folder']})
     early_date = DateField(label='Earliest Date', validators=[Optional()],
-                           render_kw={"class": "ph_tml"})
+                           render_kw={"class": "ph_tml", "docs": docs['all']['early_date']})
     latest_date = DateField(label='Latest Date', default=(dt.now() + td(days=1)).date(),
-                            render_kw={"class": "ph_tml"})
+                            render_kw={"class": "ph_tml", "docs": docs['all']['latest_date']})
     download_filename = StringField('Metadata DownloadFile Name', validators=[Optional()],
-                                    render_kw={"class": "ph_tml"})
+                                    render_kw={"class": "ph_tml", "docs": docs['all']['download_filename']})
     upload_filename = FileField('Metadata Upload File Name', validators=[Optional()],
-                                render_kw={"class": "ph_up"})
+                                render_kw={"class": "ph_up", "docs": docs['all']['upload_filename']})
 
-    def validate_on_submit(self):
+    def validate_on_submit(self, db_exec):
         res = super().validate_on_submit()
         if not res:
             return False

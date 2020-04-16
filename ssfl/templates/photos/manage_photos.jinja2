@@ -8,69 +8,74 @@
 {% extends 'base/layout.jinja2' %}
 
 {% block content %}
-    <section class="container">
-        <div class="columns">
-            <form action="{{ url_for('photo_bp.manage_photos') }}" method="post" enctype="multipart/form-data">
-                {% with %}
-                    {% set el_name=form.work_function %}
-                    {% set el_class="input" %}
-                    {% set el_placeholder="0000" %}
-                    {% include 'base/form_entry.jinja2' %}
-                {% endwith %}
+    <section class="container-fluid">
+        <div class="row mx-auto">
+            <div class="col">
+                <div class="align-items-center">
+                    <h3 class="h3">Manage Photo Metadata</h3>
+                    <form action="{{ url_for('photo_bp.manage_photos') }}" method="post" enctype="multipart/form-data">
+                        {% with %}
+                            {% set el_name=form.work_function %}
+                            {% set el_class="input" %}
+                            {% set el_placeholder="0000" %}
+                            {% include 'base/form_entry.jinja2' %}
+                        {% endwith %}
 
-                {% with %}
-                    {% set el_name=form.folder %}
-                    {% set el_class="input" %}
-                    {% set el_placeholder="Name" %}
-                    {% include 'base/form_entry.jinja2' %}
-                {% endwith %}
+                        {% with %}
+                            {% set el_name=form.folder %}
+                            {% set el_class="input" %}
+                            {% set el_placeholder="Name" %}
+                            {% include 'base/form_entry.jinja2' %}
+                        {% endwith %}
 
-                {% with %}
-                    {% set el_name=form.early_date %}
-                    {% set el_class="input" %}
-                    {% set el_placeholder="date" %}
-                    {% include 'base/form_entry.jinja2' %}
-                {% endwith %}
+                        {% with %}
+                            {% set el_name=form.early_date %}
+                            {% set el_class="input" %}
+                            {% set el_placeholder="date" %}
+                            {% include 'base/form_entry.jinja2' %}
+                        {% endwith %}
 
-                {% with %}
-                    {% set el_name=form.latest_date %}
-                    {% set el_class="input" %}
-                    {% set el_placeholder="date" %}
-                    {% include 'base/form_entry.jinja2' %}
-                {% endwith %}
+                        {% with %}
+                            {% set el_name=form.latest_date %}
+                            {% set el_class="input" %}
+                            {% set el_placeholder="date" %}
+                            {% include 'base/form_entry.jinja2' %}
+                        {% endwith %}
 
-                {% with %}
-                    {% set el_name=form.download_filename %}
-                    {% set el_class="input" %}
-                    {% set el_placeholder="date" %}
-                    {% include 'base/form_entry.jinja2' %}
-                {% endwith %}
+                        {% with %}
+                            {% set el_name=form.download_filename %}
+                            {% set el_class="input" %}
+                            {% set el_placeholder="date" %}
+                            {% include 'base/form_entry.jinja2' %}
+                        {% endwith %}
 
-                {% with %}
-                    {% set el_name=form.upload_filename %}
-                    {% set el_class="input" %}
-                    {% set el_placeholder="date" %}
-                    {% include 'base/form_entry.jinja2' %}
-                {% endwith %}
+                        {% with %}
+                            {% set el_name=form.upload_filename %}
+                            {% set el_class="input" %}
+                            {% set el_placeholder="date" %}
+                            {% include 'base/form_entry.jinja2' %}
+                        {% endwith %}
 
-                <div class="button">
-                    <input id="submit" type="submit" value="Submit">
-                </div>
-                {% if form.errors %}
-                    <ul class="errors">
-                        {% for error, val in form.errors.items() %}
-                            {% if val is iterable and val is string %}
-                                <li>{{ error }} : {{ val }}</li>
-                            {% else %}
-                                {% for val_el in val %}
-                                    <li>{{ error }} : {{ val_el }}</li>
+                        <div class="button">
+                            <input id="submit" type="submit" value="Submit">
+                        </div>
+                        {% if form.errors %}
+                            <ul class="errors">
+                                {% for error, val in form.errors.items() %}
+                                    {% if val is iterable and val is string %}
+                                        <li>{{ error }} : {{ val }}</li>
+                                    {% else %}
+                                        {% for val_el in val %}
+                                            <li>{{ error }} : {{ val_el }}</li>
+                                        {% endfor %}
+                                    {% endif %}
                                 {% endfor %}
-                            {% endif %}
-                        {% endfor %}
-                    </ul>
-                {% endif %}
-                {{ form.csrf_token }}
-            </form>
+                            </ul>
+                        {% endif %}
+                        {{ form.csrf_token }}
+                    </form>
+                </div>
+        </div>
 
         </div>
         <script>
@@ -83,6 +88,7 @@
             $('.' + opt).parent().show();
         });
         //# sourceURL=manage_photos.js
+
 
 
 
