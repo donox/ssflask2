@@ -2,6 +2,10 @@ from ssfl import db
 from .base_table_manager import BaseTableManager
 import datetime as dt
 
+calendar_categories = ['Religion', 'Wellness', 'Resident Clubs', 'Event']
+
+calendar_audiences = ['IL', 'AL', 'HC']
+
 # Table supporting many-many relationships between events and metadata items.
 event_meta_tbl = db.Table('event_meta_tbl', db.metadata,
                           db.Column('event_id', db.Integer, db.ForeignKey('event.id',
@@ -13,6 +17,26 @@ event_meta_tbl = db.Table('event_meta_tbl', db.metadata,
 class EventManager(BaseTableManager):
     def __init__(self, db_session):
         super().__init__(db_session)
+        self.db_session = db_session
+
+    def add_event_to_database(self, event, commit=True):
+        event.add_to_db(self.db_session, commit=commit)
+
+    def delete_specific_event(self, event, cal_start, cal_end):
+        event.delete_specific_event(self.db_session, cal_start, cal_end)
+
+    def reset_calendar(self):
+        self.db_session.query(EventTime).delete()
+        self.db_session.query(Event).delete()
+        self.db_session.query(EventMeta).delete()
+        self.db_session.commit()
+        for aud in calendar_audiences:
+            evm = EventMeta(meta_key='audience', meta_value=aud)
+            evm.add_to_db(self.db_session, commit=True)
+        for cat in calendar_categories:
+            evm = EventMeta(meta_key='category', meta_value=cat.lower())
+            evm.add_to_db(self.db_session, commit=True)
+        return True
 
 
 class Event(db.Model):

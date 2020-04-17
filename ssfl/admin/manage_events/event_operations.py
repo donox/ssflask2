@@ -1,10 +1,11 @@
-from db_mgt.event_tables import Event, EventMeta, EventTime, event_meta_tbl
+from db_mgt.event_tables import Event, EventMeta, EventTime, event_meta_tbl, calendar_categories, calendar_audiences
 import csv
 import datetime as dt
 from ssfl import sst_syslog
 from unidecode import unidecode
 from io import StringIO
 import json
+from db_mgt.base_table_manager import BaseTableManager
 
 # These are needed when running standalone
 from pathlib import Path
@@ -29,17 +30,27 @@ CAL_START = 10
 CAL_END = 11
 CAL_DATES_BEGIN = 12
 
-calendar_categories = ['Religion', 'Wellness', 'Resident Clubs', 'Event']
-
-calendar_audiences = ['IL', 'AL', 'HC']
-
-
 # TODO: Need to check if an event is a duplicate which can mean the base event is duplicated but has
 #       a different audience or category.  Issue:  if there is a different category or audience are they
 #       full replacements or we add the deltas and have separate removal means
 
+class CalendarEventManager(BaseTableManager):
+    def __init__(self, db_session):
+        super().__init__(db_session)
+        self.db_session = db_session
+
+    def add_event_to_database(self, event, commit=True):
+        event.add_to_db(self.db_session, commit=True)
+
+    def get_new_calendar_event(self):
+        event = CalendarEvent()
+        return event
+
 class CalendarEvent(object):
-    """A CalendarEvent object is a temporary layer between outside info and the DB."""
+    """A CalendarEvent object is a temporary layer between outside info and the DB.
+
+    This needs to be reduced to a method within the Event manager to determine if it is appropriate to
+    to add an event (is it duplicated)."""
     zero_time = dt.time(hour=0, minute=0, second=0)
 
     def __init__(self):
@@ -67,7 +78,7 @@ class CalendarEvent(object):
         for ev_start, ev_end, ev_date in self.occurs:
             print('    Date: {}; Start: {}; End: {}'.format(ev_start, ev_end, ev_date))
 
-    def add_to_db(self, db_session):
+    def add_to_db(self, db_session, commit=True):
         """Add event(s) to database represented by this event, if not already there."""
         already_there = self._check_if_there(db_session, check_location=True, check_time=True)
         if 'location' not in already_there.keys():
@@ -163,7 +174,8 @@ class CalendarEvent(object):
             if not found_it:
                 new_time = EventTime(all_day_event=ad, start=st, end=end, event_id=db_event_id)
                 new_time.add_to_db(db_session)
-        db_session.commit()
+        if commit:                  # Should not do commit here
+            db_session.commit()
 
     def _check_if_there(self, db_session, check_time=False, check_location=False):
         # TODO: Handle All Day Event
@@ -231,7 +243,9 @@ class CalendarEvent(object):
 
 
 class JSONToDb(object):
-    def __init__(self, json_file):
+    def __init__(self, db_exec, json_file):
+        self.db_exec = db_exec
+        self.cal_mgr = self.db_exec.create_calendar_manager()
         self.json_file = json_file
         self.events = None
 
@@ -289,7 +303,7 @@ class JSONToDb(object):
         event_list = []
         try:
             for row in self.read_file():
-                new_event = CalendarEvent()
+                new_event = self.cal_mgr.get_new_calendar_event()
                 new_event.name = row['event_name']
                 new_event.venue = row['event_location']
                 # dl = [CsvToDb._try_parsing_date(x) for x in row[CAL_DATES_BEGIN:] if x]
@@ -322,7 +336,9 @@ class JSONToDb(object):
         return self.events
 
 class CsvToDb(object):
-    def __init__(self, csv_file):
+    def __init__(self, db_exec, csv_file):
+        self.db_exec = db_exec
+        self.cal_mgr = self.db_exec.create_calendar_manager()
         self.csv_file = csv_file
         self.events = None
 
@@ -378,7 +394,7 @@ class CsvToDb(object):
         event_list = []
         try:
             for row in self.read_file():
-                new_event = CalendarEvent()
+                new_event = self.cal_mgr.get_new_calendar_event()
                 new_event.name = row[CAL_EVENT_NAME]
                 new_event.venue = row[CAL_LOCATION]
                 dl = [CsvToDb._try_parsing_date(x) for x in row[CAL_DATES_BEGIN:] if x]

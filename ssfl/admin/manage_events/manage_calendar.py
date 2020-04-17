@@ -1,4 +1,5 @@
 from db_mgt.event_tables import Event, EventTime, EventMeta
+from db_mgt.db_exec import DBExec
 from werkzeug.utils import secure_filename
 from .event_retrieval_support import SelectedEvents, Evt
 from .event_operations import CsvToDb, JSONToDb, calendar_categories, calendar_audiences
@@ -7,6 +8,7 @@ from flask import send_file
 from io import BytesIO
 from utilities.sst_exceptions import log_sst_error
 import sys
+from ssfl.admin.forms.manage_calendar_form import ManageCalendarForm
 
 ALLOWED_EXTENSIONS = set(['csv', 'json'])
 
@@ -15,7 +17,7 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-def manage_calendar(db_session, form):
+def manage_calendar(db_exec: DBExec, form: ManageCalendarForm):
     """Process calendar form as requested."""
     """
      Route: '/admin/calendar' => manage_calendar
@@ -31,6 +33,8 @@ def manage_calendar(db_session, form):
     cal_end = form.end_datetime
     out_file = form.save_file_name.data
     submit = form.submit.data
+
+    calendar_mgr = db_exec.create_event_manager()
     try:
         if work_function.data == 'XXX':
             pass
@@ -47,10 +51,10 @@ def manage_calendar(db_session, form):
                     input_file.save(file_path)
                     file_path.seek(0)
                     file_content = file_path.read().decode(encoding='latin-1')
-                    build_calendar = CsvToDb(file_content)
+                    build_calendar = CsvToDb(db_exec,  file_content)
                     build_calendar.add_events()
                     for evt in build_calendar.get_event_list():
-                        evt.add_to_db(db_session)
+                        calendar_mgr.add_event_to_database(evt, commit=True)
             return True
 
         elif work_function.data == 'c_json':
@@ -61,15 +65,14 @@ def manage_calendar(db_session, form):
             else:
                 secure_filename(input_file.filename)
                 with tempfile.TemporaryFile(mode='w+b') as file_path:
-                    # file_path = tempfile.TemporaryFile()
                     input_file.save(file_path)
                     file_path.seek(0)
                     file_content = file_path.read().decode(encoding='utf-8-sig')
-                    build_calendar = JSONToDb(file_content)
+                    build_calendar = JSONToDb(db_exec, file_content)
                     build_calendar.add_events()
                     for evt in build_calendar.get_event_list():
                         try:
-                            evt.add_to_db(db_session)
+                            calendar_mgr.add_event_to_database(evt, commit=True)
                         except Exception as e:
                             log_sst_error(sys.exc_info(), get_traceback=True)
             return True
@@ -77,7 +80,13 @@ def manage_calendar(db_session, form):
 
         elif work_function.data == 'c_pr':
             # Print Calendar to file
-            ev = SelectedEvents(db_session, cal_start, cal_end, audiences, categories)
+            if not audiences:
+                form.errors['No Audience'] = ['No audiences specified => no events selectable']
+                return False
+            if not categories:
+                form.errors['No Category'] = ['No category specified => no events selectable']
+                return False
+            ev = SelectedEvents(db_exec, cal_start, cal_end, audiences, categories)
             events = ev.get_events()
             with tempfile.TemporaryFile(mode='w+b') as fl:
                 s = f'No events - {len(events)} : Start - {ev.start} : End - {ev.end}\n'
@@ -108,17 +117,8 @@ def manage_calendar(db_session, form):
         elif work_function.data == 'c_new':
             # Clear all event tables and reinitialize Event_Meta
             form.errors['Exception'] = ['Calendar clearing not yet tested']
-            return False
-            db_session.query(EventTime).delete()
-            db_session.query(Event).delete()
-            db_session.query(EventMeta).delete()
-            db_session.commit()
-            for aud in calendar_audiences:
-                evm = EventMeta(meta_key='audience', meta_value=aud)
-                evm.add_to_db(db_session, commit=True)
-            for cat in calendar_categories:
-                evm = EventMeta(meta_key='category', meta_value=cat.lower())
-                evm.add_to_db(db_session, commit=True)
+            # return False
+            calendar_mgr.reset_calendar()
             return True
 
         elif work_function.data == 'c_del':
@@ -129,10 +129,10 @@ def manage_calendar(db_session, form):
                 if not categories:
                     form.errors['No Category'] = ['No category specified => no events selectable']
                     return False
-                ev = SelectedEvents(db_session, cal_start, cal_end, audiences, categories)
+                ev = SelectedEvents(db_exec, cal_start, cal_end, audiences, categories)
                 events = ev.get_events()
                 for event in events:
-                    event.delete_specific_event(db_session, cal_start.data, cal_end.data)
+                    calendar_mgr.delete_specific_event(event, cal_start.data, cal_end.data)
             except Exception as e:
                 log_sst_error(sys.exc_info(), get_traceback=True)
                 form.errors['Exception'] = [f'Error deleting event: {e.args}']

@@ -4,6 +4,8 @@ from .sst_photo_tables import SSTPhotoManager
 from .page_tables import PageManager
 from .json_tables import JSONTableManager
 from .event_tables import EventManager
+from ssfl.admin.manage_events.event_operations import CalendarEventManager
+
 
 
 
@@ -74,7 +76,8 @@ class DBExec(object):
         return mgr
 
     def create_calendar_manager(self):
-        pass
+        mgr = CalendarEventManager(self.db_session)
+        return mgr
 
     def create_page_body_manager(self):
         pass

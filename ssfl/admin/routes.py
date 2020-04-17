@@ -55,7 +55,7 @@ def flash_errors(form):
 # that were initiated from another route.
 @admin_bp.route('/downloads/<string:file_path>', methods=['GET'])
 @login_required
-def get_download(file_path):
+def get_downloadXX(file_path):
     sst_admin_access_log.make_info_entry(f"Route: /admin/get_download/{file_path}")
     path = Config.USER_DIRECTORY_BASE + file_path
     if os.path.exists(path):
@@ -84,7 +84,7 @@ def get_events():
         event_class = SelectedEvents(db_exec, start, end, audiences, categories)
         events = event_class.get_events_as_dict()
         return jsonify(events)
-    except Exception as e:  # Normally occurs if there are no events to show
+    except Exception as e:  # Occurs normally if there are no events to show
         return jsonify({})
     finally:
         db_exec.terminate()
@@ -101,28 +101,6 @@ def get_image(image_path):
         else:
             return abort(404, f'File: {image_path} does not exist.')
 
-        # No need to resize as browser seems to handle it just fine
-        args = request.args
-        width = 200
-        height = 200
-        if args['w'] and args['w'] != 'None':
-            width = int(args['w'])  # TODO: Change to width/height and in picture.jinja2
-        if args['h'] and args['h'] != 'None':
-            height = int(args['h'])
-        fl = f'Photo {path} not available'
-        try:
-            photo_mgr = db_exec.create_photo_manager()
-            photo = photo_mgr.get_photo_from_path(path)
-            if photo:
-                photo_string = photo_mgr.get_resized_photo(photo, width=width, height=height)
-                photo_string.seek(0)
-                wrapped_string = FileWrapper(photo_string)
-                # Note:  this return can be removed if Werkzeug is upgraded to handle ByteIO objects
-                # github.com/unbit/uwsgi/issues/1126
-                return Response(wrapped_string, mimetype='image/jpeg', direct_passthrough=True)
-                # return send_file(wrapped_string, mimetype='image/jpeg')
-        except AttributeError as e:
-            return abort(404, "Screwed up")
     finally:
         db_exec.terminate()
 
@@ -164,6 +142,19 @@ def sst_admin_edit():
 @admin_bp.route('/admin/calendar', methods=['GET', 'POST'])
 @login_required
 def sst_admin_calendar():
+    """Transfer content to-from DB for local editing."""
+    """
+     Route: '/admin/calendar' => manage_calendar
+     Template: calendar.jinja2
+     Form: manage_calendar_form.py
+     Processor: manage_calendar.py
+    """
+    return build_route('admin/calendar.jinja2', ManageCalendarForm(), manage_calendar, '/admin/calendar')()
+
+
+@admin_bp.route('/admin/calendarX', methods=['GET', 'POST'])
+@login_required
+def sst_admin_calendarX():
     """Transfer content to-from DB for local editing."""
     """
      Route: '/admin/calendar' => manage_calendar
@@ -371,7 +362,7 @@ def sst_import_database():
     else:
         raise RequestInvalidMethodError('Invalid method type: {}'.format(request.method))
 
-#  THIS IS EDIT SLIDESHOW  Need it???
+
 @admin_bp.route('/manage_photos', methods=['GET', 'POST'])
 @login_required
 def manage_photos():
@@ -382,42 +373,6 @@ def manage_photos():
      Processor: manage_photo_functions.py
     """
     return build_route('admin/manage_photos.jinja2', DBPhotoManageForm(), manage_photo_functions, '/manage_photos')()
-
-@admin_bp.route('/manage_photosx', methods=['GET', 'POST'])
-@login_required
-def manage_photosx():
-    """
-     Route: '/admin/manage_photos' => manage_photo_functions
-     Template: manage_photos.jinja2
-     Form: manage_photo_functions_form.py
-     Processor: manage_photo_functions.py
-    """
-    sst_admin_access_log.make_info_entry(f"Route: /admin/manage_photos/")
-    form = DBPhotoManageForm()
-    db_exec = DBExec()
-    try:
-        if request.method == 'GET':
-            context = dict()
-            context['form'] = DBPhotoManageForm()
-        elif request.method == 'POST':
-            context = dict()
-            context['form'] = form
-            if form.validate_on_submit():
-                res = manage_photo_functions(db_exec, form)
-                if res:
-                    flash(f'Manage Photos succeeded', 'success')
-                else:
-                    form.errors['submit'] = 'Error processing manage_photo_templates'
-                    flash_errors(form)
-        else:
-            raise RequestInvalidMethodError('Invalid method type: {}'.format(request.method))
-    except Exception as e:
-        log_sst_error(sys.exc_info(), get_traceback=True)
-        form.errors['submit'] = 'Error processing manage_photo_templates'
-        flash_errors(form)
-    finally:
-        db_exec.terminate()
-        return render_template('admin/manage_photos.jinja2', **context)  # Executed in all cases
 
 
 def build_route(template, processing_form, processing_function, route_name):
