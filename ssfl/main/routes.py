@@ -9,6 +9,7 @@ from ssfl.main.build_page import BuildPage
 from ssfl.main.multi_story_page import MultiStoryPage
 from ssfl.main.views.calendar_view import RandomCalendarAPI
 from utilities.toml_support import dict_to_toml_file
+from config import Config
 
 # Set up a Blueprint
 main_bp = Blueprint('main', __name__,
@@ -22,7 +23,7 @@ main_bp.add_url_rule('/cal/', defaults={'count': 6},
 
 def log_request(file, tag, context):
     context['tag'] = tag
-    dict_to_toml_file(context, '/home/don/devel/temp/cmd_logs/' + file)
+    dict_to_toml_file(context, Config.TEMP_FILE_LOC +'cmd_logs/' + file)
 
 
 @main_bp.route('/main/fullcalendar', methods=['GET'])
