@@ -17,6 +17,7 @@ from utilities.sst_exceptions import PhotoOrGalleryMissing
 from .base_table_manager import BaseTableManager
 from .json_tables import JSONStorageManager as jsm
 from .photo_tables import SlideShow
+from db_mgt.db_exec import TestPADB
 
 json_metadata_descriptor = {"title": None, "photographer": None, "people": [],
                             "keywords": None, "xxx": None}
@@ -33,12 +34,18 @@ class SSTPhotoManager(BaseTableManager):
 
     def ensure_folder_exists(self, folder: str) -> None:
         """Create a folder in the PHOTO directory if it does not already exist."""
-        directory = Config.UPLOADED_PHOTOS_DEST + folder
-        if os.path.exists(directory):
-            return
-        else:
-            os.mkdir(directory)
-            return
+        try:
+            foo = TestPADB()                                                # Remove???  ###########
+            foo.test_connection()                                           # Ditto
+            directory = Config.UPLOADED_PHOTOS_DEST + folder
+            if os.path.exists(directory):
+                return
+            else:
+                os.mkdir(directory)
+                return
+        except Exception as e:
+            print(f'Failure checking photo directory: {sys.exc_info()}')
+            raise e
 
     def get_photo_if_exists(self, folder, filename):
         """Get photo from folder, filename or return False"""
@@ -50,7 +57,8 @@ class SSTPhotoManager(BaseTableManager):
             else:
                 return False
         except Exception as e:
-            print(f'Failure going to database: {sys.exc_info()}')
+            print(f'Failure going to database: {sys.exc_info()}')  # Remove
+            sys.stdout.flush()                                      # Remove ########################################
             raise e
 
     def get_photos_by_time_and_folder(self, folder, early_date, latest_date):
