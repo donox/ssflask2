@@ -9,10 +9,6 @@ import pymysql
 import sys
 
 
-
-
-
-
 class DBExec(object):
     """DBExec provides access to Managers for each model class.
 
@@ -99,30 +95,3 @@ class DBExec(object):
         close_session(self.db_session)
 
 
-
-class TestPADB(object):
-    def __init__(self):
-        self.conn = None
-
-    def connect(self):
-        self.conn = pymysql.connect()
-
-    def query(self, sql):
-        try:
-            cursor = self.conn.cursor()
-            cursor.execute(sql)
-        except (AttributeError, pymysql.OperationalError):
-            self.connect()
-            cursor = self.conn.cursor()
-            cursor.execute(sql)
-        except Exception as e:
-            print(f'TESTDB OTHER ERROR: {sys.exc_info()}')
-            sys.stdout.flush()
-        return cursor
-
-    def test_connection(self):
-        sql = "SHOW Databases;"
-        cur = self.query(sql)
-        # wait a long time for the Mysql connection to timeout
-        cur = self.query(sql)
-        # still works
