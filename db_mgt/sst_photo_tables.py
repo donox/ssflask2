@@ -1,5 +1,6 @@
 from io import BytesIO
 import os
+import sys
 from datetime import datetime as dt
 from config import Config
 
@@ -49,6 +50,7 @@ class SSTPhotoManager(BaseTableManager):
             else:
                 return False
         except Exception as e:
+            print(f'Failure going to database: {sys.exc_info()}')
             raise e
 
     def get_photos_by_time_and_folder(self, folder, early_date, latest_date):
