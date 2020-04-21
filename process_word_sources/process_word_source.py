@@ -166,7 +166,7 @@ class TopElement(ParsedElement):
         self.environment_stack = list()  # Environments that control interpretation set/cleared by latex expressions
         self.text_segments = None       # result of parse breaking input text into segments broken at environment bounds
         self.dupe_para_segments = []
-        self.photo_mgr = db_exec.create_photo_manager()
+        self.photo_mgr = db_exec.create_sst_photo_manager()
         self.photo_frames = dict()
         self.current_photo_frame = None
         self.content_features = dict()  # A dictionary of things found in the parse (e.g, title) useful to parents
@@ -571,7 +571,7 @@ class LatexElement(ParsedElement):
             if tmp.isdigit():
                 photo_id = int(tmp)
             else:
-                photo_mgr = self.top.db_exec.create_photo_manager()
+                photo_mgr = self.top.db_exec.create_sst_photo_manager()
                 photo_tmp = photo_mgr.get_photo_from_slug(tmp)
                 if photo_tmp:
                     photo_id = photo_tmp.id
