@@ -3,8 +3,6 @@ from xml.etree import ElementTree
 from utilities.sst_exceptions import WordHTMLExpressionError, WordLatexExpressionError, WordInputError, \
     WordRenderingError, WordContentFeature, PhotoOrGalleryMissing
 from utilities.miscellaneous import factor_string
-from .photos import Photo
-from config import Config
 from db_mgt.db_exec import DBExec
 
 import re

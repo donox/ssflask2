@@ -1,6 +1,5 @@
 import csv
 from ssfl.main.story import Story
-from db_mgt.photo_tables import Photo
 from db_mgt.json_tables import JSONStorageManager as jsm
 from ssfl.main.calendar_snippet import Calendar
 from config import Config

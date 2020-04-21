@@ -16,7 +16,6 @@ from utilities.sst_exceptions import PhotoHandlingError
 from utilities.sst_exceptions import PhotoOrGalleryMissing
 from .base_table_manager import BaseTableManager
 from .json_tables import JSONStorageManager as jsm
-from .photo_tables import SlideShow
 from db_mgt.pa_db_connect_problems import TestPADB
 
 json_metadata_descriptor = {"title": None, "photographer": None, "people": [],

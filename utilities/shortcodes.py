@@ -1,9 +1,7 @@
 import re
 from utilities.process_urls import find_page_from_url, find_download_from_url
 from config import Config
-from process_word_sources.photos import Photo
-from db_mgt.sst_photo_tables import SlideShow, SSTPhoto, SSTPhotoManager
-# from db_mgt.photo_tables import Photo as DBPhoto
+from db_mgt.sst_photo_tables import SlideShow
 from utilities.miscellaneous import run_jinja_template
 from utilities.sst_exceptions import ShortcodeError, ShortcodeParameterError, ShortcodeSystemError
 

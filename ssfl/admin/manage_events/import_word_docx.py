@@ -37,14 +37,14 @@ def import_docx_and_add_to_db(db_exec: DBExec, form):
         if not html:
             form.errors['file_name'] = ['Translation from docx to html failed']
             return False
-        content_features = wsd.get_content_features()
-        if 'byline' in content_features.keys():
-            author = content_features['byline']
-        if 'title' in content_features.keys():
-            page_title = content_features['title']
+        # Each of byline, title, snippet may be null without problems
+        byline = wsd.get_content_feature_value('byline', 'byline')
+        title = wsd.get_content_feature_value('title', 'title')
+        snippet = wsd.get_content_feature_value('snippet', 'snippet')
         verify(html)
-        new_page = Page(page_title=page_title, page_name=page_name, page_date=dt.datetime.now(),
-                        page_content=html, page_status='publish', page_guid='Needs GUID', page_author=author)
+        new_page = Page(page_title=title, page_name=page_name, page_date=dt.datetime.now(),
+                        page_content=html, page_status='publish', page_guid='Needs GUID', page_author=byline,
+                        page_snippet=snippet)
         verify(new_page.page_content)
         page_mgr.add_page_to_database(new_page, overwrite)
         return True
@@ -54,5 +54,3 @@ def import_docx_and_add_to_db(db_exec: DBExec, form):
         form.errors['work_function'] = ['file process_page_masters - Exception occurred processing page']
         form.errors['work_function'] = [e.args]
         return False
-
-

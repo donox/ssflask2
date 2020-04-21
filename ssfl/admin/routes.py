@@ -6,8 +6,6 @@ from flask import Blueprint, render_template, url_for, request, send_file, \
     abort, jsonify, redirect, flash, Response
 from flask import current_app as app
 from flask_login import login_required
-from werkzeug.utils import secure_filename
-from werkzeug.wsgi import FileWrapper
 
 from config import Config
 from db_mgt.db_exec import DBExec

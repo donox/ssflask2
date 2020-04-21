@@ -1,16 +1,14 @@
 from lxml.html import html5parser as hp
 from lxml import etree
-import lxml
 from xml.etree.ElementTree import tostring
 import copy
-from db_mgt.page_tables import Page, PageMeta
 import re
 from utilities.shortcodes import Shortcode
-from utilities.sst_exceptions import SiteObjectNotFoundError, SiteIdentifierError
 
 XHTML_NAMESPACE = 'http://www.w3.org/1999/xhtml'
 XHTML = "{%s}" % XHTML_NAMESPACE
 NSMAP = {None: XHTML_NAMESPACE}
+
 
 def find_null_elements(el: etree.Element):
     """Make count of elements containing some text."""
@@ -31,6 +29,8 @@ class PageBody(object):
         self.working_dir = '/home/don/devel/flaskSamples/'
         self.doc_as_html = None  # Not set if page is loaded from database
         self.title = None  # If html element use self.title.text to get text, else title is text (from db generally)
+        self.author = None
+        self.snippet = None
         self.tab_title = None   # Generally same as title, but may be different
         self.body = None  # As original doc with title removed
         self.page_date = None
@@ -44,6 +44,7 @@ class PageBody(object):
         target_page = self.page_manager.fetch_page(page_id, page_name)
         self.page_in_db = target_page
         content = target_page.fetch_content(self.session)
+        self.title, self.author, self.snippet = target_page.fetch_title_author_snippet()
         xhtml = etree.Element(XHTML + "html", nsmap=NSMAP)  # set namespaces so they don't appear in result HTML
         body = etree.SubElement(xhtml, XHTML + "body")
 
@@ -174,25 +175,14 @@ class PageBody(object):
             res = tostring(self.body, 'utf-8').decode('utf-8').replace('<html:', '<').replace('/html:', '/')
             self.page_manager.update_cached_page(self.page_in_db, res)
 
-    def find_title(self):
-        """Find title from the body, if it exists.
-
-        The title is assumed to be the first occurring element with an h* tag beginning with
-        h1 and going to lower hx tags through level h4."""
-        # TODO: Need to deal with body as soup and take from body
-        title = None
-        for elem in self.doc_as_html:
-            if elem.tag.partition('}')[2] in ['h1', 'h2', 'h3', 'h4']:    # TODO: Need to remove namespace
-                self.title = elem
-                title = elem.text
-                break
-        return title
+    def get_title_author_snippet(self):
+        return self.title, self.author, self.snippet
 
     def set_body(self):
         """Find body portion of html"""
         # TODO: Need to deal with body as soup
         if not self.title:
-            self.find_title()
+            self.get_title_author_snippet()
         self.body = self.doc_as_html  # We assume there is no outside copy/dependence on self.doc_as_html
         self.doc_as_html = copy.deepcopy(self.body)
         if self.title is not None:
@@ -222,19 +212,22 @@ class PageBody(object):
                         end = next_match.end()
                         yield sc, elem, start, end
 
-    def get_title_body(self):
-        if self.title and self.body is not None:                # body test is for lxml - expected future change
-            return self.title, self.tab_title, self.body
-        if not self.body:
+    def get_story_body(self):
+        if self.body is not None:                # body test is for lxml - expected future change
+            return self.body
+        else:
             if self.doc_as_html:
                 self.set_body()
+                return self.body
             else:
-                return None, None, None
-        return self.title, self.title, self.body
+                return None
 
     def create_snippet(self, max_length=125):
+        if self.snippet:
+            return self.snippet
+        # If there is not snippet specified in the story - take it from the body text
         if not self.body:
-            _, tmp = self.get_title_body()
+            tmp = self.get_story_body()
             if tmp is None:
                 return None
         ct = stringify_children(self.body).replace('\n', '')

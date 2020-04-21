@@ -69,7 +69,7 @@ def create_app():
 
     # Initialize Flask-SQLAlchemy
     db.init_app(app)
-    migrate = Migrate(app, db)
+    # migrate = Migrate(app, db)  Not using alembic
 
     # Set up User Manager and (implicitly) Login Manager
     user_manager = UserManager(app, db, User, RoleClass=Role)

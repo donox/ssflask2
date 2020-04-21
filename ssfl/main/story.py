@@ -1,11 +1,7 @@
-import re
 from utilities.html_mgt import PageBody
 from utilities.shortcodes import Shortcode
 from lxml.html import html5parser as hp
 import lxml
-from db_mgt.json_tables import JSONStorageManager as jsm
-from flask import render_template
-from config import Config
 
 
 class Story(object):
