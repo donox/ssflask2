@@ -2,6 +2,8 @@ import sys
 
 import json
 import toml
+from toml import TomlDecodeError
+from utilities.sst_exceptions import NoSuchTOMLItem
 from werkzeug.utils import secure_filename
 from flask import send_file
 
@@ -236,6 +238,27 @@ def manage_json_templates(db_exec, form):
         else:
             form.errors['work_function'] = ['Selected Work Function Not Yet Implemented']
             return False
+    except NoSuchTOMLItem as e:
+        log_sst_error(sys.exc_info(), 'TOML No such item')
+        form.errors['Exception'] = [f'No such TOML item: {e.args[0]}']
+        return False
+    except TomlDecodeError as e:
+        log_sst_error(sys.exc_info(), 'TOML Decode Error')
+        form.errors['Exception'] = [f'Template Error: {e.args[0]}']
+        return False
+    except InvalidDateOrNumberTomlError as e:
+        foo = 3
+        ctx.fail((
+            'Duplicate key: "{}" '
+            'One frequent cause of this is using the same account name twice.'
+        )).format(e.field)
+    except DuplicateKeyTomlError as e:
+        foo = 3
+        ctx.fail((
+            'Invalid date or number on field "{}" '
+            'One frequent cause of this is forgetting to put quotes '
+            'around secret keys. Check the file.'
+        )).format(e.field)
 
     except Exception as e:
         log_sst_error(sys.exc_info(), 'Unexpected Error in edit_json_file')

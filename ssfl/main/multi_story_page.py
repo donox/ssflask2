@@ -22,7 +22,7 @@ class MultiStoryPage(object):
         self.descriptor = None
         self.context = dict()
         self.storage_manager = db_exec.create_json_manager()
-        self.photo_manager = db_exec.create_photo_manager()
+        self.photo_manager = db_exec.create_sst_photo_manager()
 
     def make_descriptor_from_csv_file(self, file):
         """Create a descriptor corresponding to a formatted spreadsheet.
@@ -296,7 +296,6 @@ class MultiStoryPage(object):
         # name = elem['name']
         # content_type = elem['content_type']
         # styling = elem['styling']
-
 
     def make_multi_element_page_context(self) -> Dict[AnyStr, Any]:
         """Create context for a page based on current descriptor.

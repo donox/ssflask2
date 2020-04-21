@@ -2,8 +2,8 @@ import re
 from utilities.process_urls import find_page_from_url, find_download_from_url
 from config import Config
 from process_word_sources.photos import Photo
-from db_mgt.photo_tables import PhotoGallery, SlideShow
-from db_mgt.photo_tables import Photo as DBPhoto
+from db_mgt.sst_photo_tables import SlideShow, SSTPhoto, SSTPhotoManager
+# from db_mgt.photo_tables import Photo as DBPhoto
 from utilities.miscellaneous import run_jinja_template
 from utilities.sst_exceptions import ShortcodeError, ShortcodeParameterError, ShortcodeSystemError
 
@@ -30,7 +30,7 @@ class Shortcode(object):
         self.shortcode_string = string_to_match
         self.content_dict = None
         self.page_mgr = db_exec.create_page_manager()
-        self.photo_mgr = db_exec.create_photo_manager()
+        self.photo_mgr = db_exec.create_sst_photo_manager()
 
     def parse_shortcode(self):
         # Need to verify/handle case where shortcode has contained string "[xx] yy [/xx]"
@@ -120,21 +120,6 @@ class Shortcode(object):
         res = run_jinja_template('base/button.jinja2', context=context).replace('\n', '')
         self.content_dict['result'] = res
 
-    def XX_get_photo_by_id(self, photo_id, old_id=True):
-        # TODO: change to current id's and update singlepic reference
-        # TODO: change to use same photo url build as in multi_story_page
-        if old_id:
-            photo_rec = self.session.query(DBPhoto).filter(DBPhoto.old_id == photo_id).first()     ###########################################################
-        else:
-            photo_rec = self.session.query(DBPhoto).filter(DBPhoto.id == photo_id).first()
-        gallery_id = photo_rec.old_gallery_id
-        photo_file = photo_rec.file_name
-        alt_text = photo_rec.alt_text
-        photo_caption = photo_rec.caption
-        gallery_rec = self.session.query(PhotoGallery).filter(PhotoGallery.old_id == gallery_id).first()  ###################################################
-        file_path = gallery_rec.path_name + photo_file
-        return photo_rec, gallery_rec, gallery_id, photo_file, photo_caption, alt_text, file_path
-
     def _get_photo_list_by_gallery_id(self, gallery_id):
         photo_ids = [x.id for x in self.photo_mgr.get_photos_in_gallery_with_id(gallery_id)]
         return photo_ids
@@ -142,6 +127,7 @@ class Shortcode(object):
     def _process_singlepic(self):
         try:
             photo_id = int(self.content_dict['id'])
+            photo_id = self.photo_mgr.get_new_photo_id_from_old(photo_id)
             photoframe = SlideShow('NO NAME', self.db_exec)
             photoframe.add_photo(photo_id)
             if 'h' in self.content_dict:

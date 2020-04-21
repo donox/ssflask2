@@ -111,8 +111,8 @@ class WordRenderingError(SsTDocParseError):
     pass
 
 
-class WordContentFeatureExists(SsTDocParseError):
-    """Error raised when a specific content feature is added more than once as a single feature."""
+class WordContentFeature(SsTDocParseError):
+    """Error raised when there is a problem with a ContentFeature."""
     pass
 
 class NoSuchTOMLItem(SsTTOMLError):

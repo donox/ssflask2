@@ -13,6 +13,7 @@ from config import Config
 from db_mgt.db_exec import DBExec
 from db_mgt.setup import get_engine, create_session, close_session
 from import_data.db_import_pages import ImportPageData
+from import_data.db_import_photos import ImportPhotoData
 from ssfl import sst_admin_access_log
 from ssfl.admin.manage_events.import_word_docx import import_docx_and_add_to_db
 from utilities.sst_exceptions import RequestInvalidMethodError
@@ -49,6 +50,14 @@ def flash_errors(form):
                 flash(u"routes - Error in the %s field - %s" % (getattr(form, field).label.text, error), 'error')
             else:
                 flash(u"%s error: %s" % (field, error), 'error')
+
+
+@admin_bp.route('/run_ace', methods=['GET'])
+@login_required
+def run_ace():
+    sst_admin_access_log.make_info_entry(f"Route: /admin/run_ace")
+    context = dict()
+    return render_template('/admin/run_ace.jinja2', **context)
 
 
 # These functions are not directly called by the user but support calls from the client
@@ -351,11 +360,20 @@ def sst_import_database():
         context['form'] = form
         if form.validate_on_submit():
             db_session = create_session(get_engine())
-            mgr = ImportPageData(db_session)
-            mgr.import_useable_pages_from_wp_database()
-            close_session(db_session)
-            flash('You were successful', 'success')
-            return render_template('admin/import_database_functions.jinja2', **context)  # redirect to success url
+            function = form.work_function.data
+            if function == 'imp_pages':
+                mgr = ImportPageData(db_session)
+                mgr.import_useable_pages_from_wp_database()
+                close_session(db_session)
+                flash('You were successful', 'success')
+                return render_template('admin/import_database_functions.jinja2', **context)  # redirect to success url
+            elif function == 'import_photos':
+                mgr = ImportPhotoData(db_session)
+                mgr.import_all_galleries()
+                mgr.import_all_photos()
+                close_session(db_session)
+                flash('You were successful', 'success')
+                return render_template('admin/import_database_functions.jinja2', **context)  # redirect to success url
 
         flash_errors(form)
         return render_template('admin/import_database_functions.jinja2', **context)

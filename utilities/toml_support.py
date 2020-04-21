@@ -120,18 +120,23 @@ def elaborate_toml_list(db_exec: DBExec, toml_list: list) -> list:
 def elaborate_toml_dict(db_exec: DBExec, toml_dict: dict) -> dict:
     """Replace named elements (e.g., value is a string) with their content."""
     # Note this is modifying the dictionary passed in - should not be a problem
-    json_mgr = db_exec.create_json_manager()
-    for key, value in toml_dict.items():
-        if key == 'element' and type(value) is str:
-            elem_name = toml_dict['element']
-            elem = json_mgr.get_json_from_name(elem_name)
-            if elem:
-                toml_dict['element'] = elaborate_toml_dict(db_exec, elem)
-            else:
-                raise NoSuchTOMLItem(f'TOML Item: {elem_name} does not exist.')
-        elif type(value) is dict:
-            toml_dict[key] = elaborate_toml_dict(db_exec, value)
-        elif type(value) is list:
-            toml_dict[key] = elaborate_toml_list(db_exec, value)
-    return toml_dict
+    try:
+        json_mgr = db_exec.create_json_manager()
+        for key, value in toml_dict.items():
+            if key == 'element' and type(value) is str:
+                elem_name = toml_dict['element']
+                elem = json_mgr.get_json_from_name(elem_name)
+                if elem:
+                    toml_dict['element'] = elaborate_toml_dict(db_exec, elem)
+                else:
+                    raise NoSuchTOMLItem(f'TOML Item: {elem_name} does not exist.')
+            elif type(value) is dict:
+                toml_dict[key] = elaborate_toml_dict(db_exec, value)
+            elif type(value) is list:
+                toml_dict[key] = elaborate_toml_list(db_exec, value)
+        return toml_dict
+    except NoSuchTOMLItem as e:
+        raise e
+    except Exception as e:
+        raise e
 

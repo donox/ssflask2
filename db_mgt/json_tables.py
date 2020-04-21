@@ -4,7 +4,7 @@ import toml
 import json as jsn
 from collections import defaultdict
 from .base_table_manager import BaseTableManager
-
+from sqlalchemy.exc import IntegrityError
 
 class JSONTableManager(BaseTableManager):
     def __init__(self, db_session):
@@ -389,6 +389,8 @@ class JSONStore(db.Model):
         if commit:
             try:
                 session.commit()
+            except IntegrityError as e:    # TODO: log error and report
+                raise e
             except Exception as e:
                 foo = 3
                 raise e

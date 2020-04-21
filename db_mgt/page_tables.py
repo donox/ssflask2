@@ -89,6 +89,7 @@ class Page(db.Model):
     page_author = db.Column(db.String(128), nullable=True)
     page_date = db.Column(db.DateTime, default='2000-01-01')
     page_content = db.Column(db.String(), nullable=True)
+    page_snippet = db.Column(db.String(), nullable=True)
     page_status = db.Column(db.String(32), nullable=False)
     page_parent = db.Column(db.Integer, db.ForeignKey('page.id'), nullable=True)
     page_guid = db.Column(db.String(), nullable=False)
@@ -117,6 +118,7 @@ class Page(db.Model):
         res['author'] = self.author
         res['date'] = self.page_date
         # res['content'] = self.page_date       # Can't pick up content for lack of a session
+        # res['snippet'] = self.page_snippet    # Can't pick up content for lack of a session
         return res
 
     def fetch_content(self, session):
@@ -133,6 +135,9 @@ class Page(db.Model):
                 return self.page_content
         else:
             return self.page_content
+
+    def fetch_title_author_snippet(self):
+        return self.page_title, self.page_author, self.page_snippet
 
     def update_cache(self, session, new_text):
         raise SystemError("moved to Page Manager")

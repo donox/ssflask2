@@ -20,6 +20,7 @@ class PhotoManager(BaseTableManager):
     """
 
     def __init__(self, db_session):
+        raise SystemError("Not using this Photo Manager Anymore")
         super().__init__(db_session)
         self.get_photo_field_value = self.get_table_value('photo')
         self.get_gallery_field_value = self.get_table_value('photo_gallery')
@@ -192,8 +193,8 @@ class Photo(db.Model):
         return '<Flask PhotoGallery {}>'.format(self.__tablename__)
 
 
-class PhotoMeta(db.Model):
-    __tablename__ = 'photo_meta'
+class XPhotoMeta(db.Model):
+    __tablename__ = 'Xphoto_meta'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     gallery_id = db.Column(db.ForeignKey('photo_gallery.id'), nullable=False)
     meta_key = db.Column(db.String(128), nullable=False)
@@ -252,7 +253,7 @@ class SlideShow(object):
         # ['SLIDESHOW', 'title', 'title_class', 'position', 'width', 'height', 'rotation', 'frame_title', 'pictures']
         self.db_exec = db_exec
         self.json_store_manager = db_exec.create_json_manager()
-        self.photo_manager = db_exec.create_photo_manager()
+        self.photo_manager = db_exec.create_sst_photo_manager()
         self.show_desc = self.json_store_manager.get_json_from_name('P_SLIDESHOW')
         self.show_desc['title'] = name
         self.show_desc['title_class'] = 'title_class'
@@ -319,7 +320,7 @@ class Picture(object):
         self.picture_desc = self.json_store.get_json_from_name('P_PICTURE')
         self.db_exec = db_exec
         self.picture_desc['id'] = photo_id
-        self.picture_manager = db_exec.create_photo_manager()
+        self.picture_manager = db_exec.create_sst_photo_manager()
         res = self.picture_manager.get_photo_from_id(photo_id)
         if res:
             db_photo = res

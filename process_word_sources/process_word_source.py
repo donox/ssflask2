@@ -1,7 +1,8 @@
 from lxml import etree
 from xml.etree import ElementTree
 from utilities.sst_exceptions import WordHTMLExpressionError, WordLatexExpressionError, WordInputError, \
-    WordRenderingError, WordContentFeatureExists, PhotoOrGalleryMissing
+    WordRenderingError, WordContentFeature, PhotoOrGalleryMissing
+from utilities.miscellaneous import factor_string
 from .photos import Photo
 from config import Config
 from db_mgt.db_exec import DBExec
@@ -25,14 +26,18 @@ def remove_useless_html(in_source: str) -> str:
     return re.sub(re1, '', in_source)
 
 
+predefined_environments = ['snippet', 'snippet_only', 'flow_box']
+
+
 class ParsedElement(object):
     """ Base class to represent elements of the parse and support expansion.
     """
 
-    def __init__(self, element_type, source, parent): # where is this initiated?
+    def __init__(self, element_type, source, parent):
         self.element_type = element_type
         self.source = source
         self.parent = parent
+        self.result = None  # Set only on highest parent
         self.top = None
         self.parsed_result = []  # List of 2-tuples and objects.  Tuple is ('node_type', content)
         if self.parent:
@@ -126,7 +131,7 @@ class ParsedElement(object):
         except Exception as e:
             self.top.db_exec.add_error_to_form('Except', f'{e.args}')
             self.top.db_exec.add_error_to_form('ParseElement',
-                                               f'Element: {el_save}, "{self.source[ndx_save: ndx_save+20]}"')
+                                               f'Element: {el_save}, "{self.source[ndx_save: ndx_save + 20]}"')
             raise e
 
     def render(self):
@@ -148,6 +153,7 @@ class ParsedElement(object):
                     self.top.db_exec.add_error_to_form('Render_fail', f'Node: {node}')
                     raise e
         if self.element_type == 'Top':
+            self.result = res
             return res
         else:
             return '<UndrendredElement>' + verify(res) + '</UndrendredElement>'
@@ -156,11 +162,14 @@ class ParsedElement(object):
 class TopElement(ParsedElement):
     def __init__(self, source_list, db_exec: DBExec):
         self.db_exec = db_exec
+        self.environments = dict()
+        self.environment_stack = list()  # Environments that control interpretation set/cleared by latex expressions
+        self.text_segments = None       # result of parse breaking input text into segments broken at environment bounds
+        self.dupe_para_segments = []
         self.photo_mgr = db_exec.create_photo_manager()
-        self.environment = []  # Environments that control interpretation set/cleared by latex expressions
         self.photo_frames = dict()
         self.current_photo_frame = None
-        self.content_features = dict()      # A dictionary of things found in the parse (e.g, title) useful to parents
+        self.content_features = dict()  # A dictionary of things found in the parse (e.g, title) useful to parents
         super().__init__('Top', source_list, None)
         pass
 
@@ -169,14 +178,17 @@ class TopElement(ParsedElement):
         return self
 
     def open_environment(self, env_name):
-        if env_name in self.environment:
+        if env_name in self.environment_stack:
             raise WordInputError(f'Environment: {env_name} already open.')
         else:
-            self.environment.append(env_name)
+            self.environment_stack.append(env_name)
+            self.environments[env_name] = dict()
 
     def close_environment(self, env_name):
-        if self.environment and self.environment[-1] != env_name:
+        if self.environment_stack and self.environment_stack[-1] != env_name:
             raise WordInputError(f'Environment: {env_name} not most recently created environment.')
+        else:
+            self.environment_stack.pop()
 
     def add_photo_frame(self, name):
         if name in self.photo_frames.keys():
@@ -200,23 +212,153 @@ class TopElement(ParsedElement):
     # Content features are intended to provide a mechanism for accumulating information
     # while processing a document that may be useful at a higher level such as placing the
     # title in the database.
+    # A content feature is itself a dictionary into which values may be accumulated as needed.
     def get_content_features(self):
         return self.content_features
 
-    def add_content_feature(self, name, value):
-        if name in self.content_features.keys():
-            raise WordContentFeatureExists(f'Feature: {name} has already been added')
-        self.content_features[name] = value
-
-    def add_content_feature_list(self, name, value):
-        if name in self.content_features.keys():
-            self.content_features[name].append(value)
+    def add_content_feature(self, feature_name, name, value):
+        if feature_name not in self.content_features:
+            self.content_features[feature_name] = dict()
+        feature_dict = self.content_features[feature_name]
+        if name in feature_dict:
+            if type(feature_dict[name]) is list:
+                feature_dict[name].append(value)
+            else:
+                raise WordContentFeature(f'Feature: {feature_name} attempt to replace value of {feature_dict[name]}')
         else:
-            self.content_features[name] = [value]
+            feature_dict[name] = value
+
+    def add_content_feature_list(self, feature_name):
+        """Add new content feature"""
+        if feature_name in self.content_features.keys():
+            raise WordContentFeature(f'Feature: {feature_name} has already been added')
+        else:
+            self.content_features[feature_name] = dict()
+
+    def get_content_feature_value(self, feature, feature_name):
+        if feature in self.content_features and feature_name in self.content_features[feature]:
+            return self.content_features[feature][feature_name]
+        else:
+            return None
+
+
+    def get_result(self):
+        return self.result
+
+    def _create_delimited_strings(self, txt):
+        """Post process to establish environments, do clean-up.
+
+        :param txt: str
+        :return: None,  creates environment specs and breaks source into list of pieces for later joining.
+"""
+        para_dupes = r'(?P<Para><p></p>(<p></p>)*)'.replace('@', '\a')  # remove replicated paras
+        html_open = r'(?P<HOpen><[^><&@/]+?>)'.replace('@', '\a')  # <tag attributes>
+        html_close = r'(?P<HClose></[^><&@/]+?>)'.replace('@', '\a')  # </tag>
+        html_self_close = r'(?P<HSelf><[^><&@/]+?/>)'.replace('@', '\a')  # <tag attributes/>
+        free_text = r'(?P<Free>[^@<>{}]+?)'.replace('@', '\a')  # text
+        start_env = r'(?P<EOpen><p>\s*?<!--\[\[open_env(,(\w+))*?\s*?]]-->\s*?</p>)'.replace('@', '\a')
+        close_env = r'(?P<EClose><p>\s*?<!--\[\[close_env(,(\w+))*?\s*?]]-->\s*?</p>)'.replace('@', '\a')
+        tmp = ''.join(['(', para_dupes, '|', start_env, '|', close_env, '|', html_close, '|', html_self_close,
+                       '|', html_open, '|', free_text, ')'])
+        try:
+            txt_parse = re.compile(tmp)
+            txt_positions = []
+            nxt_position = 1
+            for match in re.finditer(txt_parse, txt.replace('\\', '\a')):
+                tmp = [(k, v) for k, v in match.groupdict().items() if v]  # k: group name, v: matched content
+                if tmp:
+                    tmp = tmp[0]
+                if tmp[0] in ['EOpen', 'EClose', 'FOpen', 'FClose', 'Para']:
+                    match_type = tmp[0]
+                    match_start = match.start()
+                    match_end = match.end()
+                    # !!! THis construct is to avoid the fact that the matcher is sometimes returning None(s)
+                    #      where it should be matching.  Regex has been tested with online tester, so more debugging
+                    #      needed.  This is a workaround. May still have ',' in match name.
+                    match_name = ''
+                    if match_type != 'Para':
+                        match_name = [x for x in match.groups()[2:] if x][1].replace(',', '')
+                    # print(f'{match_type}  value: {match_name} start: {match_start} end: {match_end}')
+                    match_details = (match.group(0), match_type, match_name, match_start, match_end, nxt_position)
+                    if match_type == 'EOpen':
+                        self._process_env_open(match_details)
+                    elif match_type == 'EClose':
+                        self._process_env_close(match_details)
+                    elif match_type == 'FOpen':
+                        self._process_flow_open(match_details)
+                    elif match_type == 'FClose':
+                        self._process_flow_close(match_details)
+                    elif match_type == 'Para':
+                        self.dupe_para_segments.append(nxt_position)
+                    else:
+                        raise ValueError(f'Match Type: {match_type} is not recognized.')
+                    txt_positions += [match_start, match_end]
+                    nxt_position += 2
+            self.text_segments = factor_string(txt.replace('\a', '\\'), txt_positions)
+            for seg in self.dupe_para_segments:
+                self.text_segments[seg] = '<p></p>'
+            return
+        except Exception as e:
+            foo = 3
+            raise e
+
+    def _process_env_open(self, match_details):
+        match_text, match_type, match_name, match_start, match_end, nxt_position = match_details
+        env = self.environments[match_name]
+        env['text_list_start_pos'] = nxt_position
+        env['type'] = match_name
+
+    def _process_env_close(self, match_details):
+        match_text, match_type, match_name, match_start, match_end, nxt_position = match_details
+        env = self.environments[match_name]
+        env['text_list_end_pos'] = nxt_position  # begin segment after content
+
+    def _process_flow_open(self, match_details):
+        match_text, match_type, match_name, match_start, match_end, nxt_position = match_details
+        env = self.environments[match_name]
+        env['text_list_start_pos'] = nxt_position
+        env['type'] = 'flow_box'
+        env['flow_box_name'] = match_name
+
+    def _process_flow_close(self, match_details):
+        match_text, match_type, match_name, match_start, match_end, nxt_position = match_details
+        env = self.environments[match_name]
+        env['text_list_end_pos'] = nxt_position  # begin segment after content
+
+    def _process_environments(self):
+        """Modify/generate html associated with environments and capture any features."""
+        for env_name, env in self.environments.items():
+            env_type = env['type']
+            snip_text_begin = env['text_list_start_pos']
+            snip_text_end = env['text_list_end_pos']
+            if env_type == 'snippet':
+                snip_text = ''.join(self.text_segments[snip_text_begin+1:snip_text_end])
+                self.add_content_feature('snippet', 'snippet', snip_text)
+                # TODO: if snippet is not to be left alone, need to remove intermediate text
+                self.text_segments[snip_text_begin] = ''
+                self.text_segments[snip_text_end] = ''
+            elif env_type == 'flow_box':
+                pass
+            else:
+                raise SystemError(f'Unrecognized Environment Type: {env_type}, named: {env_name}')
+
+    def post_process(self):
+        """Post process resultant HTML (as string) for cleanup and envionment handling.
+
+        Cleanup:
+            (1) Remove '<p></p>' elements.
+        Environments:
+            (1) Find snippet and create feature to be returned.
+            (2) Find flow_boxes and surround with proper div element and class.
+        """
+        self._create_delimited_strings(self.result)
+        self._process_environments()
+        self.result = ''.join(self.text_segments)
 
 
 class FreeElement(ParsedElement):
     """Represents elements containing neither HTML nor Latex structure."""
+
     def __init__(self, item, source_list, parent):
         super().__init__('Free', source_list, parent)
         self.source_item = item
@@ -225,15 +367,15 @@ class FreeElement(ParsedElement):
         parent_type = self.get_parent_type()
         if not renderer:
             if parent_type == 'HTML':
-                return '<scan>' + verify( self.source_item) + '</scan>'
+                return verify(self.source_item)
             elif parent_type == 'Latex':
-                return verify( self.source_item)
+                return verify(self.source_item)
             elif parent_type == 'Top':  # Free standing element not in expression => at start or end
-                return '<scan>' + verify( self.source_item) + '</scan>'
+                return '<span>' + verify(self.source_item) + '</span>'  # Can this span be removed???
             else:
                 raise WordInputError(f'Invalid element type: {parent_type}')
         else:
-            return renderer(verify( self.source_item))
+            return renderer(verify(self.source_item))
 
 
 class LatexElement(ParsedElement):
@@ -344,7 +486,7 @@ class LatexElement(ParsedElement):
         if len(self.args) != 1:
             raise WordLatexExpressionError(f'Latex title called with wrong args: {self.args}')
         arg = self.args[0][0]
-        super().get_top().add_content_feature('title',  arg)
+        super().get_top().add_content_feature('title', 'title', arg)
         res += str(arg)
         res += '</div>'
         return verify(res)
@@ -354,7 +496,7 @@ class LatexElement(ParsedElement):
         if len(self.args) != 1:
             raise WordLatexExpressionError(f'Latex title called with wrong args: {self.args}')
         arg = self.args[0][0]
-        super().get_top().add_content_feature('byline', arg)
+        super().get_top().add_content_feature('byline', 'byline', arg)
         res += str(arg)
         res += '</div>'
         return verify(res)
@@ -374,7 +516,9 @@ class LatexElement(ParsedElement):
         arg = self.args[0][0]
         top_element = super().get_top()
         top_element.open_environment(arg)
-        return ''
+        #  Use comment to support RE finding relevant text in post fixup.
+        res = '<!--[[open_env,' + arg + ' ]]-->'
+        return res
 
     def _latex_end_env(self):
         if len(self.args) != 1:
@@ -382,7 +526,7 @@ class LatexElement(ParsedElement):
         arg = self.args[0][0]
         top_element = super().get_top()
         top_element.close_environment(arg)
-        return ''
+        return '<!--[[close_env,' + arg + ' ]]-->'
 
     def _latex_begin_figure(self):
         if len(self.args) != 1:
@@ -431,6 +575,9 @@ class LatexElement(ParsedElement):
                 photo_tmp = photo_mgr.get_photo_from_slug(tmp)
                 if photo_tmp:
                     photo_id = photo_tmp.id
+                    if not photo_id:
+                        self.top.db_exec.add_error_to_form('Add Photo', f'No such Photo: {tmp}')
+                        raise PhotoOrGalleryMissing(f'Missing photo{tmp}')
             if caption:
                 top_element.current_photo_frame.add_caption(caption)
             top_element.current_photo_frame.add_photo(photo_id)
@@ -515,7 +662,7 @@ class HTMLElement(ParsedElement):
 
         This is an artifact of the HTML element not using a command structure (i.e., element
         tag) like a Latex element. Switching to a full command structure will allow the
-        easy addition of new features (such as finding empty 'scan'  or 'p' elements, adding
+        easy addition of new features (such as finding empty 'span'  or 'p' elements, adding
         css classes, ..."""
         try:
             res = ''
@@ -549,11 +696,11 @@ class WordSourceDocument(object):
 
     """
 
-    def __init__(self, db_exec: DBExec,logger):
+    def __init__(self, db_exec: DBExec, logger):
         self.logger = logger
         self.db_exec = db_exec
         self.docx_source = None
-        self.content_features = None
+        self.content_features = dict()
         self.text_as_substrings = []
         self.html_etree = None
         self.env_blocks = []  # Stack of outstanding environment blocks
@@ -617,6 +764,19 @@ class WordSourceDocument(object):
     def get_content_features(self):
         return self.content_features
 
+    def get_specific_content_feature(self, feature_name):
+        if feature_name in self.content_features:
+            return self.content_features[feature_name]
+        else:
+            return None
+
+    def get_content_feature_value(self, feature, feature_name):
+        if feature in self.content_features and feature_name in self.content_features[feature]:
+            return self.content_features[feature][feature_name]
+        else:
+            return None
+
+
     def _create_delimited_strings(self, txt):
         """Convert html/latex source to strings delimited by open/close latex/html and text.
 
@@ -668,7 +828,9 @@ class WordSourceDocument(object):
                     foo = 3
             te = TopElement(txt_strings, self.db_exec)
             te.parse()
-            res = te.render()
+            te.render()
+            te.post_process()
+            res = te.get_result()
             verify(res)
             self.content_features = te.get_content_features()
             return res
@@ -687,4 +849,3 @@ class WordSourceDocument(object):
             self.db_exec.add_error_to_form('Parse_text', 'Error in WordSourceDocument.build_html_output_tree')
             self.db_exec.add_error_to_form('Parse_text', f'{e.args}')
             raise e
-

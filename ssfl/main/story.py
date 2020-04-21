@@ -111,9 +111,9 @@ class Story(object):
 
         if False:                       # TODO: REMOVEQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ
             self.pb.update_cached_page()
-        title, tab_title, story = self.pb.get_title_body()
-        self.story['title'] = title
-        self.story['tab_title'] = tab_title
+        story = self.pb.get_story_body()
+        self.story['title'], author, snippet = self.pb.get_title_author_snippet()
+        self.story['tab_title'] = self.story['title']
         self.story['read_more'] = self._create_read_more()      # TODO: Not incorporated properly
         try:
             body = lxml.html.tostring(story, method='html').decode('utf-8')

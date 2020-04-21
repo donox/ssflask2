@@ -1,6 +1,7 @@
 from config import Config
 import os, sys
 from jinja2 import Environment, PackageLoader, select_autoescape
+from typing import List
 
 
 def get_temp_file_name(temp_type, extension):
@@ -47,3 +48,17 @@ def run_jinja_template(template, context):
     except Exception as e:
         print(e.args)
         raise e
+
+
+def factor_string(in_str: str, pos_list: List[int]) -> List[str]:
+    """Factor input string into list of strings broken at points specified in a list of integers."""
+    try:
+        res = list()
+        n = 0
+        for m in pos_list:
+            res.append(in_str[n:m])
+            n = m
+        res.append(in_str[m:])
+        return res
+    except Exception as e:
+        raise ValueError(f'Error factoring string beginning: {in_str[:20]}')
