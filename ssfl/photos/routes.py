@@ -8,6 +8,7 @@ from .forms.manage_photos_form import ManagePhotosForm
 from .manage_photo_metadata import manage_photo_metadata
 from .upload_photos import upload_photo_file
 from ssfl.admin.routes import build_route
+from ssfl import sst_syslog
 
 # Set up a Blueprint
 photo_bp = Blueprint('photo_bp', __name__,
@@ -64,6 +65,7 @@ def upload_photos():
             if not gallery:
                 abort(400)
             file = request.files['file']
+            sst_syslog.make_info_entry(f'Upload Photo Route: get file: {file}')
             res = upload_photo_file(db_exec, gallery, file)
             if res:
                 return render_template_string('<h4>Success</h4>')
