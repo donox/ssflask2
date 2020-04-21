@@ -33,6 +33,7 @@ def upload_photo_file(db_exec, gallery, file):
      Processor: photo/upload_photos.py
     """
     try:
+        sst_syslog.make_info_entry(f'upload_photo_file: Starting')
         photo_mgr = db_exec.create_sst_photo_manager()
         filename = secure_filename(file.filename)
         # TODO: This config location needs to be moved under static when working properly.

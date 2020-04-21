@@ -99,7 +99,7 @@ def get_events():
 
 @admin_bp.route('/getimage/<path:image_path>', methods=['GET'])
 def get_image(image_path):
-    sst_admin_access_log.make_info_entry(f"Route: /admin/get_image/{image_path}")
+    # sst_admin_access_log.make_info_entry(f"Route: /admin/get_image/{image_path}")
     db_exec = DBExec()
     try:
         path = Config.USER_DIRECTORY_IMAGES + image_path
