@@ -1,4 +1,4 @@
-import os
+from ssfl import sst_syslog
 import json
 from werkzeug.utils import secure_filename
 from db_mgt.page_tables import Page, PageManager
@@ -37,13 +37,17 @@ def upload_photo_file(db_exec, gallery, file):
         filename = secure_filename(file.filename)
         # TODO: This config location needs to be moved under static when working properly.
         photo_folder = Config.UPLOADED_PHOTOS_DEST
+        sst_syslog.make_info_entry(f'upload_photo_file: photo_exists')
         photo_mgr.ensure_folder_exists(gallery)
+        # sst_syslog.make_info_entry(f'upload_photo_file: photo_exists {gallery}')
         filepath = photo_folder + gallery + '/' + filename
         file.save(filepath)
+        sst_syslog.make_info_entry(f'upload_photo_file: file saved - path: {filepath}')
 
-        exif = PhotoExif(db_exec, 0, filepath=filepath)
-        tags = exif.get_tags()
-        dict_to_toml_file(tags, '/home/don/devel/exif.toml')
+        # exif = PhotoExif(db_exec, 0, filepath=filepath)
+        # tags = exif.get_tags()
+        # dict_to_toml_file(tags, '/home/don/devel/exif.toml')
+
         #
         # imag = PIL.Image.open(filepath)
         # for segment, content in imag.applist:
@@ -60,4 +64,5 @@ def upload_photo_file(db_exec, gallery, file):
         return True
     except Exception as e:
         # TODO: handle error/log, and return useful message to user
+        sst_syslog.make_error_entry(f'upload_photo_file. Error: {e.args[0]}, {e.args[1]}')
         return False
