@@ -25,7 +25,7 @@ meta_to_exif = dict()
 for key, val in exif_to_meta.items():
     meta_to_exif[val] = key
 
-def upload_photo_file(db_exec, gallery, file):
+def upload_photo_file(db_exec, folder, file):
     """Upload a photo and save in the gallery."""
     """
      Route: 'photo/upload_photos' => upload_photos
@@ -36,12 +36,11 @@ def upload_photo_file(db_exec, gallery, file):
         sst_syslog.make_info_entry(f'upload_photo_file: Starting')
         photo_mgr = db_exec.create_sst_photo_manager()
         filename = secure_filename(file.filename)
-        # TODO: This config location needs to be moved under static when working properly.
-        photo_folder = Config.UPLOADED_PHOTOS_DEST
+        photo_folder = Config.USER_DIRECTORY_IMAGES
         sst_syslog.make_info_entry(f'upload_photo_file: photo_exists')
-        photo_mgr.ensure_folder_exists(gallery)
+        photo_mgr.ensure_folder_exists(folder)
         # sst_syslog.make_info_entry(f'upload_photo_file: photo_exists {gallery}')
-        filepath = photo_folder + gallery + '/' + filename
+        filepath = photo_folder + folder + '/' + filename
         file.save(filepath)
         sst_syslog.make_info_entry(f'upload_photo_file: file saved - path: {filepath}')
 
@@ -58,9 +57,9 @@ def upload_photo_file(db_exec, gallery, file):
         metadata = photo_mgr.get_empty_json()
         metadata_str = json.dumps(metadata)
 
-        photo = photo_mgr.get_photo_if_exists(gallery, filename)
+        photo = photo_mgr.get_photo_if_exists(folder, filename)
         if not photo:
-            photo = SSTPhoto(file_name=filename, folder_name=gallery, json_metadata=metadata_str)
+            photo = SSTPhoto(file_name=filename, folder_name=folder, json_metadata=metadata_str)
             photo.add_to_db(db_exec, commit=True)
         return True
     except Exception as e:
