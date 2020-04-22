@@ -31,12 +31,11 @@ class SSTPhotoManager(BaseTableManager):
         super().__init__(db_session)
         self.get_photo_field_value = self.get_table_value('sst_photos')
 
-    def ensure_folder_exists(self, folder: str) -> None:
+    def ensure_folder_exists(self, directory: str) -> None:
         """Create a folder in the PHOTO directory if it does not already exist."""
         try:
             foo = TestPADB()  # Remove???  ###########
             foo.test_connection()  # Ditto
-            directory = Config.UPLOADED_PHOTOS_DEST + folder
             if os.path.exists(directory):
                 return
             else:

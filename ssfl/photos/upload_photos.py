@@ -36,11 +36,11 @@ def upload_photo_file(db_exec, folder, file):
         sst_syslog.make_info_entry(f'upload_photo_file: Starting')
         photo_mgr = db_exec.create_sst_photo_manager()
         filename = secure_filename(file.filename)
-        photo_folder = Config.USER_DIRECTORY_IMAGES
+        photo_folder = Config.USER_DIRECTORY_IMAGES + folder
         sst_syslog.make_info_entry(f'upload_photo_file: photo_exists')
-        photo_mgr.ensure_folder_exists(folder)
+        photo_mgr.ensure_folder_exists(photo_folder)
         # sst_syslog.make_info_entry(f'upload_photo_file: photo_exists {gallery}')
-        filepath = photo_folder + folder + '/' + filename
+        filepath = photo_folder + '/' + filename
         file.save(filepath)
         sst_syslog.make_info_entry(f'upload_photo_file: file saved - path: {filepath}')
 
