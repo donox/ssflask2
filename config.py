@@ -15,6 +15,7 @@ class Config:
     SESSION_TYPE = 'sqlalchemy'
     SESSION_PERMANENT = False
     LOG_DIRECTORY = os.environ.get('LOG_DIRECTORY')
+    SYSTEM_HOST = os.environ.get('SYSTEM_HOST')
 
     # Database
     SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI')

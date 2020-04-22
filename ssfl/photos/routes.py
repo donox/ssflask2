@@ -56,31 +56,24 @@ def upload_photos():
 
     sst_admin_access_log.make_info_entry(f"Route: /photos/upload_photos")
     db_exec = DBExec()
-    with open(Config.LOG_DIRECTORY + 'extra_log', 'w+') as log:
-        try:
-            if request.method == 'GET':
-                context = dict()
-                context['form'] = ManagePhotosForm()
-                return render_template('photos/upload_photos.jinja2', **context)
-            elif request.method == 'POST':
-                log.write(f'Start Post Request\n')
-                log.flush()
-                gallery = request.form['gallery']
-                if not gallery:
-                    abort(400)
-                file = request.files['file']
-                sst_syslog.make_info_entry(f'Upload Photo Route: get file: {file}')       # ##############################
-                log.write(f'Upload Photo Route: get file: {file}\n')
-                log.flush()
-                res = upload_photo_file(db_exec, gallery, file)
-                if res:
-                    return render_template_string('<h4>Success</h4>')
-                else:
-                    abort(400)
-        except Exception as e:
-            log.write(f'Exception: {e.args[0]}, {e.args[1]}\n')
-            log.flush()
-            raise e
-        finally:
-            db_exec.terminate()
-            log.close()
+    try:
+        if request.method == 'GET':
+            context = dict()
+            context['form'] = ManagePhotosForm()
+            context['host'] = Config.SYSTEM_HOST
+            return render_template('photos/upload_photos.jinja2', **context)
+        elif request.method == 'POST':
+            gallery = request.form['gallery']
+            if not gallery:
+                abort(400)
+            file = request.files['file']
+            res = upload_photo_file(db_exec, gallery, file)
+            if res:
+                return render_template_string('<h4>Success</h4>')
+            else:
+                abort(400)
+    except Exception as e:
+        sst_admin_access_log.make_error_entry(f'Exception: {e.args[0]}, {e.args[1]}\n')
+        raise e
+    finally:
+        db_exec.terminate()

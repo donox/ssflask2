@@ -49,13 +49,14 @@
             </div>
         </div>
         </div>
-
-        <script>
+        <script type="text/javascript">
+        var $SCRIPT_ROOT = "{{ host }}" + "{{ url_for('photo_bp.upload_photos') }}";
         $ = jQuery;
         $(document).ready(function(){
             Dropzone.options.ourdropzone = {
 
               // Prevents Dropzone from uploading dropped files immediately
+
               autoProcessQueue: true,
               uploadMultiple: false,
               acceptedFiles: '.jpg, .jpeg, .toml',
@@ -89,7 +90,7 @@
                     });
                 });
             }};
-            $("#ourdropzone").dropzone({url: "http://localhost:5000/photos/upload_photos"});
+            $("#ourdropzone").dropzone({url: $SCRIPT_ROOT  });
 
         });
         //# sourceURL=upload_photos.js
