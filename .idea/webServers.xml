@@ -3,11 +3,10 @@
   <component name="WebServers">
     <option name="servers">
       <webServer id="81357de9-550d-4ce7-af9d-bce86c5b6a23" name="doxley@ssh.pythonanywhere.com" url="http://ssh.pythonanywhere.com">
-        <fileTransfer host="ssh.pythonanywhere.com" port="22" accessType="SFTP">
+        <fileTransfer accessType="SFTP" sshConfigId="fc377869-84b9-4a3d-9f9f-dc48b32516f2" sshConfig="doxley@ssh.pythonanywhere.com">
           <advancedOptions>
             <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
           </advancedOptions>
-          <option name="port" value="22" />
         </fileTransfer>
       </webServer>
     </option>
