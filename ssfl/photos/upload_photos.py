@@ -25,6 +25,17 @@ meta_to_exif = dict()
 for key, val in exif_to_meta.items():
     meta_to_exif[val] = key
 
+def make_slug(folder: str, file_name: str) -> str:
+    """Make slug by combining folder/file names with hyphes, LC."""
+    file_name = file_name.replace('-',' ').replace('_',' ')
+    file_name = file_name.split('.')
+    file_name = file_name[0]
+    folder = folder.replace('-',' ').replace('_',' ')
+    fn = folder + ' ' + file_name
+    fn = fn.split(' ')
+    slug = '-'.join(fn).lower()
+    return slug
+
 def upload_photo_file(db_exec, folder, file):
     """Upload a photo and save in the gallery."""
     """
@@ -58,8 +69,9 @@ def upload_photo_file(db_exec, folder, file):
         metadata_str = json.dumps(metadata)
 
         photo = photo_mgr.get_photo_if_exists(folder, filename)
+        slug = make_slug(folder, filename)
         if not photo:
-            photo = SSTPhoto(file_name=filename, folder_name=folder, json_metadata=metadata_str)
+            photo = SSTPhoto(file_name=filename, folder_name=folder, json_metadata=metadata_str, slug=slug)
             photo.add_to_db(db_exec, commit=True)
         return True
     except Exception as e:
