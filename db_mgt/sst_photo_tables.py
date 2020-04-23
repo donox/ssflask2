@@ -11,7 +11,7 @@ from sqlalchemy import UnicodeText, text
 
 from config import Config
 from ssfl import db
-from utilities.miscellaneous import run_jinja_template
+from utilities.miscellaneous import run_jinja_template, make_db_search_string
 from utilities.sst_exceptions import PhotoHandlingError
 from utilities.sst_exceptions import PhotoOrGalleryMissing
 from .base_table_manager import BaseTableManager
@@ -50,6 +50,19 @@ class SSTPhotoManager(BaseTableManager):
         try:
             photo = self.db_session.query(SSTPhoto).filter(SSTPhoto.folder_name == folder).filter(
                 SSTPhoto.file_name == filename).first()
+            if photo:
+                return photo
+            else:
+                return False
+        except Exception as e:
+            print(f'Failure going to database: {sys.exc_info()}')  # Remove
+            sys.stdout.flush()  # Remove ########################################
+            raise e
+
+    def get_photo_by_id_if_exists(self, photo_id):
+        """Get photo from folder, filename or return False"""
+        try:
+            photo = self.db_session.query(SSTPhoto).filter(SSTPhoto.id == photo_id).first()
             if photo:
                 return photo
             else:
@@ -227,6 +240,33 @@ class SSTPhotoManager(BaseTableManager):
             return None
         else:
             return target_id[0]
+
+    def get_recent_photos(self, nbr_to_get):
+        sql = f'select id from sst_photos order by image_date desc limit {nbr_to_get};'
+        res = self.db_session.execute(sql)
+        photos = []
+        for ndx in res:
+            new_photo = self.get_photo_by_id_if_exists(ndx[0])
+            photos.append(new_photo)
+        return photos
+
+    def get_records_by_field_search(self, field, folder_search, search_string, nbr_to_get):
+        search = make_db_search_string(search_string.lower())
+        find_folder = make_db_search_string(folder_search.lower())
+        sql = f'select id from sst_photos where '
+        if search_string:
+            sql += f'{field} like lower("{search}") '
+        if search_string and folder_search:
+            sql += f'and '
+        if folder_search:
+            sql += f'folder_name like lower("{find_folder}") '
+        sql += f'order by image_date desc limit {nbr_to_get}'
+        res = self.db_session.execute(sql)
+        photos = []
+        for ndx in res:
+            new_photo = self.get_photo_by_id_if_exists(ndx[0])
+            photos.append(new_photo)
+        return photos
 
 
 class SlideShow(object):

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<!--
+     Route: '/admin/manage_page_data' => manage_page_data
+     Template: db_manage_pages.jinja2
+     Form: manage_page_data_form.py
+     Processor: manage_page_data.py
+-->
+{% extends 'base/layout.jinja2' %}
+
+{% block content %}
+    <section class="container">
+        <div class="XXX">
+            {% if function == 'mpd_recent' %}
+                <h3 class="h3">Recent Pages</h3>
+            {% endif %}
+            {% if function == 'mpd_search' %}
+                <h3 class="h3">Recent Pages in "{{ search_field }}" Searched with "{{ search_string }}"</h3>
+            {% endif %}
+            {% if function == 'mpd_recent' or function == 'mpd_search' %}
+                <table class="table table-bordered table-sm">
+                    <thead class="thead-dark">
+                    {% for field in fields %}
+                        <th>{{ field }}</th>
+                    {% endfor %}
+                    </thead>
+                    <tbody>
+                    {% for field in values %}
+                        <tr>
+                            <td>{{ field.id }}</td>
+                            <td>{{ field.page_title }}</td>
+                            <td>{{ field.page_name }}</td>
+                            <td>{{ field.page_author }}</td>
+                            <td>{{ field.page_date }}</td>
+                        </tr>
+                    {% endfor %}</tbody>
+                </table>
+            {% endif %}
+            {% if function == 'mpd_photo' %}
+                <h3 class="h3">Recent Photos in folder: "{{ folder_search }}", Field: "{{ search_field }}", with:
+                    "{{ search_string }}"</h3>
+                <table class="table table-bordered table-sm">
+                    <thead class="thead-dark">
+                    {% for field in fields %}
+                        <th>{{ field }}</th>
+                    {% endfor %}
+                    </thead>
+                    <tbody>
+                    {% for field in values %}
+                        <tr>
+                            <td>{{ field.id }}</td>
+                            <td>{{ field.slug }}</td>
+                            <td>{{ field.file_name }}</td>
+                            <td>{{ field.folder_name }}</td>
+                            <td>{{ field.caption }}</td>
+                            <td>{{ field.image_date }}</td>
+                        </tr>
+                    {% endfor %}</tbody>
+                </table>
+            {% endif %}
+        </div>
+
+        <script>
+            $ = jQuery;
+            $('#js1').change(function () {
+                $('.dpdb').parent().hide();
+                $('.dp').parent().hide();
+                $('.df').parent().hide();
+                let opt = $('#js1 option:selected').val();
+                $('.' + opt).parent().show();
+            });
+            //# sourceURL=json_make_template.js
+
+
+        </script>
+    </section>
+{% endblock %}

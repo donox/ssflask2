@@ -21,6 +21,7 @@ from .edit_json_file import edit_json_file
 from .forms.db_json_manage_templates_form import DBJSONManageTemplatesForm
 from .forms.edit_db_content_form import DBContentEditForm
 from .forms.edit_db_json_content_form import DBJSONEditForm
+from.forms.manage_page_data_form import DBManagePages
 from .forms.import_database_functions_form import ImportDatabaseFunctionsForm
 from .forms.import_word_doc_form import ImportMSWordDocForm
 from .forms.manage_calendar_form import ManageCalendarForm
@@ -28,11 +29,13 @@ from .forms.manage_index_pages_form import ManageIndexPagesForm
 from .forms.manage_photo_functions_form import DBPhotoManageForm
 from .forms.miscellaneous_functions_form import MiscellaneousFunctionsForm
 from .manage_events.event_retrieval_support import SelectedEvents
+from .get_database_data import db_manage_pages
 from .manage_events.manage_calendar import manage_calendar
 from .manage_index_pages import DBManageIndexPages
 from .manage_json_templates import manage_json_templates
 from .manage_photo_functions import manage_photo_functions
 from .miscellaneous_functions import miscellaneous_functions
+
 
 # Set up a Blueprint
 admin_bp = Blueprint('admin_bp', __name__,
@@ -56,6 +59,14 @@ def run_ace():
     sst_admin_access_log.make_info_entry(f"Route: /admin/run_ace")
     context = dict()
     return render_template('/admin/run_ace.jinja2', **context)
+
+
+@admin_bp.route('/run_js_test', methods=['GET'])
+@login_required
+def run_js_test():
+    sst_admin_access_log.make_info_entry(f"Route: /admin/run_js_test")
+    context = dict()
+    return render_template('/admin/run_js_test.jinja2', **context)
 
 
 # These functions are not directly called by the user but support calls from the client
@@ -389,6 +400,60 @@ def manage_photos():
      Processor: manage_photo_functions.py
     """
     return build_route('admin/manage_photos.jinja2', DBPhotoManageForm(), manage_photo_functions, '/manage_photos')()
+
+
+@admin_bp.route('/admin/manage_page_data', methods=['GET', 'POST'])
+@login_required
+def manage_page_data():
+    """
+    Route: '/admin/get_database_data' => get_database_data
+    Template: db_manage_pages.jinja2
+    Form: get_database_data_form.py
+    Processor: manage_page_data_form.py
+    """
+    route_name = 'admin/manage_page_data'
+    processing_form = DBManagePages()
+    template = 'admin/db_manage_pages.jinja2'
+    processing_function = db_manage_pages
+
+    db_exec = DBExec()
+    sst_admin_access_log.make_info_entry(f"Route: {route_name}")
+    try:
+        if request.method == 'GET':
+            context = dict()
+            context['form'] = processing_form
+            result = ('GET', 'succeed', template, context)
+        elif request.method == 'POST':
+            context = dict()
+            context['form'] = processing_form
+            result = ('POST', 'fail', template, context)  # In case of execption in validation
+            if processing_form.validate_on_submit(db_exec):
+                result = processing_function(db_exec, processing_form)
+                if type(result) is Response or type(result) is str:
+                    # This allows the response to be created in the support code - such as send_file.
+                    pass
+                elif result:
+                    result = ('POST', 'succeed', template, context)
+                else:
+                    result = ('POST', 'fail', template, context)
+            else:
+                result = ('POST', 'fail', template, context)
+        else:
+            raise RequestInvalidMethodError('System Error: Invalid method type: {}'.format(request.method))
+    finally:
+        if type(result) == Response or type(result) is str:
+            pass  # Actual result generally from lower code such as making a send-file
+        elif result[0] == 'GET' or processing_form.errors:
+            flash_errors(processing_form)
+            result = render_template(result[2], **result[3])
+        elif result[1] == 'fail' and not processing_form.errors:
+            flash('Failed - no message given', 'error')
+            result = render_template(result[2], **result[3])
+        else:
+            flash('Successful', 'success')
+            result = render_template(result[2], **result[3])
+        db_exec.terminate()
+        return result
 
 
 def build_route(template, processing_form, processing_function, route_name):

@@ -1,14 +1,36 @@
 from config import Config
-import os, sys
+import os
+import sys
+import re
 from jinja2 import Environment, PackageLoader, select_autoescape
 from typing import List
 
 
-def get_temp_file_name(temp_type, extension):
-    """Create name for new temp file, deleting file with that name if necessary.
+def extract_fields_to_dict(data_object, field_list):
+    """Make dictionary of selected fields from an object (e.g., page, photo, ...)."""
+    res = dict()
+    for field in field_list:
+        res[field] = getattr(data_object, field, 'NA')
+    return res
 
-    Temporary files are maintained on a rotating basis and reused.  This seems to
-        avoid problems managing the closing and deleting of temporary files."""
+
+def make_re_from_string(in_string: str):
+    """Make re that finds content from string with wildcards."""
+    parts = in_string.split('*')
+    regex = r''
+    for part in parts:
+        regex += '.*' + part
+    regex = re.compile(regex[2:])
+    return regex
+
+def make_db_search_string(in_string: str):
+    """Make re that finds content from string with wildcards."""
+    parts = in_string.split('*')
+    search_string = r''
+    for part in parts:
+        search_string += '%' + part
+    search_string += '%'
+    return search_string
 
 
 def get_temp_file_name(temp_type, extension):

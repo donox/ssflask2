@@ -4,6 +4,7 @@ from sqlalchemy.orm import defer
 from .json_tables import JSONStorageManager as jsm
 from .base_table_manager import BaseTableManager
 from utilities.sst_exceptions import SiteIdentifierError, SiteObjectNotFoundError
+from utilities.miscellaneous import make_db_search_string
 
 
 class PageManager(BaseTableManager):
@@ -79,6 +80,25 @@ class PageManager(BaseTableManager):
         else:
             page.add_to_db(self.db_session, commit=True)
 
+    def get_recent_pages(self, nbr_to_get):
+        sql = f'select id from page order by page_date desc limit {nbr_to_get};'
+        res = self.db_session.execute(sql)
+        pages = []
+        for ndx in res:
+            new_page = self.get_page_if_exists(ndx[0], None)
+            pages.append(new_page)
+        return pages
+
+    def get_records_by_field_search(self, field, search_string, nbr_to_get):
+        search = make_db_search_string(search_string)
+        sql = f'select id from page where {field} like "{search}" collate utf8_general_ci '
+        sql += f'order by page_date desc limit {nbr_to_get}'
+        res = self.db_session.execute(sql)
+        pages = []
+        for ndx in res:
+            new_page = self.get_page_if_exists(ndx[0], None)
+            pages.append(new_page)
+        return pages
 
 class Page(db.Model):
     __tablename__ = 'page'
