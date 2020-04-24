@@ -10,6 +10,11 @@ module.exports = {
     output: {
         filename: 'packed.js',
         path: dir_path + '/gen',
+        publicPath: "/static/",
+        chunkFilename: "[id]-[chunkhash].js"
+    },
+    devServer: {
+        writeToDisk: true,
     },
     resolve: {
         extensions: ['.js', '.jsx', '.css'],

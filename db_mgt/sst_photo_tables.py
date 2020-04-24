@@ -189,7 +189,11 @@ class SSTPhotoManager(BaseTableManager):
         try:
             photo = self.get_photo_from_id(photo_id)
             if photo:
-                return photo.folder_name + photo.file_name
+                if photo.folder_name.endswith('/'):
+                    return photo.folder_name + photo.file_name
+                else:
+                    # This should not be necessary, but we may be inconsistent.
+                    return photo.folder_name + '/' + photo.file_name
             else:
                 return None
         except Exception as e:
@@ -363,8 +367,10 @@ class Picture(object):
             file_name = db_photo.file_name
             self.picture_desc['alt_text'] = db_photo.alt_text
             self.picture_desc['caption'] = db_photo.caption
-
-            relative_path = '/static/gallery/' + folder + file_name
+            if folder.endswith('/'):
+                relative_path = '/static/gallery/' + folder + file_name
+            else:
+                relative_path = '/static/gallery/' + folder + '/' + file_name
             self.picture_desc['url'] = relative_path
         else:
             raise PhotoOrGalleryMissing(f'Photo {photo_id} does not exist in database.')

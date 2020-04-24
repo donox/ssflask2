@@ -69,20 +69,6 @@ def run_js_test():
     return render_template('/admin/run_js_test.jinja2', **context)
 
 
-# These functions are not directly called by the user but support calls from the client
-# that were initiated from another route.
-@admin_bp.route('/downloads/<string:file_path>', methods=['GET'])
-@login_required
-def get_downloadXX(file_path):
-    sst_admin_access_log.make_info_entry(f"Route: /admin/get_download/{file_path}")
-    path = Config.USER_DIRECTORY_BASE + file_path
-    if os.path.exists(path):
-        with open(path, 'r') as fl:
-            return send_file(fl, mimetype='application/octet')
-    else:
-        abort(404)
-
-
 @admin_bp.route('/admin/events', methods=['GET'])
 @login_required
 def get_events():
@@ -181,12 +167,14 @@ def sst_admin_calendarX():
      Processor: manage_calendar.py
     """
     sst_admin_access_log.make_info_entry(f"Route: /admin/sst_admin_calendar")
+    form = ManageCalendarForm()
+    db_exec = DBExec()
+    db_exec.set_current_form(form)
     if request.method == 'GET':
         context = dict()
-        context['form'] = ManageCalendarForm()
+        context['form'] = form
         return render_template('admin/calendar.jinja2', **context)
     elif request.method == 'POST':
-        form = ManageCalendarForm()
         context = dict()
         context['form'] = form
         if form.validate_on_submit():
@@ -220,14 +208,15 @@ def sst_miscellaneous():
      Processor: miscellaneous_functions.py
     """
     sst_admin_access_log.make_info_entry(f"Route: /admin/translate_to_html")
+    form = MiscellaneousFunctionsForm()
     db_exec = DBExec()
+    db_exec.set_current_form(form)
     try:
         if request.method == 'GET':
             context = dict()
-            context['form'] = MiscellaneousFunctionsForm()
+            context['form'] = form
             return render_template('admin/miscellaneous_functions.jinja2', **context)
         elif request.method == 'POST':
-            form = MiscellaneousFunctionsForm()
             context = dict()
             context['form'] = form
             if form.validate_on_submit():
@@ -323,6 +312,7 @@ def up_down_load_json_template():
     sst_admin_access_log.make_info_entry(f"Route: /admin/json/")
     form = DBJSONEditForm()
     db_exec = DBExec()
+    db_exec.set_current_form(form)
     try:
         if request.method == 'GET':
             context = dict()
@@ -417,7 +407,7 @@ def manage_page_data():
     processing_function = db_manage_pages
 
     db_exec = DBExec()
-
+    db_exec.set_current_form(processing_form)
     sst_admin_access_log.make_info_entry(f"Route: {route_name}")
     try:
         if request.method == 'GET':
