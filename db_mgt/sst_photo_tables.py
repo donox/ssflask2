@@ -107,7 +107,16 @@ class SSTPhotoManager(BaseTableManager):
 
     def get_photo_from_slug(self, slug):
         sql = f'select * from sst_photos where slug="{slug}"'
-        return self._get_photo(sql)
+        photo = self._get_photo(sql)
+        if photo.id:
+            return photo
+        # Attempt again trying for the most recent photo with slug as a substring.
+        sql = f'select * from sst_photos where slug like"%{slug}%" order by image_date desc limit 1;'
+        photo = self._get_photo(sql)
+        if photo.id:
+            return photo
+        else:
+            return None
 
     def get_photo_from_id(self, photo_id):
         sql = f'select * from sst_photos where id={photo_id};'

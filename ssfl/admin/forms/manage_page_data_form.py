@@ -26,7 +26,7 @@ class DBManagePages(FlaskForm):
     search_string = StringField('Search String', validators=[Optional()],
                                 render_kw={"class": "mpd_search mpd_photo",
                                            "docs": docs['mpd_search']['search_string']})
-    search_field = StringField('Field to Search', validators=[Optional()],
+    search_field = StringField('Field to Search', validators=[DataRequired()],
                                render_kw={"class": "mpd_search mpd_photo", "docs": docs['mpd_search']['search_field']})
     folder_search = StringField('Field to Search', validators=[Optional()],
                                 render_kw={"class": "mpd_photo xxx", "docs": docs['mpd_photo']['folder_search']})

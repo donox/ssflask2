@@ -12,11 +12,11 @@ from ssfl import Base
 # See stackoverflow.com/questions/37239970/connect-to-mysql-server-without-sudo
 def get_engine():
     try:
-        db_name = Config.SQLALCHEMY_DATABASE_NAME
-        # Engine = django.db.backends.mysql
-        # db_name = config['database']['Name']
-        user = Config.SQLALCHEMY_USERNAME
-        password = Config.SQLALCHEMY_PASSWORD
+        # db_name = Config.SQLALCHEMY_DATABASE_NAME
+        # # Engine = django.db.backends.mysql
+        # # db_name = config['database']['Name']
+        # user = Config.SQLALCHEMY_USERNAME
+        # password = Config.SQLALCHEMY_PASSWORD
         login_string = Config.SQLALCHEMY_DATABASE_URI
         engine = create_engine(login_string, echo=False, poolclass=NullPool, pool_recycle=280, pool_pre_ping=True)
         engine.connect()
