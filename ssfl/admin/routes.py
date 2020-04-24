@@ -417,6 +417,7 @@ def manage_page_data():
     processing_function = db_manage_pages
 
     db_exec = DBExec()
+
     sst_admin_access_log.make_info_entry(f"Route: {route_name}")
     try:
         if request.method == 'GET':
@@ -459,6 +460,7 @@ def manage_page_data():
 def build_route(template, processing_form, processing_function, route_name):
     def route():
         db_exec = DBExec()
+        db_exec.set_current_form(processing_form)
         sst_admin_access_log.make_info_entry(f"Route: {route_name}")
         try:
             if request.method == 'GET':

@@ -4,8 +4,6 @@ from .page_tables import PageManager
 from .json_tables import JSONTableManager
 from .event_tables import EventManager
 from ssfl.admin.manage_events.event_operations import CalendarEventManager
-import pymysql
-import sys
 
 
 class DBExec(object):
@@ -43,7 +41,7 @@ class DBExec(object):
             else:
                 self.current_form.errors[error_key] = [error_val]
         else:
-            raise SystemError(f'Attempt to add error to none existent form - {error_key} : {error_val}')
+            raise SystemError(f'Attempt to add error to non-existent form - {error_key} : {error_val}')
 
     def get_db_session(self):
         return self.db_session
