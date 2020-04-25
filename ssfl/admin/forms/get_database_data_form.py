@@ -7,15 +7,15 @@ from config import Config
 from .form_docs.manage_page_data_doc import docs
 
 
-class DBManagePages(FlaskForm):
+class DBGetDatabaseData(FlaskForm):
     """Miscellaneous functions for retrieving and reporting data from the database.
 
     """
     """
      Route: '/admin/manage_page_data' => manage_page_data
-     Template: manage_page_data.jinja2
-     Display:  display_page_data.jinja2
-     Form: manage_page_data_form.py
+     Template: db_get_database_data.jinja2
+     Display:  db_display_database_data.jinja2
+     Form: get_database_data_form.py
      Processor: manage_page_data.py
     """
     supported_functions = [('mpd_recent', 'Show Most Recent Pages'),

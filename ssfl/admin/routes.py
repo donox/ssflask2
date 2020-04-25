@@ -21,13 +21,14 @@ from .edit_json_file import edit_json_file
 from .forms.db_json_manage_templates_form import DBJSONManageTemplatesForm
 from .forms.edit_db_content_form import DBContentEditForm
 from .forms.edit_db_json_content_form import DBJSONEditForm
-from .forms.manage_page_data_form import DBManagePages
+from .forms.get_database_data_form import DBGetDatabaseData
 from import_data.forms.import_database_functions_form import ImportDatabaseFunctionsForm
 from .forms.import_word_doc_form import ImportMSWordDocForm
 from .forms.manage_calendar_form import ManageCalendarForm
 from .forms.manage_index_pages_form import ManageIndexPagesForm
 from .forms.manage_photo_functions_form import DBPhotoManageForm
 from .forms.miscellaneous_functions_form import MiscellaneousFunctionsForm
+from .forms.get_database_data_form import DBGetDatabaseData
 from .manage_events.event_retrieval_support import SelectedEvents
 from .get_database_data import db_manage_pages
 from .manage_events.manage_calendar import manage_calendar
@@ -67,6 +68,23 @@ def run_js_test():
     sst_admin_access_log.make_info_entry(f"Route: /admin/run_js_test")
     context = dict()
     return render_template('/admin/run_js_test.jinja2', **context)
+
+@admin_bp.route('/admin/delete_row', methods=['POST'])
+@login_required
+def delete_row():
+    db_exec = DBExec()
+    context = dict()
+    context['form'] = DBGetDatabaseData()
+    sst_admin_access_log.make_info_entry(f"Route: /admin/delete_row")
+    table_type = request.form['table']
+    row_id = request.form['row_id']
+    if table_type == 'page':
+        page_mgr = db_exec.create_page_manager()
+        page_mgr.delete_page(row_id, None)
+    elif table_type == 'photo':
+        photo_mgr = db_exec.create_sst_photo_manager()
+        photo_mgr.delete_photo(row_id)
+    return render_template('admin/db_get_database_data.jinja2', **context)
 
 
 @admin_bp.route('/admin/events', methods=['GET'])
@@ -368,26 +386,25 @@ def manage_photos():
 def manage_page_data():
     """
     Route: '/admin/get_database_data' => get_database_data
-    Template: db_manage_pages.jinja2
+    Template: db_get_database_data.jinja2
+    Display:  db_display_database_data.jinja2
     Form: get_database_data_form.py
-    Processor: manage_page_data_form.py
+    Processor: get_database_data_form.py
     """
-    return build_route('admin/db_manage_pages.jinja2', DBManagePages(), db_manage_pages, '/admin/get_database_data')()
+    return build_route('admin/db_get_database_data.jinja2', DBGetDatabaseData(), db_manage_pages, '/admin/get_database_data')()
 
 
 def build_route(template, processing_form, processing_function, route_name):
     def route():
         db_exec = DBExec()
         db_exec.set_current_form(processing_form)
+        context = dict()
+        context['form'] = processing_form
         sst_admin_access_log.make_info_entry(f"Route: {route_name}")
         try:
             if request.method == 'GET':
-                context = dict()
-                context['form'] = processing_form
                 result = ('GET', 'succeed', template, context)
             elif request.method == 'POST':
-                context = dict()
-                context['form'] = processing_form
                 result = ('POST', 'fail', template, context)  # In case of execption in validation
                 if processing_form.validate_on_submit(db_exec):
                     result = processing_function(db_exec, processing_form)
