@@ -1,6 +1,7 @@
 from db_mgt.page_tables import Page
 import urllib.parse as uparse
 import unidecode
+from db_mgt.db_exec import DBExec
 
 
 class ImportPageData(object):
@@ -16,8 +17,8 @@ class ImportPageData(object):
     wp = ['ID', 'guid', 'post_title', 'post_author', ('post_date','post_modified'), 'post_content' ]
 
 
-    def __init__(self, db_session):
-        self.db_session = db_session
+    def __init__(self, db_exec: DBExec):
+        self.db_session = db_exec.get_db_session()
         self.wp_post_fields = self.get_table_fields('wp_posts')
         self.page_fields = self.get_table_fields('page')
         self.page_names = set()

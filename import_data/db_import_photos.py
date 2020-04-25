@@ -1,5 +1,3 @@
-from db_mgt.page_tables import Page
-import urllib.parse as uparse
 import unidecode
 from db_mgt.sst_photo_tables import SSTPhotoManager, SSTPhoto
 from db_mgt.db_exec import DBExec
@@ -14,8 +12,8 @@ class ImportPhotoData(object):
     Processor: db_import_pages.py
     """
 
-    def __init__(self, db_session):     # TODO:  MODIFY TO USE DBEXEC
-        self.db_session = db_session
+    def __init__(self, db_exec: DBExec):
+        self.db_session = db_exec.get_db_session()
         self.db_exec = DBExec()
         self.wp_gallery_fields = self.get_table_fields('wp_ngg_gallery')
         self.wp_picture_fields = self.get_table_fields('wp_ngg_pictures')

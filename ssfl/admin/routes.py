@@ -3,7 +3,7 @@ import sys
 
 import dateutil.parser
 from flask import Blueprint, render_template, url_for, request, send_file, \
-    abort, jsonify, redirect, flash, Response
+    abort, jsonify, flash, Response
 from flask import current_app as app
 from flask_login import login_required
 
@@ -21,8 +21,8 @@ from .edit_json_file import edit_json_file
 from .forms.db_json_manage_templates_form import DBJSONManageTemplatesForm
 from .forms.edit_db_content_form import DBContentEditForm
 from .forms.edit_db_json_content_form import DBJSONEditForm
-from.forms.manage_page_data_form import DBManagePages
-from .forms.import_database_functions_form import ImportDatabaseFunctionsForm
+from .forms.manage_page_data_form import DBManagePages
+from import_data.forms.import_database_functions_form import ImportDatabaseFunctionsForm
 from .forms.import_word_doc_form import ImportMSWordDocForm
 from .forms.manage_calendar_form import ManageCalendarForm
 from .forms.manage_index_pages_form import ManageIndexPagesForm
@@ -35,7 +35,7 @@ from .manage_index_pages import DBManageIndexPages
 from .manage_json_templates import manage_json_templates
 from .manage_photo_functions import manage_photo_functions
 from .miscellaneous_functions import miscellaneous_functions
-
+from import_data.db_process_imports import db_process_imports
 
 # Set up a Blueprint
 admin_bp = Blueprint('admin_bp', __name__,
@@ -104,7 +104,6 @@ def get_image(image_path):
             return Response(open(path, 'rb'), direct_passthrough=True)
         else:
             return abort(404, f'File: {image_path} does not exist.')
-
     finally:
         db_exec.terminate()
 
@@ -341,43 +340,15 @@ def up_down_load_json_template():
 @admin_bp.route('/admin/sst_import_database', methods=['GET', 'POST'])
 @login_required
 def sst_import_database():
-    """Translate file to HTML and store in database."""
+    """Functions to import data from wp db to flask db.."""
     """
      Route: '/admin/sst_import_database' => db_import_pages
      Template: import_database_functions.jinja2
      Form: import_database_functions_form.py
      Processor: db_import_pages.py
     """
-    sst_admin_access_log.make_info_entry(f"Route: /admin/sst_import_database")
-    if request.method == 'GET':
-        context = dict()
-        context['form'] = ImportDatabaseFunctionsForm()
-        return render_template('admin/import_database_functions.jinja2', **context)
-    elif request.method == 'POST':
-        form = ImportDatabaseFunctionsForm()
-        context = dict()
-        context['form'] = form
-        if form.validate_on_submit():
-            db_session = create_session(get_engine())
-            function = form.work_function.data
-            if function == 'imp_pages':
-                mgr = ImportPageData(db_session)
-                mgr.import_useable_pages_from_wp_database()
-                close_session(db_session)
-                flash('You were successful', 'success')
-                return render_template('admin/import_database_functions.jinja2', **context)  # redirect to success url
-            elif function == 'import_photos':
-                mgr = ImportPhotoData(db_session)
-                mgr.import_all_galleries()
-                mgr.import_all_photos()
-                close_session(db_session)
-                flash('You were successful', 'success')
-                return render_template('admin/import_database_functions.jinja2', **context)  # redirect to success url
-
-        flash_errors(form)
-        return render_template('admin/import_database_functions.jinja2', **context)
-    else:
-        raise RequestInvalidMethodError('Invalid method type: {}'.format(request.method))
+    return build_route('admin/import_database_functions.jinja2', ImportDatabaseFunctionsForm(), db_process_imports,
+                       'admin/sst_import_database')()
 
 
 @admin_bp.route('/manage_photos', methods=['GET', 'POST'])
@@ -401,50 +372,7 @@ def manage_page_data():
     Form: get_database_data_form.py
     Processor: manage_page_data_form.py
     """
-    route_name = 'admin/manage_page_data'
-    processing_form = DBManagePages()
-    template = 'admin/db_manage_pages.jinja2'
-    processing_function = db_manage_pages
-
-    db_exec = DBExec()
-    db_exec.set_current_form(processing_form)
-    sst_admin_access_log.make_info_entry(f"Route: {route_name}")
-    try:
-        if request.method == 'GET':
-            context = dict()
-            context['form'] = processing_form
-            result = ('GET', 'succeed', template, context)
-        elif request.method == 'POST':
-            context = dict()
-            context['form'] = processing_form
-            result = ('POST', 'fail', template, context)  # In case of execption in validation
-            if processing_form.validate_on_submit(db_exec):
-                result = processing_function(db_exec, processing_form)
-                if type(result) is Response or type(result) is str:
-                    # This allows the response to be created in the support code - such as send_file.
-                    pass
-                elif result:
-                    result = ('POST', 'succeed', template, context)
-                else:
-                    result = ('POST', 'fail', template, context)
-            else:
-                result = ('POST', 'fail', template, context)
-        else:
-            raise RequestInvalidMethodError('System Error: Invalid method type: {}'.format(request.method))
-    finally:
-        if type(result) == Response or type(result) is str:
-            pass  # Actual result generally from lower code such as making a send-file
-        elif result[0] == 'GET' or processing_form.errors:
-            flash_errors(processing_form)
-            result = render_template(result[2], **result[3])
-        elif result[1] == 'fail' and not processing_form.errors:
-            flash('Failed - no message given', 'error')
-            result = render_template(result[2], **result[3])
-        else:
-            flash('Successful', 'success')
-            result = render_template(result[2], **result[3])
-        db_exec.terminate()
-        return result
+    return build_route('admin/db_manage_pages.jinja2', DBManagePages(), db_manage_pages, '/admin/get_database_data')()
 
 
 def build_route(template, processing_form, processing_function, route_name):
@@ -460,10 +388,10 @@ def build_route(template, processing_form, processing_function, route_name):
             elif request.method == 'POST':
                 context = dict()
                 context['form'] = processing_form
-                result = ('POST', 'fail', template, context)        # In case of execption in validation
+                result = ('POST', 'fail', template, context)  # In case of execption in validation
                 if processing_form.validate_on_submit(db_exec):
                     result = processing_function(db_exec, processing_form)
-                    if type(result) is Response:
+                    if type(result) is Response or type(result) is str:
                         # This allows the response to be created in the support code - such as send_file.
                         pass
                     elif result:
@@ -475,7 +403,7 @@ def build_route(template, processing_form, processing_function, route_name):
             else:
                 raise RequestInvalidMethodError('System Error: Invalid method type: {}'.format(request.method))
         finally:
-            if type(result) == Response:
+            if type(result) == Response or type(result) is str:
                 pass  # Actual result generally from lower code such as making a send-file
             elif result[0] == 'GET' or processing_form.errors:
                 flash_errors(processing_form)
