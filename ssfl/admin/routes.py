@@ -53,6 +53,12 @@ def flash_errors(form):
             else:
                 flash(u"%s error: %s" % (field, error), 'error')
 
+@admin_bp.route('/test', methods=['GET'])
+@login_required
+def test():
+    sst_admin_access_log.make_info_entry(f"Route: /admin/run_ace")
+
+    return app.send_static_file('dist/index.html')
 
 @admin_bp.route('/run_ace', methods=['GET'])
 @login_required
