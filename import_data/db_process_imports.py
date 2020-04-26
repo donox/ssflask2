@@ -5,6 +5,7 @@ from utilities.miscellaneous import get_temp_file_name
 import csv
 from .db_import_pages import ImportPageData
 from .db_import_photos import ImportPhotoData
+from .db_import_users import ImportUserData
 from flask import render_template
 
 
@@ -22,7 +23,7 @@ def db_process_imports(db_exec, form):
 
     try:
         page_mgr = db_exec.create_page_manager()
-        if function == 'imp_pages':
+        if function == 'import_pages':
             page_importer = ImportPageData(db_exec)
             page_importer.import_useable_pages_from_wp_database()
             return True
@@ -30,6 +31,10 @@ def db_process_imports(db_exec, form):
             mgr = ImportPhotoData(db_exec)
             mgr.import_all_galleries()
             mgr.import_all_photos()
+            return True
+        elif function == 'import_users':
+            mgr = ImportUserData(db_exec)
+            mgr.import_users()
             return True
         else:
             return False

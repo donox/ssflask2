@@ -1,6 +1,27 @@
+from .base_table_manager import BaseTableManager
+from utilities.sst_exceptions import SiteIdentifierError, SiteObjectNotFoundError
+from utilities.miscellaneous import make_db_search_string
 from flask_user import UserMixin
 from ssfl import db
 import datetime
+
+
+class UserManager(BaseTableManager):
+    def __init__(self, db_session):
+        super().__init__(db_session)
+
+    def get_user_id_from_email(self, email_address):
+        sql = f'select id from users where email="{email_address}"; '
+        res = self.db_session.execute(sql).fetchone()
+        if res:
+            return res[0]
+        else:
+            return None
+
+    def delete_user_by_id(self, uid):
+        sql = f'delete from users where id={uid};'
+        res = self.db_session.execute(sql)
+
 
 
 class User(db.Model, UserMixin):
@@ -17,6 +38,16 @@ class User(db.Model, UserMixin):
     active = db.Column(db.Boolean, default=False)
     email_confirmed_at = db.Column(db.DateTime, index=False, unique=False, nullable=True, default='2000-01-01')
     roles = db.relationship('Role', secondary='user_roles', backref=db.backref('user', lazy='dynamic'))
+
+    def add_to_db(self, session, commit=False):
+        session.add(self)
+        if commit:
+            try:
+                session.commit()
+            except Exception as e:
+                foo = 3
+                raise e
+        return self
 
 
 class Role(db.Model):
