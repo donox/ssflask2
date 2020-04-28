@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template_string, render_template, request, current_app, redirect
+from flask import Blueprint, render_template_string, render_template, request, current_app, redirect, url_for
 from flask_login import login_required
 from flask_user import roles_required
 from flask_user.user_manager__utils import current_user
@@ -13,7 +13,8 @@ login_bp = Blueprint('login_bp', __name__,
 @login_bp.route('/', methods=['GET', 'POST'])
 def home_page():
     um = current_app.user_manager
-    um.login_view()
+    res = um.login_view()
+    return res
 
 
 @login_bp.route('/logout', methods=['GET', 'POST'])
@@ -21,10 +22,8 @@ def logout():
     um = current_app.user_manager
     login_form = um.LoginFormClass(request.form)
     um.logout_view()
-    template_filename = um.USER_LOGIN_AUTH0_TEMPLATE if um.USER_ENABLE_AUTH0 else um.USER_LOGIN_TEMPLATE
-    return render_template(template_filename,
-                           form=login_form,
-                           login_form=login_form)
+    return redirect(url_for('login_bp.home_page'), code=302)
+
 
 
 # The Admin page requires an 'Admin' role.
