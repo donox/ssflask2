@@ -162,7 +162,7 @@ class TopElement(ParsedElement):
         self.db_exec = db_exec
         self.environments = dict()
         self.environment_stack = list()  # Environments that control interpretation set/cleared by latex expressions
-        self.text_segments = None       # result of parse breaking input text into segments broken at environment bounds
+        self.text_segments = None  # result of parse breaking input text into segments broken at environment bounds
         self.dupe_para_segments = []
         self.photo_mgr = db_exec.create_sst_photo_manager()
         self.photo_frames = dict()
@@ -238,7 +238,6 @@ class TopElement(ParsedElement):
             return self.content_features[feature][feature_name]
         else:
             return None
-
 
     def get_result(self):
         return self.result
@@ -330,7 +329,7 @@ class TopElement(ParsedElement):
             snip_text_begin = env['text_list_start_pos']
             snip_text_end = env['text_list_end_pos']
             if env_type == 'snippet':
-                snip_text = ''.join(self.text_segments[snip_text_begin+1:snip_text_end])
+                snip_text = ''.join(self.text_segments[snip_text_begin + 1:snip_text_end])
                 self.add_content_feature('snippet', 'snippet', snip_text)
                 # TODO: if snippet is not to be left alone, need to remove intermediate text
                 self.text_segments[snip_text_begin] = ''
@@ -571,11 +570,11 @@ class LatexElement(ParsedElement):
             else:
                 photo_mgr = self.top.db_exec.create_sst_photo_manager()
                 photo_tmp = photo_mgr.get_photo_from_slug(tmp)
-                if photo_tmp:
+                if photo_tmp and photo_tmp.id:
                     photo_id = photo_tmp.id
-                    if not photo_id:
-                        self.top.db_exec.add_error_to_form('Add Photo', f'No such Photo: {tmp}')
-                        raise PhotoOrGalleryMissing(f'Missing photo{tmp}')
+                else:
+                    self.top.db_exec.add_error_to_form('Add Photo', f'No such Photo: {tmp}')
+                    raise PhotoOrGalleryMissing(f'Missing photo{tmp}')
             if caption:
                 top_element.current_photo_frame.add_caption(caption)
             top_element.current_photo_frame.add_photo(photo_id)
@@ -773,7 +772,6 @@ class WordSourceDocument(object):
             return self.content_features[feature][feature_name]
         else:
             return None
-
 
     def _create_delimited_strings(self, txt):
         """Convert html/latex source to strings delimited by open/close latex/html and text.

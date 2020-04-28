@@ -11,9 +11,9 @@ def db_manage_pages(db_exec: DBExec, form):
     """Place to build support before rebuilding interface."""
     """
      Route: '/admin/manage_page_data' => manage_page_data
-     Template: manage_page_data.jinja2
-     Display:  display_page_data.jinja2
-     Form: manage_page_data_form.py
+     Template: db_get_database_data.jinja2
+     Display:  db_display_database_data.jinja2
+     Form: get_database_data_form.py
      Processor: manage_page_data.py
     """
     function_to_execute = form.work_function.data
@@ -21,9 +21,9 @@ def db_manage_pages(db_exec: DBExec, form):
     search_field = form.search_field.data
     folder_search = form.folder_search.data
     nbr_pages = 10
-    page_fields = ['id', 'page_title', 'page_name', 'page_author', 'page_date']
-    photo_fields = ['id', 'slug', 'file_name', 'folder_name', 'caption', 'image_date']
-    result_template = 'admin/display_page_data.jinja2'
+    page_fields = ['delete', 'id', 'page_title', 'page_name', 'page_author', 'page_date']
+    photo_fields = ['delete', 'id', 'slug', 'file_name', 'folder_name', 'caption', 'image_date']
+    result_template = 'admin/db_display_database_data.jinja2'
 
     try:
         page_mgr = db_exec.create_page_manager()
@@ -32,7 +32,13 @@ def db_manage_pages(db_exec: DBExec, form):
             page_list = page_mgr.get_recent_pages(nbr_pages)
             res = []
             for page in page_list:
-                res.append(extract_fields_to_dict(page, page_fields))
+                field_values = extract_fields_to_dict(page, page_fields)
+                del_button = dict()
+                del_button['action'] = '/admin/delete_row'
+                del_button['table'] = 'page'
+                del_button['row_id'] = page.id
+                field_values['del_button'] = del_button
+                res.append(field_values)
                 context = dict()
                 context['function'] = 'mpd_recent'
                 context['fields'] = page_fields

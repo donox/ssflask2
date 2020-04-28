@@ -16,8 +16,9 @@ class ImportDatabaseFunctionsForm(FlaskForm):
      Form: import_database_functions_form.py
      Processor: db_import_pages.py
     """
-    supported_functions = [('imp_pages', 'Import Pages'),
+    supported_functions = [('import_pages', 'Import Pages'),
                            ('import_photos', 'Import Photo Tables'),
+                           ('import_users', 'Import Users'),
                            ('xx', 'Delete File')]
     work_function = SelectField(label='Select Function',
                                 choices=supported_functions,
@@ -25,16 +26,18 @@ class ImportDatabaseFunctionsForm(FlaskForm):
     page_name = StringField(label='Page Name', validators=[Optional()])
     filename = StringField(label='File Name', validators=[Optional()])
 
-    def validate_on_submit(self):
+    def validate_on_submit(self, db_exec):
         res = super().validate_on_submit()
         if not res:
             return False
-        if self.work_function.data == 'imp_pages':
+        if self.work_function.data == 'import_pages':
             # We don't check database for page
             return True
         elif self.work_function.data == 'import_photos':
             # if self.filename.data == '':
             #     self.errors['page_name'] = ['You must specify the name of the file to be deleted']
+            return True
+        elif self.work_function.data == 'import_users':
             return True
         elif self.work_function.data == 'dp':
             return True

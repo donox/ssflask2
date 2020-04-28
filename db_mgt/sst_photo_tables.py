@@ -72,6 +72,13 @@ class SSTPhotoManager(BaseTableManager):
             sys.stdout.flush()  # Remove ########################################
             raise e
 
+    def delete_photo(self, photo_id):
+        photo = self.get_photo_by_id_if_exists(photo_id)
+        if photo:
+            sql = f'delete from sst_photos where id={photo_id}'
+            self.db_session.execute(sql)
+            self.db_session.commit()
+
     def get_photos_by_time_and_folder(self, folder, early_date, latest_date):
         ed = str(early_date)
         ld = str(latest_date)
