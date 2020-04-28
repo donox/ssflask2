@@ -6,7 +6,7 @@ entry = dict()
 # Fields used in all choices
 docs['mpd_search'] = entry
 x = """The name of the field to search.  This is the actual database name and is one of: page_name, page_title, 
-page_author, page-date.
+page_author, page-date for pages or image_slug, filename, caption or alt_text for photos.
 """
 entry['search_field'] = [x]
 

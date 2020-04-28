@@ -26,7 +26,7 @@ class DBGetDatabaseData(FlaskForm):
     search_string = StringField('Search String', validators=[Optional()],
                                 render_kw={"class": "mpd_search mpd_photo",
                                            "docs": docs['mpd_search']['search_string']})
-    search_field = StringField('Field to Search', validators=[DataRequired()],
+    search_field = StringField('Field to Search', validators=[Optional()],
                                render_kw={"class": "mpd_search mpd_photo", "docs": docs['mpd_search']['search_field']})
     folder_search = StringField('Field to Search', validators=[Optional()],
                                 render_kw={"class": "mpd_photo xxx", "docs": docs['mpd_photo']['folder_search']})
@@ -39,7 +39,12 @@ class DBGetDatabaseData(FlaskForm):
             # We don't check database for page
             return True
         elif self.work_function.data == 'mpd_search':
+            if not self.search_string.data or not self.search_field.data:
+                self.errors['search_string'] = ['Must specify both a search field and search string']
+                return False
             return True
         elif self.work_function.data == 'mpd_photo':
+            if not self.search_string.data and not self.folder_search.data:
+                self.errors['search_string'] = ['Must specify either a string to search on photos or folders.']
             return True
         return False
