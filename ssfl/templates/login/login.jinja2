@@ -1,8 +1,4 @@
-{% extends "layout.html" %}
-
-{% block pagestyles %}
-  <link href="{{ url_for('static', filename='dist/css/account.css') }}" rel="stylesheet" type="text/css">
-{% endblock %}
+{% extends "base/layout.jinja2" %}
 
 {% block content %}
   <div class="formwrapper">
@@ -38,9 +34,6 @@
       <div class="submitbutton">
         <input id="submit" type="submit" value="Submit">
       </div>
-      <div class="loginsignup">
-        <span>Don't have an account? <a href="{{ url_for('auth_bp.signup_page') }}">Sign up.</a></span>
-        </div>
     </form>
   </div>
 {% endblock %}
