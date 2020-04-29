@@ -162,6 +162,7 @@ class TopElement(ParsedElement):
         self.db_exec = db_exec
         self.environments = dict()
         self.environment_stack = list()  # Environments that control interpretation set/cleared by latex expressions
+        self.environment_types = ['snippet', 'flow_box']
         self.text_segments = None  # result of parse breaking input text into segments broken at environment bounds
         self.dupe_para_segments = []
         self.photo_mgr = db_exec.create_sst_photo_manager()
@@ -175,12 +176,39 @@ class TopElement(ParsedElement):
         super().parse()
         return self
 
-    def open_environment(self, env_name):
+    def get_environment_types(self):
+        return self.environment_types
+
+    def open_environment(self, env_type_name: str, env_name: str) -> dict:
+        """Open a new or existing environment.
+
+        An environment is a named dictionary that may be used to provide information or control operation of
+        the system.  Environments may be created during the parsing of a document (or created externally). Any
+        specific environment may not be nested.  A specific type of environment (env name) may occur multiple times
+        that do not overlap. The name of each environment is an entry in the environment with the name '__name__'.
+
+        The system maintains a dictionary of environments each know by an environment type (such as snippet).  For each
+        such type, the system maintains a list of environments of that type.  Each of which has it's own name.
+
+        Args:
+            env_type_name: (str) name of the environment type.
+            env_name: (str) - name of the specific environment
+
+        Returns:
+            (dict) (mutable) dictionary to hold content of the environment.
+        """
         if env_name in self.environment_stack:
             raise WordInputError(f'Environment: {env_name} already open.')
         else:
+            new_env = dict()
+            new_env['__name__'] = env_name
+            new_env['type'] = env_type_name
             self.environment_stack.append(env_name)
-            self.environments[env_name] = dict()
+            if env_type_name in self.environments:
+                self.environments[env_type_name].append(new_env)
+            else:
+                self.environments[env_name] = [new_env]
+            return new_env
 
     def close_environment(self, env_name):
         if self.environment_stack and self.environment_stack[-1] != env_name:
@@ -211,6 +239,12 @@ class TopElement(ParsedElement):
     # while processing a document that may be useful at a higher level such as placing the
     # title in the database.
     # A content feature is itself a dictionary into which values may be accumulated as needed.
+    # Note that the value is a dictionary or list of dictionaries to allow for user defined
+    # items such as an environment that is not a recognized type.  Content feature names are
+    # generally recognizable names so that the system may invoke a dedicated handler, though
+    # unknown names have their own dedicated handler.
+    # Note also that the content feature for 'newform' (Latex expression) has as its value
+    # a list of 'arguments' each of which is itself a list (generally with 1 item).
     def get_content_features(self):
         return self.content_features
 
@@ -255,8 +289,11 @@ class TopElement(ParsedElement):
         free_text = r'(?P<Free>[^@<>{}]+?)'.replace('@', '\a')  # text
         start_env = r'(?P<EOpen><p>\s*?<!--\[\[open_env(,(\w+))*?\s*?]]-->\s*?</p>)'.replace('@', '\a')
         close_env = r'(?P<EClose><p>\s*?<!--\[\[close_env(,(\w+))*?\s*?]]-->\s*?</p>)'.replace('@', '\a')
-        tmp = ''.join(['(', para_dupes, '|', start_env, '|', close_env, '|', html_close, '|', html_self_close,
-                       '|', html_open, '|', free_text, ')'])
+        start_flow = r'(?P<FOpen><p>\s*?<!--\[\[open_flow(,(\w+))*?\s*?]]-->\s*?</p>)'.replace('@', '\a')
+        close_flow = r'(?P<FClose><p>\s*?<!--\[\[close_flow(,(\w+))*?\s*?]]-->\s*?</p>)'.replace('@', '\a')
+        tmp = ''.join(
+            ['(', para_dupes, '|', start_env, '|', close_env, '|', start_flow, '|', close_flow, '|', html_close, '|',
+             html_self_close, '|', html_open, '|', free_text, ')'])
         try:
             txt_parse = re.compile(tmp)
             txt_positions = []
@@ -269,13 +306,19 @@ class TopElement(ParsedElement):
                     match_type = tmp[0]
                     match_start = match.start()
                     match_end = match.end()
-                    # !!! THis construct is to avoid the fact that the matcher is sometimes returning None(s)
+                    # !!! This construct is to avoid the fact that the matcher is sometimes returning None(s)
                     #      where it should be matching.  Regex has been tested with online tester, so more debugging
                     #      needed.  This is a workaround. May still have ',' in match name.
                     match_name = ''
                     if match_type != 'Para':
                         match_name = [x for x in match.groups()[2:] if x][1].replace(',', '')
                     # print(f'{match_type}  value: {match_name} start: {match_start} end: {match_end}')
+
+                    # match_details = match_text, match_type, match_name, match_start, match_end, nxt_position
+                    #     where match_text = entire content of the matched expression
+                    #           match_type in ['EOpen', 'EClose', 'FOpen', 'FClose', 'Para']
+                    #           match_name = name enclosed in braces
+                    #           match_start, match_end = location of matched string in input text
                     match_details = (match.group(0), match_type, match_name, match_start, match_end, nxt_position)
                     if match_type == 'EOpen':
                         self._process_env_open(match_details)
@@ -301,46 +344,53 @@ class TopElement(ParsedElement):
 
     def _process_env_open(self, match_details):
         match_text, match_type, match_name, match_start, match_end, nxt_position = match_details
-        env = self.environments[match_name]
+        env = self.environments[match_name][-1]
         env['text_list_start_pos'] = nxt_position
         env['type'] = match_name
 
     def _process_env_close(self, match_details):
         match_text, match_type, match_name, match_start, match_end, nxt_position = match_details
-        env = self.environments[match_name]
+        env = self.environments[match_name][-1]
         env['text_list_end_pos'] = nxt_position  # begin segment after content
 
     def _process_flow_open(self, match_details):
         match_text, match_type, match_name, match_start, match_end, nxt_position = match_details
-        env = self.environments[match_name]
+        env = self.environments[match_name][-1]
         env['text_list_start_pos'] = nxt_position
         env['type'] = 'flow_box'
         env['flow_box_name'] = match_name
 
     def _process_flow_close(self, match_details):
         match_text, match_type, match_name, match_start, match_end, nxt_position = match_details
-        env = self.environments[match_name]
+        env = self.environments[match_name][-1]
         env['text_list_end_pos'] = nxt_position  # begin segment after content
 
     def _process_environments(self):
         """Modify/generate html associated with environments and capture any features."""
-        for env_name, env in self.environments.items():
-            env_type = env['type']
-            snip_text_begin = env['text_list_start_pos']
-            snip_text_end = env['text_list_end_pos']
-            if env_type == 'snippet':
-                snip_text = ''.join(self.text_segments[snip_text_begin + 1:snip_text_end])
-                self.add_content_feature('snippet', 'snippet', snip_text)
-                # TODO: if snippet is not to be left alone, need to remove intermediate text
-                self.text_segments[snip_text_begin] = ''
-                self.text_segments[snip_text_end] = ''
-            elif env_type == 'flow_box':
-                pass
-            else:
-                raise SystemError(f'Unrecognized Environment Type: {env_type}, named: {env_name}')
+        for env_name, env_list in self.environments.items():
+            for env in env_list:
+                if 'type' in env:
+                    env_type = env['type']
+                    snip_text_begin = env['text_list_start_pos']
+                    snip_text_end = env['text_list_end_pos']
+                    self.text_segments[snip_text_begin] = ''
+                    self.text_segments[snip_text_end] = ''
+                    snip_text = ''.join(self.text_segments[snip_text_begin + 1:snip_text_end])
+                    if env_type == 'snippet':
+                        self.add_content_feature('snippet', 'snippet', snip_text)
+                        # TODO: if snippet is not to be left alone, need to remove intermediate text
+                    elif env_type == 'flow_box':
+                        open_html = f'<container class="container-fluid">'
+                        close_html = f'</container>'
+                        self.text_segments[snip_text_begin] = open_html
+                        self.text_segments[snip_text_end] = close_html
+                    else:
+                        self.add_content_feature(env_type, env_name, snip_text)
+                else:
+                    raise SystemError(f'No Environment Type given for environment named: {env_name}')
 
     def post_process(self):
-        """Post process resultant HTML (as string) for cleanup and envionment handling.
+        """Post process resultant HTML (as string) for cleanup and environment handling.
 
         Cleanup:
             (1) Remove '<p></p>' elements.
@@ -393,6 +443,8 @@ class LatexElement(ParsedElement):
         self.command_processors['byline'] = self._latex_byline
         self.command_processors['begin'] = self._latex_begin_env
         self.command_processors['end'] = self._latex_end_env
+        self.command_processors['flow_box'] = self._latex_begin_flow_box
+        self.command_processors['end_flow_box'] = self._latex_end_flow_box
         self.command_processors['figure'] = self._latex_begin_figure
         self.command_processors['endfigure'] = self._latex_end_figure
         self.command_processors['photoset'] = self._latex_photoset
@@ -405,6 +457,7 @@ class LatexElement(ParsedElement):
         self.command_processors['placefigure'] = self._latex_place_figure
         self.command_processors['photosize'] = self._latex_photo_size
         self.command_processors['size'] = self._latex_photo_size
+        self.command_processors['newform'] = self._latex_newform
 
         self.command_processors['XXX'] = self
 
@@ -512,7 +565,10 @@ class LatexElement(ParsedElement):
             raise WordLatexExpressionError(f'Latex begin environment called with wrong args: {self.args}')
         arg = self.args[0][0]
         top_element = super().get_top()
-        top_element.open_environment(arg)
+        if arg in top_element.get_environment_types():
+            top_element.open_environment(arg, arg)
+        else:
+            top_element.open_environment('user_environment', arg)
         #  Use comment to support RE finding relevant text in post fixup.
         res = '<!--[[open_env,' + arg + ' ]]-->'
         return res
@@ -524,6 +580,27 @@ class LatexElement(ParsedElement):
         top_element = super().get_top()
         top_element.close_environment(arg)
         return '<!--[[close_env,' + arg + ' ]]-->'
+
+    def _latex_begin_flow_box(self):
+        if len(self.args) != 1:
+            raise WordLatexExpressionError(f'Latex flow_box called with wrong args: {self.args}')
+        arg = self.args[0][0]
+        top_element = super().get_top()
+        if arg in top_element.get_environment_types():
+            top_element.open_environment('flow_box', arg)
+        else:
+            top_element.open_environment('flow_box', arg)
+        #  Use comment to support RE finding relevant text in post fixup.
+        res = '<!--[[open_flow,' + arg + ' ]]-->'
+        return res
+
+    def _latex_end_flow_box(self):
+        if len(self.args) != 1:
+            raise WordLatexExpressionError(f'Latex end_flow_box called with wrong args: {self.args}')
+        arg = self.args[0][0]
+        top_element = super().get_top()
+        top_element.close_environment(arg)
+        return '<!--[[close_flow,' + arg + ' ]]-->'
 
     def _latex_begin_figure(self):
         if len(self.args) != 1:
@@ -635,6 +712,13 @@ class LatexElement(ParsedElement):
         arg = self.args[0][0]
         frame = top_element.get_photo_frame(arg)
         return verify(frame.get_html())
+
+    def _latex_newform(self):
+        top_element = super().get_top()
+        if len(self.args):
+            name = self.args[0][0]
+            top_element.add_content_feature('newform', name, self.args[1:])
+        return ''
 
     def _latex_x(self, item, start_end):
         if start_end == 'start':
