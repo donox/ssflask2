@@ -244,7 +244,7 @@ def sst_miscellaneous():
             context['form'] = form
             if form.validate_on_submit():
                 func, res = miscellaneous_functions(db_exec, form)
-                if func in ['dpdb', 'df'] and res:
+                if func in ['dpdb', 'df', 'show_layout'] and res:
                     flash('You were successful', 'success')
                     return render_template('admin/miscellaneous_functions.jinja2', **context)  # redirect to success url
                 else:

@@ -19,51 +19,28 @@
                     {% set el_placeholder="0000" %}
                     {% include 'base/form_entry.jinja2' %}
                 {% endwith %}
-                {#            <div class="input">#}
-                {#                {{ form.work_function.label }}#}
-                {#                {{ form.work_function(placeholder='0000') }}#}
-                {#                {% if form.work_function.errors %}#}
-                {#                <ul class="errors">#}
-                {#                    {% for error in form.work_function.errors %}#}
-                {#                    <li>{{ error }}</li>#}
-                {#                    {% endfor %}#}
-                {#                </ul>#}
-                {#                {% endif %}#}
-                {#            </div>#}
+
                 {% with %}
                     {% set el_name=form.page_name %}
                     {% set el_class="input" %}
                     {% set el_placeholder="Page name (e.g., foo-bar-xx)" %}
                     {% include 'base/form_entry.jinja2' %}
                 {% endwith %}
-                {#            <div class="input">#}
-                {#                {{ form.page_name.label }}#}
-                {#                {{ form.page_name(placeholder='Page name (e.g., foo-bar-xx)') }}#}
-                {#                {% if form.page_name.errors %}#}
-                {#                <ul class="errors">#}
-                {#                    {% for error in form.page_name.errors %}#}
-                {#                    <li>{{ error }}</li>#}
-                {#                    {% endfor %}#}
-                {#                </ul>#}
-                {#                {% endif %}#}
-                {#            </div>#}
+
                 {% with %}
                     {% set el_name=form.filename %}
                     {% set el_class="file" %}
                     {% set el_placeholder="File to be translated" %}
                     {% include 'base/form_entry.jinja2' %}
                 {% endwith %}
-                {#            <div class="file">#}
-                {#                {{ form.filename.label }}#}
-                {#                {{ form.filename(placeholder='File to be translated') }}#}
-                {#                {% if form.filename.errors %}#}
-                {#                <ul class="errors">#}
-                {#                    {% for error in form.filename.errors %}#}
-                {#                    <li>{{ error }}</li>#}
-                {#                    {% endfor %}#}
-                {#                </ul>#}
-                {#                {% endif %}#}
-                {#            </div>#}
+
+                {% with %}
+                    {% set el_name=form.remove_text %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="T/F" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
                 <div class="button">
                     <input id="submit" type="submit" value="Submit">
                 </div>
@@ -85,15 +62,15 @@
 
         </div>
         <script>
-        $ = jQuery;
-        $('#js1').change(function(){
-            $('.dpdb').parent().hide();
-            $('.dp').parent().hide();
-            $('.df').parent().hide();
-            let opt = $('#js1 option:selected').val();
-            $('.' + opt).parent().show();
-        });
-        //# sourceURL=json_make_template.js
+            $ = jQuery;
+            $('#js1').change(function () {
+                $('.dpdb').parent().hide();
+                $('.dp').parent().hide();
+                $('.df').parent().hide();
+                let opt = $('#js1 option:selected').val();
+                $('.' + opt).parent().show();
+            });
+            //# sourceURL=json_make_template.js
 
 
         </script>

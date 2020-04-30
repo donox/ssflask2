@@ -1,11 +1,12 @@
 import os
-
+from db_mgt.db_exec import DBExec
 from db_mgt.page_tables import Page, PageManager
 from utilities.miscellaneous import get_temp_file_name
 import csv
+from lxml import etree, html
+import lxml
 
-
-def miscellaneous_functions(db_exec, form):
+def miscellaneous_functions(db_exec: DBExec, form):
     """Place to build support before rebuilding interface."""
     """
      Route: '/admin/sst_miscellaneous' => miscellaneous_functions
@@ -16,6 +17,7 @@ def miscellaneous_functions(db_exec, form):
     function_to_execute = form.work_function.data
     page_name = form.page_name.data
     filename = form.filename.data
+    remove_text = form.remove_text.data
 
     try:
         page_mgr = db_exec.create_page_manager()
@@ -36,6 +38,34 @@ def miscellaneous_functions(db_exec, form):
                     writer.writerow(vals)
                 outfile.close()
             return function_to_execute, file
+        elif function_to_execute == 'show_layout':
+            try:
+                page = page_mgr.get_page_if_exists(None, page_name)
+                html_txt = page.page_content
+                root = html.fromstring(html_txt)
+                for el in root.iter():
+                    tag = el.tag
+                    attr = ' '.join([x for x in el.classes])
+                    el.classes.add('devStyle')
+                    if remove_text:
+                        el.text = f'{tag} : {attr}'
+                        el.tail = ''
+                res = lxml.html.tostring(root)
+                new_page = Page()
+                new_page.page_title = page.page_title + '-layout'
+                new_page.page_name = page.page_name + ' layout'
+                new_page.page_author = page.page_author
+                new_page.page_date = page.page_date
+                new_page.page_status = 'publish'
+                new_page.page_guid = 'TBD'
+                new_page.page_content = res
+                page_mgr.add_page_to_database(new_page, True)
+                return function_to_execute, True
+                # lxml.html.open_in_browser(root)
+            except Exception as e:
+                foo = 3
+
+
 
 
         else:

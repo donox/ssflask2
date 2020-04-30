@@ -4,6 +4,7 @@ from utilities.sst_exceptions import WordHTMLExpressionError, WordLatexExpressio
     WordRenderingError, WordContentFeature, PhotoOrGalleryMissing
 from utilities.miscellaneous import factor_string
 from db_mgt.db_exec import DBExec
+from .parse_debug import find_string_in_parsed_result as fs
 
 import re
 import mammoth

@@ -154,14 +154,14 @@ class PageBody(object):
 
     @staticmethod
     def _break_text_string(text_string):
-        """Convert text string to list of <p> elements."""
+        """Convert text string to list of <span> elements."""
         ts1 = re.sub('[ \t]+', ' ', text_string)        # Replace tabs
         ts2 = re.sub('\n ', '\n', ts1)                  # Replace space following line feed
         ts3 = re.sub('\n(\n)+', '\n', ts2)              # Replace multiple line feeds with single one
         tsl = ts3.split('\n')                           # Break text into separate lines
         res = []
         for segment in tsl:
-            el = etree.Element(XHTML + 'p', nsmap=NSMAP)
+            el = etree.Element(XHTML + 'span', nsmap=NSMAP)
             el.text = segment
             res.append(el)
         return res

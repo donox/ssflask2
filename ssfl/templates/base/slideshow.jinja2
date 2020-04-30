@@ -1,10 +1,17 @@
-<div>
-    {% if slideshow.title and slideshow.title != 'NO NAME' %}
-        <figcaption class="{{ slideshow.title_class }}">{{ slideshow.title }}</figcaption>
-    {% endif %}
-    <div class="slideshow" interval="{{ slideshow.rotation }}">
-        {% for photo in slideshow.pictures %}
-            {% include 'base/picture.jinja2' %}
-        {% endfor %}
+<container class="devBorder container-fluid">
+    <div class="row">
+        <div class="col">
+            <div class="devBorder2" style="max-width: {{ slideshow.width }}px;
+                    min-height: {{ slideshow.frame_ht }}px">
+                {% if slideshow.title and slideshow.title != 'NO NAME' %}
+                    <figcaption class="{{ slideshow.title_class }}">{{ slideshow.title }}</figcaption>
+                {% endif %}
+                <div class="slideshow" interval="{{ slideshow.rotation }}">
+                    {% for photo in slideshow.pictures %}
+                        {% include 'base/picture.jinja2' %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
     </div>
-</div>
+</container>

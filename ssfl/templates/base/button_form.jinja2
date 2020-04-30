@@ -1,7 +1,7 @@
 
-    <form class="button" method="post" action="{{ button.action }}">
+    <form class="button" method="{{ button.method }}" action="{{ button.action }}">
         <input type="hidden" name="row_id"  value="{{ button.row_id }}">
         <input type="hidden" name="table"  value="{{ button.table }}">
-        <input type="submit" value="Delete">
+        <input type="submit" value="{{ button.function }}">
     </form>
 

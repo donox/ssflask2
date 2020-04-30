@@ -18,12 +18,14 @@ class MiscellaneousFunctionsForm(FlaskForm):
     """
     supported_functions = [('dpdb', 'Delete Page from Database'),
                            ('dp', 'Download Page Directory'),
-                           ('df', 'Delete File')]
+                           ('df', 'Delete File'),
+                           ('show_layout', 'Make Layout Model')]
     work_function = SelectField(label='Select Function',
                                 choices=supported_functions,
                                 render_kw={"id": "js1"})
     page_name = StringField(label='Page Name', validators=[Optional()])
     filename = StringField(label='File Name', validators=[Optional()])
+    remove_text = BooleanField(label='Remove Text for Layout', default=False)
 
     def validate_on_submit(self):
         res = super().validate_on_submit()
@@ -37,5 +39,7 @@ class MiscellaneousFunctionsForm(FlaskForm):
                 self.errors['page_name'] = ['You must specify the name of the file to be deleted']
             return True
         elif self.work_function.data == 'dp':
+            return True
+        elif self.work_function.data == 'show_layout':
             return True
         return False

@@ -348,6 +348,10 @@ class SlideShow(object):
     def get_html(self):
         wt = self.show_desc['width']
         ht = self.show_desc['height']
+        if type(ht) is str:
+            self.show_desc['frame_ht'] = str(int(ht) + 40)
+        else:
+            self.show_desc['frame_ht'] = ht + 40
         for photo in self.show_desc['pictures']:
             photo['width'] = wt
             photo['height'] = ht
