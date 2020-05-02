@@ -28,6 +28,8 @@
                     {% for field in values %}
                         <tr>
                             {% with %}
+                                {% set button=field.view_button %}
+                                <td>{% include 'base/button_form.jinja2' %}</td>
                                 {% set button=field.del_button %}
                                 <td>{% include 'base/button_form.jinja2' %}</td>
                                 <td>{{ field.id }}</td>

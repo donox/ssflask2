@@ -21,7 +21,7 @@ def db_manage_pages(db_exec: DBExec, form):
     search_field = form.search_field.data
     folder_search = form.folder_search.data
     nbr_pages = 10
-    page_fields = ['delete', 'id', 'page_title', 'page_name', 'page_author', 'page_date']
+    page_fields = ['view', 'delete', 'id', 'page_title', 'page_name', 'page_author', 'page_date']
     photo_fields = ['delete', 'id', 'slug', 'file_name', 'folder_name', 'caption', 'image_date']
     result_template = 'admin/db_display_database_data.jinja2'
 
@@ -37,7 +37,16 @@ def db_manage_pages(db_exec: DBExec, form):
                 del_button['action'] = '/admin/delete_row'
                 del_button['table'] = 'page'
                 del_button['row_id'] = page.id
+                del_button['function'] = 'Delete'
+                del_button['method'] = 'POST'
                 field_values['del_button'] = del_button
+                view_button = dict()
+                view_button['action'] = f'/main/page/{page.id}'
+                view_button['table'] = 'page'
+                view_button['row_id'] = page.id
+                view_button['function'] = 'View'
+                view_button['method'] = 'GET'
+                field_values['view_button'] = view_button
                 res.append(field_values)
                 context = dict()
                 context['function'] = 'mpd_recent'
@@ -46,7 +55,7 @@ def db_manage_pages(db_exec: DBExec, form):
             result = render_template(result_template, **context)
             return result
 
-        elif function_to_execute == 'mpd_search':           # Display Recent Pages by Author
+        elif function_to_execute == 'mpd_search':           # Display Recent Pages search by field name, string
             page_list = page_mgr.get_records_by_field_search(search_field, search_string, nbr_pages)
             res = []
             for page in page_list:
@@ -60,7 +69,7 @@ def db_manage_pages(db_exec: DBExec, form):
             result = render_template(result_template, **context)
             return result
 
-        elif function_to_execute == 'mpd_photo':           # Display Recent Pages by Author
+        elif function_to_execute == 'mpd_photo':         # Display Recent Photos with search by field, string or folder
             photo_list = photo_mgr.get_records_by_field_search(search_field, folder_search, search_string, nbr_pages)
             res = []
             for photo in photo_list:

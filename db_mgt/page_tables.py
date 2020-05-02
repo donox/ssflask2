@@ -71,14 +71,18 @@ class PageManager(BaseTableManager):
             # session.commit()
 
     def add_page_to_database(self, page, overwrite):
-        pg = self.get_page_if_exists(None, page.page_name)
-        if pg:
-            if overwrite:
-                self.update_table(page, pg, 'Page')
+        try:
+            pg = self.get_page_if_exists(None, page.page_name)
+            if pg:
+                if overwrite:
+                    self.update_table(page, pg, 'Page')
+                else:
+                    raise ValueError(f'Page {pg.id} already exists')   # Replace with SsT Error
             else:
-                raise ValueError(f'Page {pg.id} already exists')   # Replace with SsT Error
-        else:
-            page.add_to_db(self.db_session, commit=True)
+                page.add_to_db(self.db_session, commit=True)
+        except Exception as e:
+            foo = 3
+            raise e
 
     def get_recent_pages(self, nbr_to_get):
         sql = f'select id from page order by page_date desc limit {nbr_to_get};'

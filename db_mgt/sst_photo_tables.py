@@ -310,15 +310,19 @@ class SlideShow(object):
         self.html = ''
 
     def add_photo(self, photo_id):
-        new_photo = Picture(self.db_exec, photo_id)  # make call as self.photo_manager(photo_id)
-        desc = new_photo.get_picture_descriptor()
-        # When the photo description is encountered, the picture descriptor does not exist.  However, it
-        # will exist before another photo is encountered.  Therefore, we use a caption field on the slideshow
-        # descriptor as a temporary location to pass the caption to the picture.
-        if 'caption' in self.show_desc and self.show_desc['caption']:
-            desc['caption'] = self.show_desc['caption']
-            self.show_desc['caption'] = None
-        self.show_desc['pictures'].append(desc)
+        new_photo = Picture(self.db_exec, photo_id)  # We create a Picture (not get_photo) as that creates the
+                                                     # descriptor for the Picture structure.
+        if new_photo:
+            desc = new_photo.get_picture_descriptor()
+            # When the photo description is encountered, the picture descriptor does not exist.  However, it
+            # will exist before another photo is encountered.  Therefore, we use a caption field on the slideshow
+            # descriptor as a temporary location to pass the caption to the picture.
+            if 'caption' in self.show_desc and self.show_desc['caption']:
+                desc['caption'] = self.show_desc['caption']
+                self.show_desc['caption'] = None
+            self.show_desc['pictures'].append(desc)
+        else:
+            self.db_exec.add_error_to_form('Missing Photo', f'Slideshow is missing photo {photo_id}')
 
     def add_existing_photo(self, photo):
         self.show_desc['pictures'].append(photo.get_picture_descriptor())
@@ -332,6 +336,12 @@ class SlideShow(object):
     def set_position(self, position):
         self.show_desc['position'] = position
 
+    def get_position(self):
+        if 'position' in self.show_desc:
+            return self.show_desc['position']
+        else:
+            return None
+
     def set_rotation(self, rotation):
         self.show_desc['rotation'] = rotation
 
@@ -341,13 +351,21 @@ class SlideShow(object):
         else:
             self.show_desc['height'] = size
 
-    def get_html(self):
+    def get_html(self, float_dir=None):
         wt = self.show_desc['width']
         ht = self.show_desc['height']
+        if type(ht) is str:
+            self.show_desc['frame_ht'] = str(int(ht) + 40)
+        else:
+            self.show_desc['frame_ht'] = ht + 40
         for photo in self.show_desc['pictures']:
             photo['width'] = wt
             photo['height'] = ht
         context = {'slideshow': self.show_desc}
+        if float_dir:
+            context['float_dir'] = f'style="float:{float_dir}"'
+        else:
+            context['float_dir'] = ''
         self.html = render_template('base/slideshow.jinja2', **context)
         return self.html
 
@@ -368,7 +386,7 @@ class Picture(object):
         self.picture_desc['id'] = photo_id
         self.picture_manager = db_exec.create_sst_photo_manager()
         res = self.picture_manager.get_photo_from_id(photo_id)
-        if res:
+        if res and res.id:
             db_photo = res
             folder = db_photo.folder_name
             file_name = db_photo.file_name
@@ -380,7 +398,8 @@ class Picture(object):
                 relative_path = '/static/gallery/' + folder + '/' + file_name
             self.picture_desc['url'] = relative_path
         else:
-            raise PhotoOrGalleryMissing(f'Photo {photo_id} does not exist in database.')
+            self.db_exec.add_error_to_form('Missing Photo', f'Photo {photo_id} does not exist.')
+            return None
 
     def get_picture_location(self):
         return self.picture_desc['url']

@@ -124,7 +124,9 @@ class Shortcode(object):
 
     def _process_singlepic(self):
         try:
-            photo_id = int(self.content_dict['id'])
+            photo_id = self.content_dict['id']
+            if type(photo_id) is str:
+                photo_id = int(photo_id)
             photo_id = self.photo_mgr.get_new_photo_id_from_old(photo_id)
             photoframe = SlideShow('NO NAME', self.db_exec)
             photoframe.add_photo(photo_id)

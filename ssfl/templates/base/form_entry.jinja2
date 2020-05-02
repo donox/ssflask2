@@ -5,7 +5,7 @@
                  element placeholder: el_placeholder  (optional)
 -->
 
-<div class="el_class container pt-3 border border-dark w-50" >
+<div class="el_class container pt-3 border border-dark w-50">
     {% if el_name.render_kw['docs'] %}
         {% for comment in el_name.render_kw['docs'] %}
             <p class="font-weight-bolder small">{{ comment }}</p>
