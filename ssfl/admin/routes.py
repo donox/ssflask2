@@ -230,31 +230,33 @@ def sst_miscellaneous():
      Form: manage_photos_form.py
      Processor: miscellaneous_functions.py
     """
-    sst_admin_access_log.make_info_entry(f"Route: /admin/translate_to_html")
-    form = MiscellaneousFunctionsForm()
-    db_exec = DBExec()
-    db_exec.set_current_form(form)
-    try:
-        if request.method == 'GET':
-            context = dict()
-            context['form'] = form
-            return render_template('admin/miscellaneous_functions.jinja2', **context)
-        elif request.method == 'POST':
-            context = dict()
-            context['form'] = form
-            if form.validate_on_submit():
-                func, res = miscellaneous_functions(db_exec, form)
-                if func in ['dpdb', 'df', 'show_layout'] and res:
-                    flash('You were successful', 'success')
-                    return render_template('admin/miscellaneous_functions.jinja2', **context)  # redirect to success url
-                else:
-                    return send_file(res, mimetype="text/csv", as_attachment=True)
-            flash_errors(form)
-            return render_template('admin/miscellaneous_functions.jinja2', **context)
-        else:
-            raise RequestInvalidMethodError('Invalid method type: {}'.format(request.method))
-    finally:
-        db_exec.terminate()
+    return build_route('admin/miscellaneous_functions.jinja2', MiscellaneousFunctionsForm(), miscellaneous_functions,
+                       '/admin/sst_miscellaneous')()
+    # sst_admin_access_log.make_info_entry(f"Route: /admin/translate_to_html")
+    # form = MiscellaneousFunctionsForm()
+    # db_exec = DBExec()
+    # db_exec.set_current_form(form)
+    # try:
+    #     if request.method == 'GET':
+    #         context = dict()
+    #         context['form'] = form
+    #         return render_template('admin/miscellaneous_functions.jinja2', **context)
+    #     elif request.method == 'POST':
+    #         context = dict()
+    #         context['form'] = form
+    #         if form.validate_on_submit():
+    #             func, res = miscellaneous_functions(db_exec, form)
+    #             if func in ['dpdb', 'df', 'show_layout'] and res:
+    #                 flash('You were successful', 'success')
+    #                 return render_template('admin/miscellaneous_functions.jinja2', **context)  # redirect to success url
+    #             else:
+    #                 return send_file(res, mimetype="text/csv", as_attachment=True)
+    #         flash_errors(form)
+    #         return render_template('admin/miscellaneous_functions.jinja2', **context)
+    #     else:
+    #         raise RequestInvalidMethodError('Invalid method type: {}'.format(request.method))
+    # finally:
+    #     db_exec.terminate()
 
 
 @admin_bp.route('/admin/manage_index_page', methods=['GET', 'POST'])

@@ -5,7 +5,7 @@ from utilities.miscellaneous import get_temp_file_name
 import csv
 from lxml import etree, html
 import lxml
-
+from flask import send_file
 def miscellaneous_functions(db_exec: DBExec, form):
     """Place to build support before rebuilding interface."""
     """
@@ -23,11 +23,11 @@ def miscellaneous_functions(db_exec: DBExec, form):
         page_mgr = db_exec.create_page_manager()
         if function_to_execute == 'dpdb':     # 'Delete Page from Database'
             page_mgr.delete_page(None, page_name)
-            return function_to_execute, True
+            return True
         elif function_to_execute == 'df':           # Delete File
             # TODO: Broken - must be in directory relative to static
             os.remove(filename)
-            return function_to_execute, True
+            return True
         elif function_to_execute == 'dp':           # Download a csv file of the Page Table
             file = get_temp_file_name('csv', 'csv')
             with open(file, 'w') as outfile:
@@ -37,7 +37,7 @@ def miscellaneous_functions(db_exec: DBExec, form):
                 for vals in page_mgr.generate_page_records(key_list):
                     writer.writerow(vals)
                 outfile.close()
-            return function_to_execute, file
+                return send_file(file, mimetype="text/csv", as_attachment=True)
         elif function_to_execute == 'show_layout':
             try:
                 page = page_mgr.get_page_if_exists(None, page_name)
@@ -60,19 +60,16 @@ def miscellaneous_functions(db_exec: DBExec, form):
                 new_page.page_guid = 'TBD'
                 new_page.page_content = res
                 page_mgr.add_page_to_database(new_page, True)
-                return function_to_execute, True
+                return True
                 # lxml.html.open_in_browser(root)
             except Exception as e:
-                foo = 3
-
-
-
-
+                form.errors['work_function'] = [f'Unknown exception in miscellaneous_functions: {e.args}']
+                return False
         else:
             form.errors['work_function'] = ['Selected Work Function Not Yet Implemented']
             return False
     except Exception as e:
         # TODO: handle error/log, and return useful message to user
-        form.errors['work_function'] = ['file process_page_masters - Exception occurred processing page']
+        form.errors['work_function'] = ['miscellaneous_functions - Exception occurred processing page']
         form.errors['work_function'] = [e.args]
         return False

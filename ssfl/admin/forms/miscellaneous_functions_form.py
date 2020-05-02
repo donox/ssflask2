@@ -4,6 +4,7 @@ import os
 from utilities.sst_exceptions import DataEditingSystemError
 from flask_wtf import FlaskForm
 from config import Config
+from .form_docs.miscellaneous_functions_doc import docs
 
 
 class MiscellaneousFunctionsForm(FlaskForm):
@@ -20,12 +21,15 @@ class MiscellaneousFunctionsForm(FlaskForm):
                            ('dp', 'Download Page Directory'),
                            ('df', 'Delete File'),
                            ('show_layout', 'Make Layout Model')]
-    work_function = SelectField(label='Select Function',
-                                choices=supported_functions,
-                                render_kw={"id": "js1"})
-    page_name = StringField(label='Page Name', validators=[Optional()])
-    filename = StringField(label='File Name', validators=[Optional()])
-    remove_text = BooleanField(label='Remove Text for Layout', default=False)
+    work_function = SelectField(label='Select Function', choices=supported_functions,
+                                render_kw={"id": "js1", "class": "dpdb dp df show_layout",
+                                           "docs": docs['all']['work_function']})
+    page_name = StringField(label='Page Name', validators=[Optional()],
+                            render_kw={"class": "dpdb dp show_layout", "docs": docs['dp']['page_name']})
+    filename = StringField(label='File Name', validators=[Optional()],
+                           render_kw={"class": "df", "docs": docs['df']['filename']})
+    remove_text = BooleanField(label='Remove Text for Layout', default=False,
+                               render_kw={"class": "show_layout", "docs": docs['show_layout']['remove_text']})
 
     def validate_on_submit(self):
         res = super().validate_on_submit()
