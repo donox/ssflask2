@@ -1,5 +1,6 @@
 
 def find_string_in_parsed_result(top, strng, cur_pos):
+    """Iterate through field parsed result to find location of a string"""
     for n, el in enumerate(top):
         if type(el) is tuple:
             if strng in el[1]:

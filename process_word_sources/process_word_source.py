@@ -1,4 +1,5 @@
 from lxml import etree
+from lxml.html import html5parser as hp
 from xml.etree import ElementTree
 from utilities.sst_exceptions import WordHTMLExpressionError, WordLatexExpressionError, WordInputError, \
     WordRenderingError, WordContentFeature, PhotoOrGalleryMissing
@@ -9,6 +10,9 @@ from .parse_debug import find_string_in_parsed_result as fs
 import re
 import mammoth
 
+XHTML_NAMESPACE = 'http://www.w3.org/1999/xhtml'
+XHTML = "{%s}" % XHTML_NAMESPACE
+NSMAP = {None: XHTML_NAMESPACE}
 
 def verify(string_to_add):
     if string_to_add.find('OCTY') != -1:
@@ -24,8 +28,8 @@ def remove_useless_html(in_source: str) -> str:
     re1 = re.compile(r'<a id="..DdeLink.+?"></a>')
     return re.sub(re1, '', in_source)
 
-
-predefined_environments = ['snippet', 'snippet_only', 'flow_box']
+# TODO: 'snippet_only' not yet implemented
+predefined_environments = ['snippet', 'snippet_only', 'layout']
 
 
 class ParsedElement(object):
@@ -162,8 +166,9 @@ class TopElement(ParsedElement):
     def __init__(self, source_list, db_exec: DBExec):
         self.db_exec = db_exec
         self.environments = dict()
+        self.environments_by_name = dict()  # Environments must have unique names, independent of type.
         self.environment_stack = list()  # Environments that control interpretation set/cleared by latex expressions
-        self.environment_types = ['snippet', 'flow_box']
+        self.environment_types = ['snippet', 'layout']
         self.text_segments = None  # result of parse breaking input text into segments broken at environment bounds
         self.dupe_para_segments = []
         self.photo_mgr = db_exec.create_sst_photo_manager()
@@ -179,6 +184,20 @@ class TopElement(ParsedElement):
 
     def get_environment_types(self):
         return self.environment_types
+
+    def get_type_of_current_environment(self):
+        if self.environment_stack:
+            env_name = self.environment_stack[-1]
+            return self.environments_by_name[env_name]['type']
+        else:
+            return None
+
+    def get_current_environment(self):
+        if self.environment_stack:
+            env_name = self.environment_stack[-1]
+            return self.environments_by_name[env_name]
+        else:
+            return None
 
     def open_environment(self, env_type_name: str, env_name: str) -> dict:
         """Open a new or existing environment.
@@ -198,18 +217,28 @@ class TopElement(ParsedElement):
         Returns:
             (dict) (mutable) dictionary to hold content of the environment.
         """
-        if env_name in self.environment_stack:
-            raise WordInputError(f'Environment: {env_name} already open.')
+        if env_name in self.environment_stack or env_name in self.environments_by_name:
+            raise WordInputError(f'Environment: {env_name} already exists.')
         else:
             new_env = dict()
             new_env['__name__'] = env_name
             new_env['type'] = env_type_name
+            new_env['args'] = []
             self.environment_stack.append(env_name)
+            self.environments_by_name[env_name] = new_env
             if env_type_name in self.environments:
                 self.environments[env_type_name].append(new_env)
             else:
-                self.environments[env_name] = [new_env]
+                self.environments[env_type_name] = [new_env]
             return new_env
+
+    def add_environment_arg(self, env_type, env_name, arg):
+        if env_type not in self.environments:
+            raise WordInputError(f'Environment: {env_type} does not exist.')
+        env_list = self.environments[env_type]
+        for env in env_list:
+            if env_name in env:
+                env['args'].append(arg)
 
     def close_environment(self, env_name):
         if self.environment_stack and self.environment_stack[-1] != env_name:
@@ -290,11 +319,11 @@ class TopElement(ParsedElement):
         free_text = r'(?P<Free>[^@<>{}]+?)'.replace('@', '\a')  # text
         start_env = r'(?P<EOpen><p>\s*?<!--\[\[open_env(,(\w+))*?\s*?]]-->\s*?</p>)'.replace('@', '\a')
         close_env = r'(?P<EClose><p>\s*?<!--\[\[close_env(,(\w+))*?\s*?]]-->\s*?</p>)'.replace('@', '\a')
-        start_flow = r'(?P<FOpen><p>\s*?<!--\[\[open_flow(,(\w+))*?\s*?]]-->\s*?</p>)'.replace('@', '\a')
-        close_flow = r'(?P<FClose><p>\s*?<!--\[\[close_flow(,(\w+))*?\s*?]]-->\s*?</p>)'.replace('@', '\a')
+        start_layout = r'(?P<LOpen><p>\s*?<!--\[\[open_layout(,(\w+))*?\s*?]]-->\s*?</p>)'.replace('@', '\a')
+        close_layout = r'(?P<LClose><p>\s*?<!--\[\[close_layout(,(\w+))*?\s*?]]-->\s*?</p>)'.replace('@', '\a')
         tmp = ''.join(
-            ['(', para_dupes, '|', start_env, '|', close_env, '|', start_flow, '|', close_flow, '|', html_close, '|',
-             html_self_close, '|', html_open, '|', free_text, ')'])
+            ['(', para_dupes, '|', start_env, '|', close_env, '|', start_layout, '|', close_layout, '|',
+             html_close, '|', html_self_close, '|', html_open, '|', free_text, ')'])
         try:
             txt_parse = re.compile(tmp)
             txt_positions = []
@@ -303,7 +332,7 @@ class TopElement(ParsedElement):
                 tmp = [(k, v) for k, v in match.groupdict().items() if v]  # k: group name, v: matched content
                 if tmp:
                     tmp = tmp[0]
-                if tmp[0] in ['EOpen', 'EClose', 'FOpen', 'FClose', 'Para']:
+                if tmp[0] in ['EOpen', 'EClose', 'LOpen', 'LClose', 'Para']:
                     match_type = tmp[0]
                     match_start = match.start()
                     match_end = match.end()
@@ -317,7 +346,7 @@ class TopElement(ParsedElement):
 
                     # match_details = match_text, match_type, match_name, match_start, match_end, nxt_position
                     #     where match_text = entire content of the matched expression
-                    #           match_type in ['EOpen', 'EClose', 'FOpen', 'FClose', 'Para']
+                    #           match_type in ['EOpen', 'EClose', 'LOpen', 'LClose', 'Para']
                     #           match_name = name enclosed in braces
                     #           match_start, match_end = location of matched string in input text
                     match_details = (match.group(0), match_type, match_name, match_start, match_end, nxt_position)
@@ -325,10 +354,10 @@ class TopElement(ParsedElement):
                         self._process_env_open(match_details)
                     elif match_type == 'EClose':
                         self._process_env_close(match_details)
-                    elif match_type == 'FOpen':
-                        self._process_flow_open(match_details)
-                    elif match_type == 'FClose':
-                        self._process_flow_close(match_details)
+                    elif match_type == 'LOpen':
+                        self._process_layout_open(match_details)
+                    elif match_type == 'LClose':
+                        self._process_layout_close(match_details)
                     elif match_type == 'Para':
                         self.dupe_para_segments.append(nxt_position)
                     else:
@@ -345,25 +374,25 @@ class TopElement(ParsedElement):
 
     def _process_env_open(self, match_details):
         match_text, match_type, match_name, match_start, match_end, nxt_position = match_details
-        env = self.environments[match_name][-1]
+        env = self.environments_by_name[match_name]
         env['text_list_start_pos'] = nxt_position
         env['type'] = match_name
 
     def _process_env_close(self, match_details):
         match_text, match_type, match_name, match_start, match_end, nxt_position = match_details
-        env = self.environments[match_name][-1]
+        env = self.environments_by_name[match_name]
         env['text_list_end_pos'] = nxt_position  # begin segment after content
 
-    def _process_flow_open(self, match_details):
+    def _process_layout_open(self, match_details):
         match_text, match_type, match_name, match_start, match_end, nxt_position = match_details
-        env = self.environments[match_name][-1]
+        env = self.environments_by_name[match_name]
         env['text_list_start_pos'] = nxt_position
-        env['type'] = 'flow_box'
-        env['flow_box_name'] = match_name
+        env['type'] = 'layout'
+        env['layout_name'] = match_name
 
-    def _process_flow_close(self, match_details):
+    def _process_layout_close(self, match_details):
         match_text, match_type, match_name, match_start, match_end, nxt_position = match_details
-        env = self.environments[match_name][-1]
+        env = self.environments_by_name[match_name]
         env['text_list_end_pos'] = nxt_position  # begin segment after content
 
     def _process_environments(self):
@@ -380,15 +409,34 @@ class TopElement(ParsedElement):
                     if env_type == 'snippet':
                         self.add_content_feature('snippet', 'snippet', snip_text)
                         # TODO: if snippet is not to be left alone, need to remove intermediate text
-                    elif env_type == 'flow_box':
-                        open_html = f'<container class="container-fluid">'
-                        close_html = f'</container>'
-                        self.text_segments[snip_text_begin] = open_html
-                        self.text_segments[snip_text_end] = close_html
+                    elif env_type == 'layout':
+                        self._process_layout_environment(env, snip_text_begin, snip_text_end)
                     else:
                         self.add_content_feature(env_type, env_name, snip_text)
                 else:
                     raise SystemError(f'No Environment Type given for environment named: {env_name}')
+
+    def _process_layout_environment(self, env, snip_start, snip_stop):
+        # We need to identify the components of the layout and stitch them together properly
+        open_html = f'<container class="container-fluid clearfix">'
+        for arg in env['args']:
+            open_html += f'<p>Layout Argument: {arg}</p>'
+        close_html = f'</container><div class="clearfix"></div>'
+        result_html = ''
+        self.text_segments[snip_start] = open_html
+        self.text_segments[snip_stop] = close_html
+        if snip_stop - snip_start > 2:
+            all = self.text_segments[snip_start+1]
+            for n in  range(snip_start+2, snip_stop):
+                all += self.text_segments[n]
+                self.text_segments[n] = ''
+            self.text_segments[snip_start+1] = all
+        for slideshow in env['figures']:
+            position = slideshow.get_position()
+            result_html += slideshow.get_html(float_dir=position)
+        self.text_segments[snip_start+1] = result_html + self.text_segments[snip_start+1]
+
+
 
     def post_process(self):
         """Post process resultant HTML (as string) for cleanup and environment handling.
@@ -397,7 +445,7 @@ class TopElement(ParsedElement):
             (1) Remove '<p></p>' elements.
         Environments:
             (1) Find snippet and create feature to be returned.
-            (2) Find flow_boxes and surround with proper div element and class.
+            (2) Find layouts and surround with proper div element and class.
         """
         self._create_delimited_strings(self.result)
         self._process_environments()
@@ -444,8 +492,8 @@ class LatexElement(ParsedElement):
         self.command_processors['byline'] = self._latex_byline
         self.command_processors['begin'] = self._latex_begin_env
         self.command_processors['end'] = self._latex_end_env
-        self.command_processors['flow_box'] = self._latex_begin_flow_box
-        self.command_processors['end_flow_box'] = self._latex_end_flow_box
+        self.command_processors['layout'] = self._latex_begin_layout
+        self.command_processors['end_layout'] = self._latex_end_layout
         self.command_processors['figure'] = self._latex_begin_figure
         self.command_processors['endfigure'] = self._latex_end_figure
         self.command_processors['photoset'] = self._latex_photoset
@@ -562,14 +610,19 @@ class LatexElement(ParsedElement):
         return verify(res)
 
     def _latex_begin_env(self):
-        if len(self.args) != 1:
-            raise WordLatexExpressionError(f'Latex begin environment called with wrong args: {self.args}')
-        arg = self.args[0][0]
-        top_element = super().get_top()
-        if arg in top_element.get_environment_types():
-            top_element.open_environment(arg, arg)
-        else:
-            top_element.open_environment('user_environment', arg)
+        # args[0] is env name
+        # args[1:] are arguments to control environment
+        try:
+            arg = self.args[0][0]
+            top_element = super().get_top()
+            if arg in top_element.get_environment_types():
+                top_element.open_environment(arg, arg)
+            else:
+                top_element.open_environment('user_environment', arg)
+            for val in self.args[1:]:
+                top_element.add_environment_arg(arg, arg, val)          # TODO: this is conflating name and type
+        except Exception as e:
+            raise SystemError(f'in _latex_begin_env: {e.args}')
         #  Use comment to support RE finding relevant text in post fixup.
         res = '<!--[[open_env,' + arg + ' ]]-->'
         return res
@@ -582,26 +635,25 @@ class LatexElement(ParsedElement):
         top_element.close_environment(arg)
         return '<!--[[close_env,' + arg + ' ]]-->'
 
-    def _latex_begin_flow_box(self):
-        if len(self.args) != 1:
-            raise WordLatexExpressionError(f'Latex flow_box called with wrong args: {self.args}')
-        arg = self.args[0][0]
+    def _latex_begin_layout(self):
+        # args[0] is layout name
+        # args[1:] are arguments to control environment
         top_element = super().get_top()
-        if arg in top_element.get_environment_types():
-            top_element.open_environment('flow_box', arg)
-        else:
-            top_element.open_environment('flow_box', arg)
+        layout_name = self.args[0][0]
         #  Use comment to support RE finding relevant text in post fixup.
-        res = '<!--[[open_flow,' + arg + ' ]]-->'
+        top_element.open_environment('layout', layout_name)
+        res = '<!--[[open_layout,' + layout_name + ' ]]-->'
+        for val in self.args[1:]:
+            top_element.add_environment_arg('layout', layout_name, val)
         return res
 
-    def _latex_end_flow_box(self):
+    def _latex_end_layout(self):
         if len(self.args) != 1:
-            raise WordLatexExpressionError(f'Latex end_flow_box called with wrong args: {self.args}')
+            raise WordLatexExpressionError(f'Latex end_layout called with wrong args: {self.args}')
         arg = self.args[0][0]
         top_element = super().get_top()
         top_element.close_environment(arg)
-        return '<!--[[close_flow,' + arg + ' ]]-->'
+        return '<!--[[close_layout,' + arg + ' ]]-->'
 
     def _latex_begin_figure(self):
         if len(self.args) != 1:
@@ -707,12 +759,22 @@ class LatexElement(ParsedElement):
         return ''
 
     def _latex_place_figure(self):
+        # if this occurs inside a Layout - then we attach the figure to the layout and let it be expanded
+        # when environments are processed after parsing
         top_element = super().get_top()
-        if len(self.args) != 1:
-            raise WordLatexExpressionError(f'Latex end figure called with wrong args: {self.args}')
         arg = self.args[0][0]
         frame = top_element.get_photo_frame(arg)
-        return verify(frame.get_html())
+        if len(self.args) != 1:
+            raise WordLatexExpressionError(f'Latex end figure called with wrong args: {self.args}')
+        if top_element.get_type_of_current_environment() == 'layout':
+            env = top_element.get_current_environment()
+            if 'figures' in env:
+                env['figures'].append(frame)
+            else:
+                env['figures'] = [frame]
+            return ''
+        else:
+            return verify(frame.get_html())
 
     def _latex_newform(self):
         top_element = super().get_top()
@@ -764,6 +826,8 @@ class HTMLElement(ParsedElement):
                     else:
                         raise WordLatexExpressionError(f'Invalid structure type in Latex node: {el}')
                 else:
+                    if el_structure.element_type == 'Latex' and el_structure.command == 'layout':
+                        foo = 3
                     tmp = el_structure.render()
                     res += tmp
             return verify(res)
@@ -904,9 +968,6 @@ class WordSourceDocument(object):
     def _parse_whole_text(self, txt):
         try:
             txt_strings = self._create_delimited_strings(txt)
-            for n, x in enumerate(txt_strings):
-                if x[0] == 'NewArg':
-                    foo = 3
             te = TopElement(txt_strings, self.db_exec)
             te.parse()
             te.render()

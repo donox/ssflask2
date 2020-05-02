@@ -95,7 +95,7 @@ class PageBody(object):
                 body.append(el)
         # Note this fundamentally depends on side-effects - the parent node has its children modified appropriately
         PageBody._normalize_remove_children_tails(body)
-        PageBody._covert_element_with_text(body)
+        PageBody._convert_element_with_text(body)
         PageBody._break_strings(body)
         # foo = tostring(body, 'utf-8').decode('utf-8').replace('<html:', '<').replace('/html:', '/')
         return body
@@ -108,14 +108,14 @@ class PageBody(object):
         children = [x for x in el.getchildren()]
         new_children_list = []
         for child in children:
-            new_children_list += PageBody._covert_element_with_tail(child)
+            new_children_list += PageBody._convert_element_with_tail(child)
         for x in children:
             el.remove(x)
         for x in new_children_list:
             el.append(x)
 
     @staticmethod
-    def _covert_element_with_tail(el: etree.Element) -> [etree.Element, etree.Element]:
+    def _convert_element_with_tail(el: etree.Element) -> [etree.Element, etree.Element]:
         """Make tail into span node and remove it from element, returning both"""
         enclose_span = etree.Element(XHTML + "span", nsmap=NSMAP)
         enclose_span.text = el.tail
@@ -123,7 +123,7 @@ class PageBody(object):
         return [el, enclose_span]
 
     @staticmethod
-    def _covert_element_with_text(el: etree.Element) -> None:
+    def _convert_element_with_text(el: etree.Element) -> None:
         """Convert an element with text to a child of a span."""
         if not len(el):
             return
@@ -154,7 +154,7 @@ class PageBody(object):
 
     @staticmethod
     def _break_text_string(text_string):
-        """Convert text string to list of <span> elements."""
+        """Convert text string containing new lines to list of <span> elements."""
         ts1 = re.sub('[ \t]+', ' ', text_string)        # Replace tabs
         ts2 = re.sub('\n ', '\n', ts1)                  # Replace space following line feed
         ts3 = re.sub('\n(\n)+', '\n', ts2)              # Replace multiple line feeds with single one
@@ -199,7 +199,6 @@ class PageBody(object):
         if self.body is None:
             return None
         for elem in self.body.iter():
-            el_str = elem.text
             if elem.text:
                 for sc in sc_list:
                     # TODO: change back to finditer

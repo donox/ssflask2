@@ -336,6 +336,12 @@ class SlideShow(object):
     def set_position(self, position):
         self.show_desc['position'] = position
 
+    def get_position(self):
+        if 'position' in self.show_desc:
+            return self.show_desc['position']
+        else:
+            return None
+
     def set_rotation(self, rotation):
         self.show_desc['rotation'] = rotation
 
@@ -345,7 +351,7 @@ class SlideShow(object):
         else:
             self.show_desc['height'] = size
 
-    def get_html(self):
+    def get_html(self, float_dir=None):
         wt = self.show_desc['width']
         ht = self.show_desc['height']
         if type(ht) is str:
@@ -356,6 +362,10 @@ class SlideShow(object):
             photo['width'] = wt
             photo['height'] = ht
         context = {'slideshow': self.show_desc}
+        if float_dir:
+            context['float_dir'] = f'style="float:{float_dir}"'
+        else:
+            context['float_dir'] = ''
         self.html = render_template('base/slideshow.jinja2', **context)
         return self.html
 
