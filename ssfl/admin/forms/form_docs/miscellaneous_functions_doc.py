@@ -39,10 +39,3 @@ HTML element.  This is useful in making the layout clearer in many documents.
 """
 
 
-with open('/home/don/devel/temp/kvd.txt', 'w') as fl:
-    for key, val in docs.items():
-        print(f'Key: {key}')
-        fl.writelines(f'Key: {key}')
-        for key2, val2 in val.items():
-            print(f'    Key: {key2}: {val2}')
-            fl.writelines(f'    Key: {key2}: {val2}')
