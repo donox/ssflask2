@@ -74,15 +74,13 @@
                     </a>
 
                     <div class="navbar-dropdown">
-                        <a class="navbar-item" href="{{ url_for('admin_bp.sst_admin_edit') }}">
-                            Edit DB Page
+                        <a class="navbar-item" href="{{ url_for('admin_bp.make_admin_report') }}">
+                            Report an Issue
                         </a>
                         <a class="navbar-item" href="{{ url_for('admin_bp.sst_admin_calendar') }}">
                             Manage Calendar
                         </a>
-                        <a class="navbar-item" href="{{ url_for('admin_bp.sst_import_page') }}">
-                            Import MS Word Page
-                        </a>
+
                         <a class="navbar-item" href="{{ url_for('admin_bp.sst_miscellaneous') }}">
                             Miscellaneous Functions
                         </a>
@@ -93,11 +91,17 @@
                            href="{{ url_for('main.sst_get_menu_page', page='sunnyside-resident-maps') }}">
                             Maps
                         </a>
+                        <a class="navbar-item" href="{{ url_for('admin_bp.sst_admin_edit') }}">
+                            Edit DB Page
+                        </a>
                         <a class="navbar-item" href="{{ url_for('admin_bp.up_down_load_json_template') }}">
                             Upload/edit JSON
                         </a>
                         <a class="navbar-item" href="{{ url_for('admin_bp.make_story_json_template') }}">
                             Manage JSON templates
+                        </a>
+                        <a class="navbar-item" href="{{ url_for('admin_bp.sst_import_page') }}">
+                            Import MS Word Page
                         </a>
                         <a class="navbar-item" href="{{ url_for('photo_bp.upload_photos') }}">
                             Upload New Photos
@@ -112,9 +116,6 @@
                         <hr class="navbar-divider">
                         <a class="navbar-item" href="{{ url_for('admin_bp.manage_page_data') }}">
                             Review Recent Pages
-                        </a>
-                        <a class="navbar-item">
-                            Report an issue
                         </a>
                     </div>
                 </div>

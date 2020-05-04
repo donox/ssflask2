@@ -4,6 +4,7 @@ from config import Config
 
 
 class TestPADB(object):
+    """Test connectivity to PA database."""
     def __init__(self):
         self.conn = None
 
