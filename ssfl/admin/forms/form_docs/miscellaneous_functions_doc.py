@@ -18,24 +18,23 @@ entry['work_function'] = [x]
 
 # Fields requiring a page slug
 docs['dp'] = entry
-
 x = """The page_name (a.k.a. page_slug) of the page to be deleted or downloaded.  It is an error if the page does
 not exist in the database.
 """
-
-docs['dp'] = entry = dict()
 entry['page_name'] = [x]
 
+
+# Fields requiring a filename
 docs['df'] = entry = dict()
-entry['filename'] = [x]
 x = """Filename.  ***BROKEN - Not used except by Delete File which is not needed at this time.
 """
+entry['filename'] = [x]
 
+
+# Fields supporting layout generation
 docs['show_layout'] = entry = dict()
-entry['remove_text'] = [x]
-
 x = """If selected, document text is removed and replaced with the tag name and attributes from the underlying
 HTML element.  This is useful in making the layout clearer in many documents. 
 """
-
+entry['remove_text'] = [x]
 

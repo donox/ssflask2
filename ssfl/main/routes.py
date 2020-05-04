@@ -68,7 +68,7 @@ def sst_get_specific_test_page(page_ident):
     db_exec = DBExec()
     try:
         new_page = MultiStoryPage(db_exec)
-        new_res = new_page.make_single_page_context(page_ident)    # TODO:  ALLOW PAGE ID
+        new_res = new_page.make_single_page_context(page_ident)
         context = new_res['PAGE']['rows'][0]['ROW']['columns'][0]['cells'][0]
         context['story'] = context['element']
         context['story']['body'] = context['story']['content']

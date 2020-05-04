@@ -1,0 +1,32 @@
+# Completing a Template (You may paste this text at the top of the template if useful)
+#
+#   Template: user_config.toml is used to specify parameters needed by the system.  Edit it by downloading
+#                 modifying it, and replacing the existing copy.  Use commands under admin/manage json templates.
+#
+# (1) Replace instances of '.??.' with values where desired.  Ignore others.
+#	If the replacement is simple text - enclose it in single quote marks (e.g., 'foo-bar'),
+#	if it is numeric, true, false - leave out the quote marks
+#
+# (2) Where an element_type is needed, use one of 'STORY', 'SLIDESHOW', 'CALENDAR_SNIPPET', 'STORY_SNIPPET',
+#	'SLIDESHOW_SNIPPET'  (others may be added...).  Note that 'STORY' includes the snippet, thus there is
+#	no reason to actually use 'STORY_SNIPPET' (it is used internally and may appear in downloaded
+# 	templates).
+#
+# (3) Within the CELL element, set 'is-snippet' to 'true' or 'false' depending on whether the layout is to
+#   display the full version of the element (such as a story) or the abbreviated version (e.g., story snippet).
+#
+# (4) Where an element is required, insert the unique slug for the element.  This is the name used in
+#	the database to locate the element and generally (for a story) corresponds to the last part of 
+#	the slug/url generated in Wordpress.  In places where a name is required, this is the same as element.
+#
+# (5) For [read_more] - ignore it.  The system will complete it.
+#
+# (6) Dates and date/times can be inserted with the format: 1979-05-27 or 1979-05-27T07:32:35 (no quotes).
+#
+# (7) When completed, upload to the system using the Upload TOML command.  When uploading a STORY, use the same
+#	slug as that of the underlying story (this is not checked and may not be absolutely necessary, but 
+#	it should reduce confusion)
+#
+# If useful, add other elements within the template following the name=value syntax already in use. They will
+# 	be ignored by the system, but might be useful for later edits.
+

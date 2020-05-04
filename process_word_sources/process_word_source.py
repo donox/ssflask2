@@ -549,7 +549,7 @@ class LatexElement(ParsedElement):
                 return tmp
             else:
                 el = 'LATEXElement_' + self.command + '>'
-                return '<' + el + ' El:' + el + 'Has: ' + str(len(self.args)) + ' args</' + el
+                return '<' + el + ' El:' + el + 'Has: ' + str(len(self.args)) + ' args</ ' + el
         except Exception as e:
             self.top.db_exec.add_error_to_form('Render_from_Args', f'Exception: {e.args}')
             self.top.db_exec.add_error_to_form('Render_from_Args', f'Command: {self.command}')

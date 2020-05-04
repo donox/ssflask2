@@ -153,6 +153,14 @@ class JSONTableManager(BaseTableManager):
             return None
 
     def get_json_from_name(self, name):
+        """Find template as json from database by name or return None.
+
+        Args:
+            name: Template name
+
+        Returns:  Template as json dict.
+
+        """
         sql = f'select * from json_store where name="{name}"'
         res = self.db_session.execute(sql).first()
         if res:
@@ -169,6 +177,15 @@ class JSONTableManager(BaseTableManager):
         return json_store_obj
 
     def add_json(self, name, content):
+        """Add or update JSON template (as str or JSON) in database.
+
+        Args:
+            name: str name of template
+            content: Content to be added, may be JSON in string form or JSON dict
+
+        Returns:
+
+        """
         exists = self.get_json_from_name(name)
         if type(content) is str:
             json_content = content

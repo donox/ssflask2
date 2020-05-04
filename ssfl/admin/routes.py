@@ -179,40 +179,6 @@ def sst_admin_calendar():
     return build_route('admin/calendar.jinja2', ManageCalendarForm(), manage_calendar, '/admin/calendar')()
 
 
-@admin_bp.route('/admin/calendarX', methods=['GET', 'POST'])
-@login_required
-def sst_admin_calendarX():
-    """Transfer content to-from DB for local editing."""
-    """
-     Route: '/admin/calendar' => manage_calendar
-     Template: calendar.jinja2
-     Form: manage_calendar_form.py
-     Processor: manage_calendar.py
-    """
-    sst_admin_access_log.make_info_entry(f"Route: /admin/sst_admin_calendar")
-    form = ManageCalendarForm()
-    db_exec = DBExec()
-    db_exec.set_current_form(form)
-    if request.method == 'GET':
-        context = dict()
-        context['form'] = form
-        return render_template('admin/calendar.jinja2', **context)
-    elif request.method == 'POST':
-        context = dict()
-        context['form'] = form
-        if form.validate_on_submit():
-            db_session = create_session(get_engine())
-            res = manage_calendar(db_session, form)
-            close_session(db_session)
-            if type(res) != bool:
-                return res
-            if res:
-                return render_template('admin/calendar.jinja2', **context)  # redirect to success url
-        return render_template('admin/calendar.jinja2', **context)
-    else:
-        raise RequestInvalidMethodError('Invalid method type: {}'.format(request.method))
-
-
 ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'docx', 'csv', 'toml'])
 
 
@@ -232,31 +198,6 @@ def sst_miscellaneous():
     """
     return build_route('admin/miscellaneous_functions.jinja2', MiscellaneousFunctionsForm(), miscellaneous_functions,
                        '/admin/sst_miscellaneous')()
-    # sst_admin_access_log.make_info_entry(f"Route: /admin/translate_to_html")
-    # form = MiscellaneousFunctionsForm()
-    # db_exec = DBExec()
-    # db_exec.set_current_form(form)
-    # try:
-    #     if request.method == 'GET':
-    #         context = dict()
-    #         context['form'] = form
-    #         return render_template('admin/miscellaneous_functions.jinja2', **context)
-    #     elif request.method == 'POST':
-    #         context = dict()
-    #         context['form'] = form
-    #         if form.validate_on_submit():
-    #             func, res = miscellaneous_functions(db_exec, form)
-    #             if func in ['dpdb', 'df', 'show_layout'] and res:
-    #                 flash('You were successful', 'success')
-    #                 return render_template('admin/miscellaneous_functions.jinja2', **context)  # redirect to success url
-    #             else:
-    #                 return send_file(res, mimetype="text/csv", as_attachment=True)
-    #         flash_errors(form)
-    #         return render_template('admin/miscellaneous_functions.jinja2', **context)
-    #     else:
-    #         raise RequestInvalidMethodError('Invalid method type: {}'.format(request.method))
-    # finally:
-    #     db_exec.terminate()
 
 
 @admin_bp.route('/admin/manage_index_page', methods=['GET', 'POST'])
