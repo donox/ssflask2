@@ -50,6 +50,7 @@ def edit_json_file(db_exec, form):
                 form.errors['JSON Entry Not Found'] = ['There was no entry with that id/name.']
                 return False
             if json_store_obj.content != '' and json_store_obj.content is not None:
+                # TODO: THIS IS WRITING TO A LOCAL FILE - use save_file
                 with open(direct + '/' + file, 'w') as fl:
                     fl.write(json_store_obj.content)
                     fl.close()

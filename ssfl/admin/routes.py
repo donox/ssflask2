@@ -266,7 +266,7 @@ def make_story_json_template():
                        '/admin/manageTemplate')()
 
 
-@admin_bp.route('/json', methods=['GET', 'POST'])
+@admin_bp.route('/admin/json', methods=['GET', 'POST'])
 @login_required
 def up_down_load_json_template():
     """
@@ -275,6 +275,8 @@ def up_down_load_json_template():
      Form: edit_json_content_form.py
      Processor: edit_json_file.py
     """
+    return build_route('admin/json_edit.jinja2', DBJSONEditForm(), edit_json_file,
+                       '/admin/json')()
     sst_admin_access_log.make_info_entry(f"Route: /admin/json/")
     form = DBJSONEditForm()
     db_exec = DBExec()

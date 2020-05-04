@@ -1,4 +1,4 @@
-
+# Fields to support DBJSONManageTemplatesForm
 docs = dict()
 
 entry = dict()

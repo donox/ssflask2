@@ -3,6 +3,8 @@ from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, Le
 import os
 from utilities.sst_exceptions import DataEditingSystemError
 from flask_wtf import FlaskForm
+from .form_docs.edit_db_json_content_doc import docs
+
 
 # id = db.Column(db.Integer, primary_key=True, autoincrement=True)
 # name = db.Column(db.String(), nullable=False, unique=True)
@@ -26,16 +28,20 @@ class DBJSONEditForm(FlaskForm):
                            ('jreset', 'Reset DB JSON Prototypes'),
                            ]
     work_function = SelectField(label='Select Function',
-                                choices=supported_functions, render_kw={"id": "js1"})
-    json_id = IntegerField('JSON DB ID', validators=[Optional()], render_kw={"class": "jdown jup jcsv"})
-    json_name = StringField('JSON Template Name', validators=[Optional()], render_kw={"class": "jdown jup jcsv"})
+                                choices=supported_functions, render_kw={"id": "js1", "class": "jdown jup jcsv jreset",
+                                                                        "docs": docs['all']})
+    json_id = IntegerField('JSON DB ID', validators=[Optional()],
+                           render_kw={"class": "jdown jup jcsv", "docs": docs['json']['json_id']})
+    json_name = StringField('JSON Template Name', validators=[Optional()],
+                            render_kw={"class": "jdown jup jcsv", "docs": docs['json']['json_name']})
     directory = StringField('Directory', validators=[DataRequired()], default=os.path.abspath(os.getcwd()),
                             render_kw={"class": "jdown jup jcsv"})
-    file_name = StringField('File Name', validators=[DataRequired()], render_kw={"class": "jdown jup jcsv"})
+    file_name = StringField('File Name', validators=[DataRequired()],
+                            render_kw={"class": "jdown jup jcsv", "docs": docs['file']['file_name']})
     file_type = StringField('File Type for Input', default='json', render_kw={"class": "jup jcsv"})
-    is_prototype = BooleanField('Save as a PROTOTYPE?', default=False, render_kw={"class": "jup"})
+    is_prototype = BooleanField('Save as a PROTOTYPE?', default=False, render_kw={"class": "jup", "docs": docs['proto']['is_prototype']})
     compress = BooleanField('Remove excess whitespace and newlines?', default=False,
-                            render_kw={"class": "jup jcsv"})
+                            render_kw={"class": "jup jcsv", "docs": docs['proto']['compress']})
     submit = SubmitField('Submit')
 
     def validate_on_submit(self):
