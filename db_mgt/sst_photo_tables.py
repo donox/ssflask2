@@ -55,8 +55,21 @@ class SSTPhotoManager(BaseTableManager):
             else:
                 return False
         except Exception as e:
-            print(f'Failure going to database: {sys.exc_info()}')  # Remove
-            sys.stdout.flush()  # Remove ########################################
+            # print(f'Failure going to database: {sys.exc_info()}')  # Remove
+            # sys.stdout.flush()  # Remove ########################################
+            raise e
+
+    def get_photo_by_slug_if_exists(self, slug):
+        """Get photo from slug or return False"""
+        try:
+            photo = self.db_session.query(SSTPhoto).filter(SSTPhoto.slug == slug).first()
+            if photo:
+                return photo
+            else:
+                return False
+        except Exception as e:
+            # print(f'Failure going to database: {sys.exc_info()}')  # Remove
+            # sys.stdout.flush()  # Remove ########################################
             raise e
 
     def get_photo_by_id_if_exists(self, photo_id):
@@ -152,9 +165,9 @@ class SSTPhotoManager(BaseTableManager):
             sql += f'WHERE file_name = "{filename}" and folder={folder};'
             photo = SSTPhoto()
             res = self.db_session.execute(sql).first()
-            photo_id, image_slug, file_name, folder, meta_data, image_date = res
+            photo_id, slug, file_name, folder, meta_data, image_date = res
             photo.id = photo_id
-            photo.image_slug = image_slug
+            photo.slug = slug
             photo.file_name = file_name
             photo.folder = folder
             photo.image_date = image_date
@@ -169,7 +182,7 @@ class SSTPhotoManager(BaseTableManager):
         res = []
         for row in sql_res:
             gv = self.get_photo_field_value(row)
-            photo = SSTPhoto(id=gv('id'), image_slug=gv('image_slug'), folder=gv('folder'),
+            photo = SSTPhoto(id=gv('id'), slug=gv('slug'), folder=gv('folder'),
                              file_name=gv('file_name'),
                              image_date=gv('image_date'), meta_data=gv('metadata'))
             res.append(photo)
@@ -439,7 +452,7 @@ class SSTPhoto(db.Model):
 class PhotoMeta(db.Model):
     __tablename__ = 'photo_meta'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    gallery_id = db.Column(db.ForeignKey('photo_gallery.id'), nullable=False)
+    # gallery_id = db.Column(db.ForeignKey('photo_gallery.id'), nullable=False)
     meta_key = db.Column(db.String(128), nullable=False)
     meta_value = db.Column(db.String(), nullable=True)
 

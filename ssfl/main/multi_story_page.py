@@ -5,6 +5,7 @@ from ssfl.main.calendar_snippet import Calendar
 from config import Config
 from json import dumps
 from typing import Dict, AnyStr, Any
+from utilities.sst_exceptions import PhotoOrGalleryMissing
 
 
 class MultiStoryPage(object):
@@ -194,6 +195,11 @@ class MultiStoryPage(object):
         #        loaded from the DB. This is equivalent to creating a Photo object and then calling
         #        the get_json_descriptor on it.
         photo_id = elem['id']
+        if not photo_id:
+            if 'slug' in elem:
+                photo_id = elem['slug']
+            else:
+                raise PhotoOrGalleryMissing(f'Photo missing both id and slug')
         if type(photo_id) is str:
             photo = self.photo_manager.get_photo_from_slug(photo_id)
             photo_id = photo.id
@@ -211,8 +217,11 @@ class MultiStoryPage(object):
         # descriptor_story_snippet_fields = ["id", "title", "name", "author", "date", "snippet",
         # "photo", "story_url", "content", "read_more"]
         width = 3  # TODO: determine correct input
-        id_val = elem['id']
-        page_name = elem['name']
+        id_val = page_name = None
+        if 'id' in elem:
+            id_val = elem['id']
+        if 'name' in elem:
+            page_name = elem['name']
         story = Story(self.db_exec, width)
         if id_val:
             story.create_story_from_db(page_id=id_val)
@@ -321,7 +330,7 @@ class MultiStoryPage(object):
                             styles += f'height:{height}px;'
                     cell['styles'] = styles
                     classes = ""
-                    if 'overflow' in cell:
+                    if 'overflow' in cell:          # overflow causes scrollbars if needed
                         overflow = cell['overflow']
                         if overflow:
                             classes += f' overflow-{overflow} '

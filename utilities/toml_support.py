@@ -14,13 +14,13 @@ def dict_to_toml(pydict: dict) -> dict:
         pydict: Arbitrary Python dictionary
 
     Returns:
-        Python dictionary with None values replaced with '.??.'
+        Python dictionary with None values replaced with '_xxx_'
 
     """
     result = dict()
     for key, value in pydict.items():
         if not value:
-            result[key] = '.??.'
+            result[key] = '_xxx_'
         elif type(value) is dict:
             result[key] = dict_to_toml(value)
         elif type(value) is list:
@@ -40,11 +40,11 @@ def toml_to_dict(toml_dict: dict) -> dict:
         toml_dict: Python dict containing result of toml.load or toml.loads.
 
     Returns:
-        Python dict with instances of '.??. replaced with None.
+        Python dict with instances of '_xxx_' replaced with None.
     """
     result = dict()
     for key, value in toml_dict.items():
-        if value == '.??.':
+        if value == '_xxx_':
             result[key] = None
         elif type(value) is dict:
             result[key] = toml_to_dict(value)

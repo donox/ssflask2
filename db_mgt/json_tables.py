@@ -1,10 +1,13 @@
 from ssfl import db
 import datetime as dt
 import toml
+import copy
 import json as jsn
 from collections import defaultdict
 from .base_table_manager import BaseTableManager
 from sqlalchemy.exc import IntegrityError
+from typing import List, Any, Dict, Text, NoReturn
+from collections import OrderedDict
 
 class JSONTableManager(BaseTableManager):
     def __init__(self, db_session):
@@ -25,6 +28,111 @@ class JSONTableManager(BaseTableManager):
         current_result['columns'].append(col['columns'][0])
         return
 
+    @staticmethod
+    def walk_structure(struct: dict) -> List[Any]:
+        def walker(curr_node, curr_path: list):
+            node_type = type(curr_node)
+            if node_type is str:
+                return
+            elif node_type is list:
+                # Each item in the list has exactly 1 dictionary in it - so we find it and recur on that
+                for node in curr_node:
+                    if type(node) is dict:
+                        curr_path.append(curr_node)
+                        for res in walker(node, curr_path):
+                            yield res
+                        curr_path.pop()
+            elif node_type is dict:
+                is_leaf = True
+                for key, val in curr_node.items():
+                    if type(val) in [dict, list]:
+                        is_leaf = False
+                        break
+                if is_leaf:
+                    curr_path.append(curr_node)
+                    # Found leaf
+                    yield curr_path
+                    curr_path.pop()
+                else:
+                    # Dictionary that contains at least 1 subordinate structure
+                    for key, val in curr_node.items():
+                        if type(val) is not str:
+                            curr_path.append(curr_node)
+                            for res in walker(val, curr_path):
+                                yield res
+                            curr_path.pop()
+        path = list()
+        for res in walker(struct, path):
+            yield res
+
+    def expand_json_descriptor(self, descriptor: dict) -> dict:
+        """Merge descriptor into its parent making fully specified descriptor."""
+        try:
+            parent_slug = None
+            if 'parent' in descriptor:
+                parent_slug = descriptor['parent']
+                del descriptor['parent']
+            elif len(descriptor.keys()) == 1:
+                key = next(iter(descriptor))
+                down_1 = descriptor[key]
+                if 'parent' in down_1:
+                    parent_slug = down_1['parent']
+                    del(down_1['parent'])
+            if not parent_slug:
+                return descriptor
+            parent = self.get_json_from_name(parent_slug)
+            res = self.merge_json_descriptors(descriptor, copy.deepcopy(parent))
+            return res
+        except Exception as e:
+            raise e
+
+    def _find_branch_name(self, json_tree) -> OrderedDict:
+        branch_list = OrderedDict()
+        for branch in JSONTableManager.walk_structure(json_tree):
+            keys = branch[-1].keys()
+            name = None
+            for candidate in ['node_name', 'id', 'slug', 'name']:
+                if candidate in keys:
+                    name = branch[-1][candidate]
+                    branch_list[name] = branch
+                    break
+        if name:
+            return branch_list
+        else:
+            return None
+
+    def _merge_nodes(self, child_dict: dict, parent_dict: dict) -> NoReturn:
+        for key, val in child_dict.items():
+            parent_dict[key] = val
+
+    def merge_json_descriptors(self, child: dict, parent: dict) -> dict:
+        """Merge two compatible JSON descriptors into one.
+        The assumption here is that both descriptors represent JSON or TOML structures, so
+        there are no particularly complex types such as objects, tuples, sets, ...
+
+        The parent descriptor has a key ('descriptor') at top level which identifies the structure in
+        JSONStorageManager it represents.
+        The child descriptor has a key ('parent') at top level which identifies the name of the parent
+        JSON in the database.
+        """
+        try:
+            parent_branches = self._find_branch_name(parent)
+            if not parent_branches:
+                raise ValueError(f'No node name found in parent JSON template')
+            child_branches = self._find_branch_name(child)
+            if not child_branches:
+                raise ValueError(f'No node name found in child JSON template')
+            parent_leaf_names = parent_branches.keys()
+            child_leaf_names = child_branches.keys()
+            for child_leaf in child_leaf_names:
+                if child_leaf in parent_leaf_names:
+                    self._merge_nodes(child_branches[child_leaf], parent_branches[child_leaf])
+                else:
+                    raise NotImplementedError(f'Attempt to add child_leaf {child_leaf} to a parent without such leaf')
+
+        except Exception as e:
+            raise e
+
     def make_json_descriptor(self, descriptor: dict, result_processor: object = None):
         rlt = _KeepResult()
 
@@ -33,7 +141,7 @@ class JSONTableManager(BaseTableManager):
             tmp = get_name_type(descriptor)
             if tmp == 'FUNCTION':
                 function = self.template_functions[descriptor[2:]]
-                result = function()
+                function()
                 raise SystemError('Function call templates not yet implemented')
             elif tmp == 'PREAMBLE':
                 desc = self.get_json_from_name('P_' + descriptor[2:])
@@ -301,6 +409,7 @@ class JSONStorageManager(object):
     # Names are prepended with P_ to indicate a prototype
     # Names are prepended with S_ to indicate that the corresponding DB entry (with a 'P_' substituted
     #      for the 'S_') can be substituted and expanded.
+    # Names prepended with N_ are used as is without further processing.
     # Names that are all cap are assumed to be of type prototype (no user names have all caps)
     # All prototypes are in the form of a list with the first element of the list being the name (remove 'P_' if there)
     #     and the remainder are processed to form a dictionary/context.  This implies that 'str' entries that are not
@@ -323,6 +432,7 @@ class JSONStorageManager(object):
                                    "frame_title": None, "pictures": []}
     descriptor_story_fields = {"STORY": None, "id": None, "title": None, "name": None, "author": None,
                                "date": None, "content": None, "snippet": "S_STORY_SNIPPET"}
+
 
     # Snippets
     descriptor_story_snippet_fields = {"STORY_SNIPPET": None, "id": None, "title": None, "name": None, "author": None,

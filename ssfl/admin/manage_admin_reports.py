@@ -3,7 +3,6 @@ from db_mgt.db_exec import DBExec
 from db_mgt.admin_report_table_manager import AdminReport, AdminReportManager
 import datetime as dt
 from flask_login import current_user
-import app
 from utilities.miscellaneous import get_temp_file_name
 import csv
 from lxml import etree, html
