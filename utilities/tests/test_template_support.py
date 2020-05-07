@@ -1,10 +1,12 @@
 from test_base import BaseTestCase, app
-from db_mgt.db_exec import DBExec
-from utilities.toml_support import dict_to_toml_file, elaborate_toml_dict, toml_to_dict
 import toml
-from utilities.template_support import set_dict
-from db_mgt.json_tables import JSONTableManager
-set_dict(dict_to_toml_file)
+from db_mgt.db_exec import DBExec
+from collections import OrderedDict
+from typing import List, Any, NoReturn
+import copy
+from utilities.template_support import merge_json_descriptors, walk_structure, find_branches, \
+    build_descriptors_from_prototypes
+
 instr = '''[PAGE]
 [[PAGE.rows]]
 
@@ -45,7 +47,7 @@ element = "_xxx_"
 '''
 
 
-class TestJSONExpansion(BaseTestCase):
+class TestTemplateHandling(BaseTestCase):
     def build_tree(self, ii, jj, kk):
         tree = dict()
         tree['PAGE'] = page = dict()
@@ -77,20 +79,19 @@ class TestJSONExpansion(BaseTestCase):
         top_dict['PAGE'][key] = val
 
     def setUp(self):
-        db_exec = DBExec()
-        json_mgr = db_exec.create_json_manager()
+        from db_mgt.json_tables import JSONStorageManager
         try:
             ii = 3
             jj = 3
             kk = 3
             self.node_cnt = 0
             self.parent_dict = self.build_tree(ii, jj, kk)
-            self.parent_dict['descriptor'] = 'P_FRONTPAGE'  # Corresponds to a descriptor in json_tables
+            self.parent_dict['descriptor'] = 'FRONTPAGE'  # Corresponds to a descriptor in json_tables
             self.parent_dict['name'] = 'parent'
             self.parent_dict['PAGE']['node_name'] = 'PAGE'
 
             self.child_dict = self.build_tree(ii, jj, kk)
-            self.child_dict['parent'] = 'P_FRONTPAGE'  # Name of the parent descriptor in Database
+            self.child_dict['parent'] = 'FRONTPAGE'  # Name of the parent descriptor in Database
             self.child_dict['name'] = 'child'
             self.child_dict['PAGE']['node_name'] = 'PAGE'
 
@@ -121,35 +122,24 @@ class TestJSONExpansion(BaseTestCase):
 
         except Exception as e:
             raise e
-        finally:
-            db_exec.terminate()
 
-    def test_expand_json_descriptor(self):
+    def test_tree_walk(self):
+        count = 0
+        for leaf in walk_structure(self.parent_dict):
+            count += 1
+        self.assertEqual(27, count, "Did not get right number of leaves.")
+
+    def test_find_branches(self):
+        res = find_branches(self.parent_dict)
+        self.assertEqual(27, len(res.keys()), "Incorrect number of branches returned")
+
+    def test_merge_templates(self):
+        merge_json_descriptors(self.child_dict, self.parent_dict)
+        one_val = self.parent_dict['PAGE']['ROWS'][0]['COLUMNS'][0]['CELLS'][0]['element']
+        self.assertEqual(one_val, 'testing_story', "Did not get proper result")
+
+    def test_build_descriptors_from_prototypes(self):
         db_exec = DBExec()
         json_mgr = db_exec.create_json_manager()
-        try:
-            res = json_mgr.expand_json_descriptor(self.child_dict)
-        except Exception as e:
-            raise e
-
-    def test_elaborate_toml_dict(self):
-        db_exec = DBExec()
-        json_mgr = db_exec.create_json_manager()
-        try:
-            with open('/home/don/Documents/toml pages/full_frontpage.toml', 'r') as fl:
-                toml_in = toml.loads(instr, dict)
-                with open('/home/don/Downloads/foo_dump.toml', 'w') as fl2:
-                    toml.dump(toml_in, fl2)
-                    fl2.close()
-                dict_to_toml_file(toml_in, '/home/don/Downloads/foo_in.toml')
-                test_dict = toml_to_dict(toml_in)
-                res = elaborate_toml_dict(db_exec, test_dict)
-                dict_to_toml_file(res, '/home/don/Downloads/foo.toml')
-                foo = 3
-        except Exception as e:
-            raise e
-
-        finally:
-            db_exec.terminate()
-
-
+        res = build_descriptors_from_prototypes(self.child_dict, json_mgr)
+        self.assertEqual(1, res, 'message')

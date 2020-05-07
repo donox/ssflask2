@@ -8,6 +8,8 @@ from .base_table_manager import BaseTableManager
 from sqlalchemy.exc import IntegrityError
 from typing import List, Any, Dict, Text, NoReturn
 from collections import OrderedDict
+from utilities.template_support import merge_json_descriptors, build_descriptors_from_prototypes
+
 
 class JSONTableManager(BaseTableManager):
     def __init__(self, db_session):
@@ -28,112 +30,34 @@ class JSONTableManager(BaseTableManager):
         current_result['columns'].append(col['columns'][0])
         return
 
-    @staticmethod
-    def walk_structure(struct: dict) -> List[Any]:
-        def walker(curr_node, curr_path: list):
-            node_type = type(curr_node)
-            if node_type is str:
-                return
-            elif node_type is list:
-                # Each item in the list has exactly 1 dictionary in it - so we find it and recur on that
-                for node in curr_node:
-                    if type(node) is dict:
-                        curr_path.append(curr_node)
-                        for res in walker(node, curr_path):
-                            yield res
-                        curr_path.pop()
-            elif node_type is dict:
-                is_leaf = True
-                for key, val in curr_node.items():
-                    if type(val) in [dict, list]:
-                        is_leaf = False
-                        break
-                if is_leaf:
-                    curr_path.append(curr_node)
-                    # Found leaf
-                    yield curr_path
-                    curr_path.pop()
-                else:
-                    # Dictionary that contains at least 1 subordinate structure
-                    for key, val in curr_node.items():
-                        if type(val) is not str:
-                            curr_path.append(curr_node)
-                            for res in walker(val, curr_path):
-                                yield res
-                            curr_path.pop()
-        path = list()
-        for res in walker(struct, path):
-            yield res
+    def get_json_primary_templates(self):
+        return JSONStorageManager.json_primary_templates
 
-    def expand_json_descriptor(self, descriptor: dict) -> dict:
+    def expand_json_descriptor(self, child_dict: dict) -> dict:
         """Merge descriptor into its parent making fully specified descriptor."""
         try:
             parent_slug = None
-            if 'parent' in descriptor:
-                parent_slug = descriptor['parent']
-                del descriptor['parent']
-            elif len(descriptor.keys()) == 1:
-                key = next(iter(descriptor))
-                down_1 = descriptor[key]
+            if 'parent' in child_dict:
+                parent_slug = child_dict['parent']
+                del child_dict['parent']
+            elif len(child_dict.keys()) == 1:
+                key = next(iter(child_dict))
+                down_1 = child_dict[key]
                 if 'parent' in down_1:
                     parent_slug = down_1['parent']
-                    del(down_1['parent'])
+                    del (down_1['parent'])
             if not parent_slug:
-                return descriptor
-            parent = self.get_json_from_name(parent_slug)
-            res = self.merge_json_descriptors(descriptor, copy.deepcopy(parent))
-            return res
+                return child_dict
+            if parent_slug.startswith('P_'):
+                res = build_descriptors_from_prototypes(child_dict)
+            else:
+                parent = self.get_json_from_name(parent_slug)
+                res = merge_json_descriptors(child_dict, copy.deepcopy(parent))
+                return res
         except Exception as e:
             raise e
 
-    def _find_branch_name(self, json_tree) -> OrderedDict:
-        branch_list = OrderedDict()
-        for branch in JSONTableManager.walk_structure(json_tree):
-            keys = branch[-1].keys()
-            name = None
-            for candidate in ['node_name', 'id', 'slug', 'name']:
-                if candidate in keys:
-                    name = branch[-1][candidate]
-                    branch_list[name] = branch
-                    break
-        if name:
-            return branch_list
-        else:
-            return None
-
-    def _merge_nodes(self, child_dict: dict, parent_dict: dict) -> NoReturn:
-        for key, val in child_dict.items():
-            parent_dict[key] = val
-
-    def merge_json_descriptors(self, child: dict, parent: dict) -> dict:
-        """Merge two compatible JSON descriptors into one.
-        The assumption here is that both descriptors represent JSON or TOML structures, so
-        there are no particularly complex types such as objects, tuples, sets, ...
-
-        The parent descriptor has a key ('descriptor') at top level which identifies the structure in
-        JSONStorageManager it represents.
-        The child descriptor has a key ('parent') at top level which identifies the name of the parent
-        JSON in the database.
-        """
-        try:
-            parent_branches = self._find_branch_name(parent)
-            if not parent_branches:
-                raise ValueError(f'No node name found in parent JSON template')
-            child_branches = self._find_branch_name(child)
-            if not child_branches:
-                raise ValueError(f'No node name found in child JSON template')
-            parent_leaf_names = parent_branches.keys()
-            child_leaf_names = child_branches.keys()
-            for child_leaf in child_leaf_names:
-                if child_leaf in parent_leaf_names:
-                    self._merge_nodes(child_branches[child_leaf], parent_branches[child_leaf])
-                else:
-                    raise NotImplementedError(f'Attempt to add child_leaf {child_leaf} to a parent without such leaf')
-
-        except Exception as e:
-            raise e
-
-    def make_json_descriptor(self, descriptor: dict, result_processor: object = None):
+    def make_json_descriptor(self, descriptor: Any, result_processor: object = None):
         rlt = _KeepResult()
 
         if isinstance(descriptor, str):
@@ -415,62 +339,73 @@ class JSONStorageManager(object):
     #     and the remainder are processed to form a dictionary/context.  This implies that 'str' entries that are not
     #     expanded are names whose value will be 'None' (json 'null').  Lists are in Prototype form and dictionaries
     #     are merged with the parent dictionary.
-    descriptor_page_layout = {"PAGE": None, "name": None, "rows": []}
-    descriptor_row_layout = {"ROW": None, "columns": []}
-    descriptor_column_layout = {"COLUMN": None, "cells": [], "column_width": None}
-    descriptor_cell_layout = {"CELL": None, "element_type": None, "element": None, "is_snippet": None,
+    descriptor_page_layout = {"PAGE": None, "node_name": "PAGE", "name": None, "rows": []}
+    descriptor_row_layout = {"ROW": None, "node_name": "ROW", "columns": []}
+    descriptor_column_layout = {"COLUMN": None, "node_name": "COLUMN", "cells": [], "column_width": None}
+    descriptor_cell_layout = {"CELL": None, "node_name": "CELL", "element_type": None, "element": None,
+                              "is_snippet": None,
                               "width": None, "height": None, "styles": None, "classes": None}
-    descriptor_button_fields = {"BUTTON": None, "id": None, "button_type": None, "target": None, "text_content": None}
+    descriptor_button_fields = {"BUTTON": None, "node_name": "BUTTON", "id": None, "button_type": None, "target": None,
+                                "text_content": None}
 
     # Content Types
-    descriptor_picture_fields = {"PICTURE": None, "id": None, "url": None, "title": None, "caption": None,
+    descriptor_picture_fields = {"PICTURE": None, "node_name": "PICTURE", "id": None, "url": None, "title": None,
+                                 "caption": None,
                                  "width": None, "height": None, "alignment": None, "alt_text": None,
                                  "css_style": None, "css_class": None, "title_class": None,
                                  "caption_class": None, "image_class": None}
-    descriptor_slideshow_fields = {"SLIDESHOW": None, "title": None, "title_class": None, "position": None,
+    descriptor_slideshow_fields = {"SLIDESHOW": None, "node_name": "SLIDESHOW", "title": None, "title_class": None,
+                                   "position": None,
                                    "width": None, "height": None, "rotation": None,
                                    "frame_title": None, "pictures": []}
-    descriptor_story_fields = {"STORY": None, "id": None, "title": None, "name": None, "author": None,
+    descriptor_story_fields = {"STORY": None, "node_name": "STORY", "id": None, "title": None, "name": None,
+                               "author": None,
                                "date": None, "content": None, "snippet": "S_STORY_SNIPPET"}
 
-
     # Snippets
-    descriptor_story_snippet_fields = {"STORY_SNIPPET": None, "id": None, "title": None, "name": None, "author": None,
+    descriptor_story_snippet_fields = {"STORY_SNIPPET": None, "node_name": "STORY_SNIPPET", "id": None, "title": None,
+                                       "name": None, "author": None,
                                        "date": None, "snippet": None, "photo": "S_PICTURE",
                                        "content": None, "story_url": None, "read_more": "S_BUTTON"}
-    descriptor_calendar_snippet_fields = {"CALENDAR_SNIPPET": None, "events": [], "event_count": None, "width": None,
+    descriptor_calendar_snippet_fields = {"CALENDAR_SNIPPET": None, "node_name": "CALENDAR_SNIPPET", "events": [],
+                                          "event_count": None, "width": None,
                                           "audience": [], "categories": []}
-    descriptor_slideshow_snippet_fields = {"SLIDESHOW_SNIPPET": None, "id": None, "title": None, "text": None,
+    descriptor_slideshow_snippet_fields = {"SLIDESHOW_SNIPPET": None, "node_name": "SLIDESHOW_SNIPPET", "id": None,
+                                           "title": None, "text": None,
                                            "slides": "S_SLIDESHOW"}
-    descriptor_event_snippet_fields = {"EVENT_SNIPPET": None, "name": None, "date": None, "time": None, "venue": None}
-    descriptor_sign_snippet_fields = {"SIGN_SNIPPET": None, "name": None, "content_type": None, "content": None,
+    descriptor_event_snippet_fields = {"EVENT_SNIPPET": None, "node_name": "EVENT_SNIPPET", "name": None, "date": None,
+                                       "time": None, "venue": None}
+    descriptor_sign_snippet_fields = {"SIGN_SNIPPET": None, "node_name": "SIGN_SNIPPET", "name": None,
+                                      "content_type": None, "content": None,
                                       "styling": None}
 
     # Complex/predefined types
     descriptor_row_with_single_cell_fields = {"SINGLECELLROW": "REMOVE",
                                               "ROW": {"columns": [
                                                   {"COLUMN": None, "cells": ["S_CELL"],
-                                                   "column_width": None, "descriptor": "COLUMN"}],
-                                                  "descriptor": "ROW"},
+                                                   "column_width": None, "descriptor": "COLUMN",
+                                                   "node_name": "COLUMN"}],
+                                                  "descriptor": "ROW", "node_name": "ROW"},
                                               "descriptor": "SINGLECELLROW"}
     descriptor_single_cell_table_fields = {"ONECELL": "REMOVE", "PAGE": "S_SINGLECELLROW", "descriptor": "PAGE"}
     descriptor_three_cell_row_fields = {"THREECELLROW": "REMOVE",
-                                        "ROW": {"columns": [{"COLUMN": None, "descriptor": "COLUMN",
-                                                             "cells": ["S_CELL"]},
-                                                            {"COLUMN": None,
-                                                             "cells": ["S_CELL"]},
-                                                            {"COLUMN": None,
-                                                             "cells": ["S_CELL"]},
-                                                            ],
-                                                "descriptor": "ROW"},
+                                        "ROW": {
+                                            "columns": [{"COLUMN": None, "descriptor": "COLUMN", "node_name": "COLUMN",
+                                                         "cells": ["S_CELL"]},
+                                                        {"COLUMN": None, "node_name": "COLUMN",
+                                                         "cells": ["S_CELL"]},
+                                                        {"COLUMN": None, "node_name": "COLUMN",
+                                                         "cells": ["S_CELL"]},
+                                                        ],
+                                            "descriptor": "ROW", "node_name": "ROW"},
                                         "descriptor": "THREECELLROW"}
 
     descriptor_front_page_fields = {"FRONTPAGE": "REMOVE",
-                                    "PAGE": {"name": None,
+                                    "PAGE": {"name": None, "node_name": "PAGE",
                                              "rows": ["S_THREECELLROW", "S_THREECELLROW", "S_THREECELLROW"]},
                                     "descriptor": "PAGE"}
 
-    descriptor_test_fields = {"ONECELL": "REMOVE", "PAGE": "S_SINGLECELLROW", "descriptor": "PAGE"}
+    descriptor_test_fields = {"ONECELL": "REMOVE", "PAGE": "S_SINGLECELLROW", "descriptor": "PAGE", "node_name": "PAGE"}
 
     json_field_dictionary = dict()
     json_field_dictionary['PAGE'] = descriptor_page_layout
@@ -494,6 +429,8 @@ class JSONStorageManager(object):
     json_field_dictionary['FRONTPAGE'] = descriptor_front_page_fields
 
     # json_field_dictionary[''] = cls.
+    json_primary_templates = ['PAGE', 'ROW', 'COLUMN', 'CELL', 'BUTTON', 'PICTURE', 'SLIDESHOW', 'STORY',
+                              'STORY_SNIPPET', 'CALENDAR_SNIPPET', 'EVENT_SNIPPET', 'SIGN_SNIPPET', 'SLIDESHOW_SNIPPET']
 
     def __init__(self, db_exec):
         self.db_exec = db_exec
@@ -516,7 +453,7 @@ class JSONStore(db.Model):
         if commit:
             try:
                 session.commit()
-            except IntegrityError as e:    # TODO: log error and report
+            except IntegrityError as e:  # TODO: log error and report
                 raise e
             except Exception as e:
                 foo = 3
