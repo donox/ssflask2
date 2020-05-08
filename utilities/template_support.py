@@ -80,8 +80,8 @@ there are no particularly complex types such as objects, tuples, sets, ...
     JSON in the database.
     """
     try:
-        dict_to_toml_file(parent, '/home/don/Downloads/foo_parent.toml')
-        dict_to_toml_file(child, '/home/don/Downloads/foo_child.toml')
+        # dict_to_toml_file(parent, '/home/don/Downloads/foo_parent.toml')
+        # dict_to_toml_file(child, '/home/don/Downloads/foo_child.toml')
         parent_branches = find_branches(parent)
         if not parent_branches:
             raise ValueError(f'No node name found in parent JSON template')
@@ -119,10 +119,26 @@ def merge_branches(child_branch: list, parent_branch: list) -> NoReturn:
     for child, parent in zip(child_branch, parent_branch):
         merge_nodes(child, parent)
 
+
 def build_descriptors_from_prototypes(child_dict, json_tbl_mgr):
     """Build 'parent' descriptor from child using prototypes."""
+    result_template = _build_descriptors_from_prototypes(child_dict, json_tbl_mgr)
+    # We assume that there is one dictionary (generally PAGE) and one list (generally rows)
+    for key, val in result_template.items():
+        if type(val) is dict and key.isupper():
+            for key1, val1 in result_template.items():
+                if type(val1) is list:
+                    result_template[key][key1] = val1
+                    break
+            break
+    return result_template
+
+
+def _build_descriptors_from_prototypes(child_dict, json_tbl_mgr):
+    # Top level entry seems to behave a bit differently - if we can fold into here, we
+    # can remove this function.
     if type(child_dict) is not dict:
-        raise SystemError(f'Should not call build_descriptors_from_prototypes with type: {type(child_dict)}')
+        raise SystemError(f'Should not call _build_descriptors_from_prototypes with type: {type(child_dict)}')
     else:
         try:
             result_template = dict()
@@ -137,23 +153,30 @@ def build_descriptors_from_prototypes(child_dict, json_tbl_mgr):
                             new_obj[name] = child_dict[name]
                             break
                     result_template[key] = new_obj
+                else:
+                    result_template[key.lower()] = val
             for key, val in child_dict.items():
                 if type(val) is list:
                     res_list = list()
                     for elem in val:
-                        res_list.append(build_descriptors_from_prototypes(elem, json_tbl_mgr))
-                    result_template[key] = res_list
+                        res_list.append(_build_descriptors_from_prototypes(elem, json_tbl_mgr))
+                    result_template[key.lower()] = res_list
                 elif type(val) is dict:
+                    res_dict = dict()
                     for key1, val1 in val.items():
                         if type(val1) is dict:
-                            result_template[key1] = build_descriptors_from_prototypes(val1, json_tbl_mgr)
+                            res_dict[key1] = _build_descriptors_from_prototypes(val1, json_tbl_mgr)
                         elif type(val1) is list:
-                            res_list = list()
-                            for elem in val1:
-                                res_list.append(build_descriptors_from_prototypes(elem, json_tbl_mgr))
-                            result_template[key1] = res_list
+                            if key1[0:-1] in json_tbl_mgr.get_json_primary_templates():
+                                res_list = list()
+                                for elem in val1:
+                                    res_list.append(_build_descriptors_from_prototypes(elem, json_tbl_mgr))
+                                res_dict[key1.lower()] = res_list
+                            else:
+                                result_template[key1] = val1
+                    result_template[key] = res_dict
                 else:
-                    result_template[key1] = val1
+                    result_template[key] = val
             return result_template
         except Exception as e:
             raise e

@@ -142,4 +142,11 @@ class TestTemplateHandling(BaseTestCase):
         db_exec = DBExec()
         json_mgr = db_exec.create_json_manager()
         res = build_descriptors_from_prototypes(self.child_dict, json_mgr)
-        self.assertEqual(1, res, 'message')
+        with open('/home/don/Downloads/foo_build.toml', 'w') as fl2:
+            toml.dump(res, fl2)
+            fl2.close()
+        try:
+            res_val = res['PAGE']['rows'][0]['columns'][0]['cells'][0]['node_name']
+            self.assertEqual('CELL-(0, 0, 0)', res_val, 'Incorrect cell returned from build')
+        except Exception as e:
+            self.assertEqual(1,0, f'Got Exception in checking build result: {e.args}')

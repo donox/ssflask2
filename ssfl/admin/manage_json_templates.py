@@ -213,7 +213,7 @@ def manage_json_templates(db_exec, form):
                 toml_dict_expanded = elaborate_toml_dict(db_exec, toml_dict)
                 new_obj = json_table_mgr.expand_json_descriptor(toml_dict_expanded)
                 json_obj = new_obj
-                json_obj = json.dumps(toml_dict_expanded)
+                # json_obj = json.dumps(toml_dict_expanded)
                 existing_template = json_table_mgr.get_json_from_name(json_name)
                 if (existing_template and toml_overwrite) or (not existing_template and not toml_overwrite):
                     json_table_mgr.add_json(json_name, json_obj)

@@ -315,7 +315,12 @@ class MultiStoryPage(object):
         # descriptor_column_layout = ['cells', 'column_width']
         # descriptor_cell_layout = ['element_type', 'element', 'width', 'height']
         for i, row in enumerate(self.descriptor['PAGE']['rows']):
-            for j, col in enumerate(row['ROW']['columns']):
+            # Remove use of ROW when everything is updated
+            if 'ROW' in row:
+                row_iter = row['ROW']['columns']
+            else:
+                row_iter = row['columns']
+            for j, col in enumerate(row_iter):
                 classes = ""
                 if 'width' in col:  # The cell is the container (not the column) so width control is here
                     width = col['width']
