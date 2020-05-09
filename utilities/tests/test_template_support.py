@@ -46,7 +46,23 @@ element = "_xxx_"
   
 '''
 
+story_test = '''STORY_SNIPPET = "_xxx_"
+node_name = "My_STORY_SNIPPET"
+parent = "STORY_SNIPPET"
+title = "Silly Cat"
+name = "page-dummy-7"
+author = "Thomas Jefferson"
 
+[photo]
+    node_name = "PICTURE"
+    id = "south-africa-12"
+    
+    [read_more]
+    node_name = "BUTTON"
+    button_type = "_xxx_"
+    target = "mah-jongg"
+    text_content = "Clueless"
+'''
 class TestTemplateHandling(BaseTestCase):
     def build_tree(self, ii, jj, kk):
         tree = dict()
@@ -141,12 +157,25 @@ class TestTemplateHandling(BaseTestCase):
     def test_build_descriptors_from_prototypes(self):
         db_exec = DBExec()
         json_mgr = db_exec.create_json_manager()
-        res = build_descriptors_from_prototypes(self.child_dict, json_mgr)
-        with open('/home/don/Downloads/foo_build.toml', 'w') as fl2:
-            toml.dump(res, fl2)
-            fl2.close()
         try:
+            res = build_descriptors_from_prototypes(self.child_dict, json_mgr)
+            with open('/home/don/Downloads/foo_build.toml', 'w') as fl2:
+                toml.dump(res, fl2)
+                fl2.close()
             res_val = res['PAGE']['rows'][2]['columns'][0]['cells'][0]['node_name']
             self.assertEqual('CELL-(2, 0, 0)', res_val, 'Incorrect cell returned from build')
         except Exception as e:
             self.assertEqual(1,0, f'Got Exception in checking build result: {e.args}')
+
+    def test_build_story_snippet(self):
+        db_exec = DBExec()
+        json_mgr = db_exec.create_json_manager()
+        story_dict = toml.loads(story_test)
+        try:
+            is_prototype = False
+            res = build_descriptors_from_prototypes(story_dict, json_mgr)
+            merge_json_descriptors(story_dict, res, is_prototype)
+            res_val = res['author']
+            self.assertEqual('Thomas Jefferson', res_val, 'Incorrect cell returned from build')
+        except Exception as e:
+            self.assertEqual(1, 0, f'Got Exception in checking build result: {e.args}')

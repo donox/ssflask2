@@ -1,19 +1,23 @@
 import toml
 from collections import OrderedDict
-from typing import List, Any, NoReturn
+from typing import List, Any, NoReturn, Dict
 import copy
-
+import itertools
 
 dict_to_toml_file = None
+
+
 def set_dict(proc):
     global dict_to_toml_file
     dict_to_toml_file = proc
+
 
 # These are utilities used in managing JSON templates - especially merging user created templates into larger
 # system created templates.
 
 def walk_structure(struct: dict) -> List[Any]:
     """Walk a template returning paths from root to leaf."""
+
     def walker(curr_node, curr_path: list):
         node_type = type(curr_node)
         if node_type is str:
@@ -78,6 +82,8 @@ there are no particularly complex types such as objects, tuples, sets, ...
     JSONStorageManager it represents.
     The child descriptor has a key ('parent') at top level which identifies the name of the parent
     JSON in the database.
+    Note that this works by side effect, so nothing is returned.  The caller is responsible for making
+    any copies needed.
     """
     try:
         # dict_to_toml_file(parent, '/home/don/Downloads/foo_parent.toml')
@@ -95,29 +101,12 @@ there are no particularly complex types such as objects, tuples, sets, ...
             child_leaf_names = child_branches.keys()
             for child_leaf in child_leaf_names:
                 if child_leaf in parent_leaf_names:
-                    merge_branches(child_branches[child_leaf], parent_branches[child_leaf])
+                    res = merge_lists(child_branches[child_leaf], parent_branches[child_leaf])
+                    parent_branches[child_leaf] = res
                 else:
                     raise NotImplementedError(f'Attempt to add child_leaf {child_leaf} to a parent without such leaf')
     except Exception as e:
         raise ValueError(f'Failure in merge_json_descriptors')
-
-
-def merge_nodes(child_dict: dict, parent_dict: dict) -> NoReturn:
-    if type(child_dict) is dict:
-        for key, val in child_dict.items():
-            try:
-                parent_dict[key] = val
-            except Exception as e:
-                raise ValueError(f'Fail trying to add value {val} to parent dictionary with key {key}')
-
-
-def merge_branches(child_branch: list, parent_branch: list) -> NoReturn:
-    """Merge data from child into parent branch"""
-    if len(child_branch) != len(parent_branch):
-        raise NotImplementedError(
-            f'Unequal length branches.  Child Length: {len(child_branch)}, Parent Length: {len(parent_branch)}')
-    for child, parent in zip(child_branch, parent_branch):
-        merge_nodes(child, parent)
 
 
 def build_descriptors_from_prototypes(child_dict, json_tbl_mgr):
@@ -141,42 +130,109 @@ def _build_descriptors_from_prototypes(child_dict, json_tbl_mgr):
         raise SystemError(f'Should not call _build_descriptors_from_prototypes with type: {type(child_dict)}')
     else:
         try:
-            result_template = dict()
+            parent = dict()
             # if is primary type, add to evolving parent and give parent node same name as child node.
             # if not primary type -  return - end of chain
             # for each list or dict in child, recur adding result to primary node with same key
             for key, val in child_dict.items():
-                if key in json_tbl_mgr.get_json_primary_templates():
-                    new_obj = json_tbl_mgr.get_json_from_name('P_'+key)
+                key1 = key
+                if key == 'photo':          # Deal with confusion of photo/picture term
+                    key1 = 'PICTURE'
+                if key1 in json_tbl_mgr.get_json_primary_templates():
+                    new_obj = json_tbl_mgr.get_json_from_name('P_' + key1)
                     for name in ['node_name', 'id', 'slug', 'name']:
                         if name in child_dict:
                             new_obj[name] = child_dict[name]
                             break
-                    result_template[key] = new_obj
-                else:
-                    result_template[key.lower()] = val
+                    parent[key] = new_obj
+            # result_template holds the parent we are constructing.  Now we go though the child again
+            # adding expansions of elements specified in the child that need to be in the parent.
+            # There are several cases (key, val) always in child:
+            # (1) Key in  parent(new_obj) and val in both is str => parent[key] = val
+            # (2) Key not in parent => parent[key] = val
+            # (3) Val in child is structure, not in parent  => parent[key] = val
+            # (4) Val in child is string, structure in parent => probable error - raise
+            # (5) Val in both is structure => several subcases
             for key, val in child_dict.items():
-                if type(val) is list:
-                    res_list = list()
-                    for elem in val:
-                        res_list.append(_build_descriptors_from_prototypes(elem, json_tbl_mgr))
-                    result_template[key.lower()] = res_list
-                elif type(val) is dict:
-                    res_dict = dict()
-                    for key1, val1 in val.items():
-                        if type(val1) is dict:
-                            res_dict[key1] = _build_descriptors_from_prototypes(val1, json_tbl_mgr)
-                        elif type(val1) is list:
-                            if key1[0:-1] in json_tbl_mgr.get_json_primary_templates():
-                                res_list = list()
-                                for elem in val1:
-                                    res_list.append(_build_descriptors_from_prototypes(elem, json_tbl_mgr))
-                                res_dict[key1.lower()] = res_list
+                if key in parent:
+                    par_type_is_struct = type(parent[key]) in [dict, list]
+                    if type(val) is list and not par_type_is_struct:  # Case (3)
+                        res_list = list()
+                        for elem in val:
+                            res_list.append(_build_descriptors_from_prototypes(elem, json_tbl_mgr))
+                        parent[key.lower()] = res_list
+                    elif type(val) is dict and not par_type_is_struct:  # Case (3)
+                        res_dict = dict()
+                        for key1, val1 in val.items():
+                            if type(val1) is dict:
+                                res_dict[key1] = _build_descriptors_from_prototypes(val1, json_tbl_mgr)
+                            elif type(val1) is list:
+                                if key1[0:-1] in json_tbl_mgr.get_json_primary_templates():
+                                    res_list = list()
+                                    for elem in val1:
+                                        res_list.append(_build_descriptors_from_prototypes(elem, json_tbl_mgr))
+                                    res_dict[key1.lower()] = res_list
+                                else:
+                                    res_dict[key1.lower()] = val1
                             else:
-                                result_template[key1] = val1
-                    result_template[key] = res_dict
+                                res_dict[key1.lower()] = val1
+                        parent[key] = res_dict
+                    elif type(val) is dict and type(parent[key]) is dict:
+                        parent[key] = merge_dictionaries(val, parent[key])  # Case(5), both dict
+                    elif type(val) is list and type(parent[key]) is list:
+                        parent[key] = merge_lists(val, parent[key])  # Case(5), both list
+                    else:      # Case (1)
+                        parent[key] = val
                 else:
-                    result_template[key] = val
-            return result_template
+                    parent[key] = val  # Case (2)
+            return parent
         except Exception as e:
             raise e
+
+
+def merge_structured_nodes(child: [List, Dict], parent: [List, Dict]) -> [List, Dict]:
+    # It is an error to try to merge a List and a Dict - both nodes must be of same type
+    # Dictionaries are merged by walking the keys with child providing values to the parent where sensible
+    # Lists are merged in order (BIG ASSUMPTION) assuming compatible types (BIG ASSUMPTION) recurring to
+    # merge structures,  child to parent otherwise.
+    if type(child) != type(parent):
+        raise ValueError(
+            f'Attempt to merge incompatible structures: child is {type(child)} and parent is {type(parent)}')
+    if type(child) is dict:
+        merge_dictionaries(child, parent)
+    else:
+        merge_lists(child, parent)
+
+
+def merge_dictionaries(child: Dict, parent: Dict) -> Dict:
+    res = copy.deepcopy(parent)
+    for key, val in child.items():
+        if key in parent:
+            if type(parent) not in [list, dict]:
+                res[key] = val
+            elif type(val) is dict:
+                res[key] = merge_dictionaries(val, parent[key])
+            elif type(val) is list:
+                res[key] = merge_lists(val, parent[key])
+            else:
+                res[key] = val
+    return res
+
+
+def merge_lists(child: List, parent: List) -> List:
+    res = []
+    for c, p in itertools.zip_longest(child, parent):
+        if not c:
+            res.append(p)
+        elif not p:
+            res.append(c)
+        elif type(c) != type(p):
+            raise ValueError(
+                f'Attempt to merge incompatible lists: child is {type(child)} and parent is {type(parent)}')
+        elif type(c) is list:
+            res.append(merge_lists(c, p))
+        elif type(c is dict):
+            res.append(merge_dictionaries(c, p))
+        else:
+            res.append(c)
+    return res

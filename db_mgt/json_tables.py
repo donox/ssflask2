@@ -50,13 +50,16 @@ class JSONTableManager(BaseTableManager):
                 return child_dict
             if parent_slug.startswith('P_'):
                 res = build_descriptors_from_prototypes(child_dict, self)
+                is_prototype = False
+                merge_json_descriptors(child_dict, res, is_prototype)
                 return res
             else:
                 parent = self.get_json_from_name(parent_slug)
                 if not parent:
                     raise ValueError(f'No template named {parent_slug} - did you forget a leading "P_"?')
                 is_prototype = False        # TODO: Where should this be set???
-                res = merge_json_descriptors(child_dict, copy.deepcopy(parent), is_prototype)
+                res = copy.deepcopy(parent)
+                merge_json_descriptors(child_dict, res, is_prototype)
                 return res
         except Exception as e:
             raise e

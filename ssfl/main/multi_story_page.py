@@ -216,7 +216,7 @@ class MultiStoryPage(object):
         """Fill story snippet descriptor."""
         # descriptor_story_snippet_fields = ["id", "title", "name", "author", "date", "snippet",
         # "photo", "story_url", "content", "read_more"]
-        width = 3  # TODO: determine correct input
+        width = 6  # TODO: determine correct input
         id_val = page_name = None
         if 'id' in elem:
             id_val = elem['id']
