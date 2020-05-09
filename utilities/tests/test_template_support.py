@@ -146,7 +146,7 @@ class TestTemplateHandling(BaseTestCase):
             toml.dump(res, fl2)
             fl2.close()
         try:
-            res_val = res['PAGE']['rows'][0]['columns'][0]['cells'][0]['node_name']
-            self.assertEqual('CELL-(0, 0, 0)', res_val, 'Incorrect cell returned from build')
+            res_val = res['PAGE']['rows'][2]['columns'][0]['cells'][0]['node_name']
+            self.assertEqual('CELL-(2, 0, 0)', res_val, 'Incorrect cell returned from build')
         except Exception as e:
             self.assertEqual(1,0, f'Got Exception in checking build result: {e.args}')

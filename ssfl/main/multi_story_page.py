@@ -322,13 +322,26 @@ class MultiStoryPage(object):
                 row_iter = row['columns']
             for j, col in enumerate(row_iter):
                 classes = ""
+                width_in_column = False
                 if 'width' in col:  # The cell is the container (not the column) so width control is here
                     width = col['width']
                     if width:
+                        width_in_column = True
                         classes += f'col-sm-{width} col-md-{width} col-lg-{width}'
                 col['classes'] = classes
+                # Some classes (e.g, width) may be set in the cells and need to be promoted back here.
+                # We collect them in col_extra_classes, then remove dupes and add to col['classes']
+                col_extra_classes = ''
                 for k, cell in enumerate(col['cells']):
                     styles = ""
+                    # Width is properly a column attribute since there may be multiple cells.  However, the normal
+                    # case is a single cell in a row-column and it is more natural to combine width/height in the
+                    # same place and height is a cell property.  If specified at the column level it overrides.
+                    # If not at the column level, the last cell spec wins.
+                    if 'width' in cell and not width_in_column:
+                        width = cell['width']
+                        if width:
+                            col_extra_classes += f'col-sm-{width} col-md-{width} col-lg-{width}'
                     if 'height' in cell:
                         height = cell['height']
                         if height:
@@ -364,7 +377,14 @@ class MultiStoryPage(object):
                     else:
                         if 'STORY' in elem:
                             self._fill_full_story(elem)
-
+                # Now add any extra column classes.  Note the use of set to remove dupes assumes that if multiple
+                # cells provide conflicting classes, both will be rendered and the browser will take its choice
+                if col_extra_classes:
+                    cl_list = ' '.join(list(set(col_extra_classes.split())))
+                    if col['classes']:
+                        col['classes'] += ' ' + cl_list
+                    else:
+                        col['classes'] = cl_list
         return self.descriptor
 
     def make_single_page_context(self, story: str) -> Dict[AnyStr, Any]:
