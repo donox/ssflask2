@@ -142,11 +142,10 @@ def manage_json_templates(db_exec, form):
                 form.errors['Nonexistent JSON template'] = ['Specified template does not exist']
                 return False
             # TODO:  This should customize audience, categories, -> keyword arguments to create plugin
-            calendar = Calendar(db_exec, cal_width)
+            calendar = Calendar(db_exec)
             calendar.create_daily_plugin(cal_display_count)
             content = calendar.get_calendar_snippet_data()
             template['event_count'] = cal_display_count
-            template['width'] = content['width']
             json_table_mgr.add_json(json_name, template)    # IS THIS RIGHT - was cal_result_template - redundant?
             return True
 

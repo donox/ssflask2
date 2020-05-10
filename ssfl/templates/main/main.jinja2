@@ -16,7 +16,7 @@
                     <div class="col {{ col.classes }}">
                         <div class="container-fluid">
                             {% for cell in col.cells %}
-                                <div class="{{ cell.classes }}" style="{{ cell.styles }}">
+                                <div class="{{ cell.classes }} overflow-auto" style="{{ cell.styles }}">
                                     {% if cell.element_type == 'CALENDAR_SNIPPET' %}
                                         {% set calendar = cell.element %}
                                         {% include 'main/snippet_calendar.jinja2' %}
