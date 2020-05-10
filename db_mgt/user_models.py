@@ -28,7 +28,6 @@ class UserManager(BaseTableManager):
         return res[0]
 
 
-
 class User(db.Model, UserMixin):
     """Model for user accounts."""
     __tablename__ = 'users'

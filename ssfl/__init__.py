@@ -24,12 +24,6 @@ else:
     env_path = '/home/doxley/ssflask2/.env_PA'
     load_dotenv(dotenv_path=env_path)
 
-# Monkey-patch flask_mail to fix problem in configuration variable - line 548 - DEBUG being converted to int
-import flask_mail as fm
-from ssfl.login import my_flask_mail as mfm
-
-fm.Mail = mfm.Mail
-
 # Config Loggers
 from utilities.logging_support import SsTLogger
 
