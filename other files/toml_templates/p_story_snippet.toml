@@ -1,0 +1,37 @@
+STORY_SNIPPET = "_xxx_"
+node_name = "STORY_SNIPPET"
+id = "_xxx_"		# provide one of 'id' or 'name' (slug)
+title = "_xxx_"
+name = "_xxx_"
+author = "_xxx_"
+date = "_xxx_"
+snippet = "_xxx_"
+content = "_xxx_"
+story_url = "_xxx_"
+descriptor = "STORY_SNIPPET"
+
+[photo]
+    PICTURE = "_xxx_"
+    node_name = "PICTURE"
+    id = "_xxx_"	# either numeric or slug
+    url = "_xxx_"
+    title = "_xxx_"
+    caption = "_xxx_"
+    width = "_xxx_"
+    height = "_xxx_"
+    alignment = "_xxx_"
+    alt_text = "_xxx_"
+    css_style = "_xxx_"
+    css_class = "_xxx_"
+    title_class = "_xxx_"
+    caption_class = "_xxx_"
+    image_class = "_xxx_"
+    
+    [read_more]
+    BUTTON = "_xxx_"
+    node_name = "BUTTON"
+    id = "_xxx_"
+    button_type = "_xxx_"
+    target = "_xxx_"
+    text_content = "_xxx_"
+    

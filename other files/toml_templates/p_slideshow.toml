@@ -1,0 +1,12 @@
+SLIDESHOW = "_xxx_"
+node_name = "SLIDESHOW"
+title = "_xxx_"
+title_class = "_xxx_"
+position = "_xxx_"
+width = "_xxx_"		# pixels - can limit size when in larger column space, set 
+			# 	   column width on cell or column (still needs testing)
+height = "_xxx_"
+rotation = "_xxx_"	# Time is in tenths of seconds (10 = 1sec)
+frame_title = "_xxx_"
+pictures = "_xxx_"  # Comma separated list of id's or slugs
+descriptor = "SLIDESHOW"

@@ -1,0 +1,7 @@
+CALENDAR_SNIPPET = "_xxx_"
+node_name = "CALENDAR_SNIPPET"
+events = "_xxx_"
+event_count = "_xxx_"
+audience = "_xxx_"  # audience and categories are all caps, comma separated if needed
+categories = "_xxx_"
+descriptor = "CALENDAR_SNIPPET"
