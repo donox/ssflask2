@@ -4,7 +4,7 @@ class Sign(object):
     """The sign object represents a simple item for display such as a notice, alert, quote, photo, ...
 
     """
-    def __init__(self, db_exec: DBExec, width):   # width not used, but being passed (unnecessarily??) to other snippets
+    def __init__(self, db_exec: DBExec):
         self.db_exec = db_exec
         self.sign_data = dict()
         self.json_mgr = db_exec.create_json_manager()

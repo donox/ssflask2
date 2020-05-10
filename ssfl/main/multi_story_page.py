@@ -5,6 +5,7 @@ from ssfl.main.calendar_snippet import Calendar
 from config import Config
 from json import dumps
 from typing import Dict, AnyStr, Any
+from utilities.sst_exceptions import PhotoOrGalleryMissing
 
 
 class MultiStoryPage(object):
@@ -194,6 +195,11 @@ class MultiStoryPage(object):
         #        loaded from the DB. This is equivalent to creating a Photo object and then calling
         #        the get_json_descriptor on it.
         photo_id = elem['id']
+        if not photo_id:
+            if 'slug' in elem:
+                photo_id = elem['slug']
+            else:
+                raise PhotoOrGalleryMissing(f'Photo missing both id and slug')
         if type(photo_id) is str:
             photo = self.photo_manager.get_photo_from_slug(photo_id)
             photo_id = photo.id
@@ -210,9 +216,12 @@ class MultiStoryPage(object):
         """Fill story snippet descriptor."""
         # descriptor_story_snippet_fields = ["id", "title", "name", "author", "date", "snippet",
         # "photo", "story_url", "content", "read_more"]
-        width = 3  # TODO: determine correct input
-        id_val = elem['id']
-        page_name = elem['name']
+        width = 6  # TODO: determine correct input
+        id_val = page_name = None
+        if 'id' in elem:
+            id_val = elem['id']
+        if 'name' in elem:
+            page_name = elem['name']
         story = Story(self.db_exec, width)
         if id_val:
             story.create_story_from_db(page_id=id_val)
@@ -229,7 +238,7 @@ class MultiStoryPage(object):
         # {"CALENDAR_SNIPPET": None, "events": [], "event_count": None, "width": None,
         #  "audience": [], "categories": []}
         ev_count = elem['event_count']
-        calendar = Calendar(self.db_exec, elem['width'])
+        calendar = Calendar(self.db_exec)
         calendar.create_daily_plugin(elem['event_count'])
         content = calendar.get_calendar_snippet_data()
         elem['events'] = content['events']
@@ -306,22 +315,40 @@ class MultiStoryPage(object):
         # descriptor_column_layout = ['cells', 'column_width']
         # descriptor_cell_layout = ['element_type', 'element', 'width', 'height']
         for i, row in enumerate(self.descriptor['PAGE']['rows']):
-            for j, col in enumerate(row['ROW']['columns']):
+            # Remove use of ROW when everything is updated
+            if 'ROW' in row:
+                row_iter = row['ROW']['columns']
+            else:
+                row_iter = row['columns']
+            for j, col in enumerate(row_iter):
                 classes = ""
+                width_in_column = False
                 if 'width' in col:  # The cell is the container (not the column) so width control is here
                     width = col['width']
                     if width:
+                        width_in_column = True
                         classes += f'col-sm-{width} col-md-{width} col-lg-{width}'
                 col['classes'] = classes
+                # Some classes (e.g, width) may be set in the cells and need to be promoted back here.
+                # We collect them in col_extra_classes, then remove dupes and add to col['classes']
+                col_extra_classes = ''
                 for k, cell in enumerate(col['cells']):
                     styles = ""
+                    # Width is properly a column attribute since there may be multiple cells.  However, the normal
+                    # case is a single cell in a row-column and it is more natural to combine width/height in the
+                    # same place and height is a cell property.  If specified at the column level it overrides.
+                    # If not at the column level, the last cell spec wins.
+                    if 'width' in cell and not width_in_column:
+                        width = cell['width']
+                        if width:
+                            col_extra_classes += f'col-sm-{width} col-md-{width} col-lg-{width}'
                     if 'height' in cell:
                         height = cell['height']
                         if height:
                             styles += f'height:{height}px;'
                     cell['styles'] = styles
                     classes = ""
-                    if 'overflow' in cell:
+                    if 'overflow' in cell:          # overflow causes scrollbars if needed
                         overflow = cell['overflow']
                         if overflow:
                             classes += f' overflow-{overflow} '
@@ -350,7 +377,14 @@ class MultiStoryPage(object):
                     else:
                         if 'STORY' in elem:
                             self._fill_full_story(elem)
-
+                # Now add any extra column classes.  Note the use of set to remove dupes assumes that if multiple
+                # cells provide conflicting classes, both will be rendered and the browser will take its choice
+                if col_extra_classes:
+                    cl_list = ' '.join(list(set(col_extra_classes.split())))
+                    if col['classes']:
+                        col['classes'] += ' ' + cl_list
+                    else:
+                        col['classes'] = cl_list
         return self.descriptor
 
     def make_single_page_context(self, story: str) -> Dict[AnyStr, Any]:

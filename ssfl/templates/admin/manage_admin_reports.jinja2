@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<!--
+     Route: '/admin/sst_miscellaneous' => miscellaneous_functions
+     Template: miscellaneous_functions.jinja2
+     Form: manage_photos_form.py
+     Processor: upload_photos.py
+-->
+{% extends 'base/layout.jinja2' %}
+
+{% block content %}
+    <section class="container">
+        <div class="XXX">
+            <h3>Admin Reporting</h3>
+            <form action="{{ url_for('admin_bp.make_admin_report') }}" method="post">
+
+                {#  Work Function          #}
+                {% with %}
+                    {% set el_name=form.work_function %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="0000" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
+                {#  ar_report          #}
+                {% with %}
+                    {% set el_name=form.entry_type %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="Entry Type" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
+                {#  ar_report       #}
+                {% with %}
+                    {% set el_name=form.content %}
+                    {% set el_class="file" %}
+                    {% set el_placeholder="Content" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
+                <div class="button">
+                    <input id="submit" type="submit" value="Submit">
+                </div>
+                {% if form.errors %}
+                    <ul class="errors">
+                        {% for error, val in form.errors.items() %}
+                            {% if val is iterable and val is string %}
+                                <li>{{ error }} : {{ val }}</li>
+                            {% else %}
+                                {% for val_el in val %}
+                                    <li>{{ error }} : {{ val_el }}</li>
+                                {% endfor %}
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                {{ form.csrf_token }}
+            </form>
+
+        </div>
+        <script>
+            $ = jQuery;
+            $('#js1').change(function () {
+                $('.dpdb').parent().hide();
+                $('.dp').parent().hide();
+                $('.df').parent().hide();
+                $('.show_layout').parent().hide();
+                let opt = $('#js1 option:selected').val();
+                $('.' + opt).parent().show();
+            });
+            //# sourceURL=json_make_template.js
+
+
+        </script>
+    </section>
+{% endblock %}

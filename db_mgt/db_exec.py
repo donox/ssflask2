@@ -3,7 +3,9 @@ from .sst_photo_tables import SSTPhotoManager
 from .page_tables import PageManager
 from .json_tables import JSONTableManager
 from .event_tables import EventManager
+from .admin_report_table_manager import AdminReportManager
 from ssfl.admin.manage_events.event_operations import CalendarEventManager
+from flask import flash
 
 
 class DBExec(object):
@@ -25,6 +27,7 @@ class DBExec(object):
         self.available_managers['event'] = (False, self.create_event_manager)
         self.available_managers['calendar'] = (False, self.create_calendar_manager)
         self.available_managers['page_body'] = (False, self.create_page_body_manager)
+        self.available_managers['report'] = (False, self.create_report_manager)
         for manager in managers:
             if manager not in self.available_managers:
                 raise SystemError(f'Attempt to create invalid model manager: {manager}')
@@ -41,7 +44,8 @@ class DBExec(object):
             else:
                 self.current_form.errors[error_key] = [error_val]
         else:
-            raise SystemError(f'Attempt to add error to non-existent form - {error_key} : {error_val}')
+            flash('No Form', f'Error: {error_key} with content: {error_val}')
+            # raise SystemError(f'Attempt to add error to non-existent form - {error_key} : {error_val}')
 
     def get_db_session(self):
         return self.db_session
@@ -67,6 +71,10 @@ class DBExec(object):
 
     def create_calendar_manager(self):
         mgr = CalendarEventManager(self.db_session)
+        return mgr
+
+    def create_report_manager(self):
+        mgr = AdminReportManager(self.db_session)
         return mgr
 
     def create_page_body_manager(self):

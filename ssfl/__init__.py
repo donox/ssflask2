@@ -12,19 +12,16 @@ from flask_babelex import Babel
 from sqlalchemy.ext.declarative import declarative_base
 import platform
 
+local_server = True
 if platform.node() == 'Descartes':
-    local_server = True
-else:
-    local_server = False
-
-
-
-if not local_server:
-    env_path = '/home/doxley/ssflask2/.env_PA'
-    load_dotenv(dotenv_path=env_path)
-else:
     env_path = Path('.') / '.env'
     env_path = '/home/don/devel/ssflask2/.env'
+    load_dotenv(dotenv_path=env_path)
+elif platform.node() == 'glatz':
+    env_path = r'C:\Users\glatz\PycharmProjects\devel\ssflask2\.env_SP'
+else:
+    local_server = False
+    env_path = '/home/doxley/ssflask2/.env_PA'
     load_dotenv(dotenv_path=env_path)
 
 # Monkey-patch flask_mail to fix problem in configuration variable - line 548 - DEBUG being converted to int

@@ -1,10 +1,15 @@
 from ssfl import db
 import datetime as dt
 import toml
+import copy
 import json as jsn
 from collections import defaultdict
 from .base_table_manager import BaseTableManager
 from sqlalchemy.exc import IntegrityError
+from typing import List, Any, Dict, Text, NoReturn
+from collections import OrderedDict
+from utilities.template_support import merge_json_descriptors, build_descriptors_from_prototypes
+
 
 class JSONTableManager(BaseTableManager):
     def __init__(self, db_session):
@@ -25,7 +30,41 @@ class JSONTableManager(BaseTableManager):
         current_result['columns'].append(col['columns'][0])
         return
 
-    def make_json_descriptor(self, descriptor: dict, result_processor: object = None):
+    def get_json_primary_templates(self):
+        return JSONStorageManager.json_primary_templates
+
+    def expand_json_descriptor(self, child_dict: dict) -> dict:
+        """Merge descriptor into its parent making fully specified descriptor."""
+        try:
+            parent_slug = None
+            if 'parent' in child_dict:
+                parent_slug = child_dict['parent']
+                del child_dict['parent']
+            elif len(child_dict.keys()) == 1:
+                key = next(iter(child_dict))
+                down_1 = child_dict[key]
+                if 'parent' in down_1:
+                    parent_slug = down_1['parent']
+                    del (down_1['parent'])
+            if not parent_slug:
+                return child_dict
+            if parent_slug.startswith('P_'):
+                res = build_descriptors_from_prototypes(child_dict, self)
+                is_prototype = False
+                merge_json_descriptors(child_dict, res, is_prototype)
+                return res
+            else:
+                parent = self.get_json_from_name(parent_slug)
+                if not parent:
+                    raise ValueError(f'No template named {parent_slug} - did you forget a leading "P_"?')
+                is_prototype = False        # TODO: Where should this be set???
+                res = copy.deepcopy(parent)
+                merge_json_descriptors(child_dict, res, is_prototype)
+                return res
+        except Exception as e:
+            raise e
+
+    def make_json_descriptor(self, descriptor: Any, result_processor: object = None):
         rlt = _KeepResult()
 
         if isinstance(descriptor, str):
@@ -33,7 +72,7 @@ class JSONTableManager(BaseTableManager):
             tmp = get_name_type(descriptor)
             if tmp == 'FUNCTION':
                 function = self.template_functions[descriptor[2:]]
-                result = function()
+                function()
                 raise SystemError('Function call templates not yet implemented')
             elif tmp == 'PREAMBLE':
                 desc = self.get_json_from_name('P_' + descriptor[2:])
@@ -153,6 +192,14 @@ class JSONTableManager(BaseTableManager):
             return None
 
     def get_json_from_name(self, name):
+        """Find template as json from database by name or return None.
+
+        Args:
+            name: Template name
+
+        Returns:  Template as json dict.
+
+        """
         sql = f'select * from json_store where name="{name}"'
         res = self.db_session.execute(sql).first()
         if res:
@@ -169,6 +216,15 @@ class JSONTableManager(BaseTableManager):
         return json_store_obj
 
     def add_json(self, name, content):
+        """Add or update JSON template (as str or JSON) in database.
+
+        Args:
+            name: str name of template
+            content: Content to be added, may be JSON in string form or JSON dict
+
+        Returns:
+
+        """
         exists = self.get_json_from_name(name)
         if type(content) is str:
             json_content = content
@@ -284,66 +340,79 @@ class JSONStorageManager(object):
     # Names are prepended with P_ to indicate a prototype
     # Names are prepended with S_ to indicate that the corresponding DB entry (with a 'P_' substituted
     #      for the 'S_') can be substituted and expanded.
+    # Names prepended with N_ are used as is without further processing.
     # Names that are all cap are assumed to be of type prototype (no user names have all caps)
     # All prototypes are in the form of a list with the first element of the list being the name (remove 'P_' if there)
     #     and the remainder are processed to form a dictionary/context.  This implies that 'str' entries that are not
     #     expanded are names whose value will be 'None' (json 'null').  Lists are in Prototype form and dictionaries
     #     are merged with the parent dictionary.
-    descriptor_page_layout = {"PAGE": None, "name": None, "rows": []}
-    descriptor_row_layout = {"ROW": None, "columns": []}
-    descriptor_column_layout = {"COLUMN": None, "cells": [], "column_width": None}
-    descriptor_cell_layout = {"CELL": None, "element_type": None, "element": None, "is_snippet": None,
+    descriptor_page_layout = {"PAGE": None, "node_name": "PAGE", "name": None, "rows": []}
+    descriptor_row_layout = {"ROW": None, "node_name": "ROW", "columns": []}
+    descriptor_column_layout = {"COLUMN": None, "node_name": "COLUMN", "cells": [], "column_width": None}
+    descriptor_cell_layout = {"CELL": None, "node_name": "CELL", "element_type": None, "element": None,
+                              "is_snippet": None,
                               "width": None, "height": None, "styles": None, "classes": None}
-    descriptor_button_fields = {"BUTTON": None, "id": None, "button_type": None, "target": None, "text_content": None}
+    descriptor_button_fields = {"BUTTON": None, "node_name": "BUTTON", "id": None, "button_type": None, "target": None,
+                                "text_content": None}
 
     # Content Types
-    descriptor_picture_fields = {"PICTURE": None, "id": None, "url": None, "title": None, "caption": None,
+    descriptor_picture_fields = {"PICTURE": None, "node_name": "PICTURE", "id": None, "url": None, "title": None,
+                                 "caption": None,
                                  "width": None, "height": None, "alignment": None, "alt_text": None,
                                  "css_style": None, "css_class": None, "title_class": None,
                                  "caption_class": None, "image_class": None}
-    descriptor_slideshow_fields = {"SLIDESHOW": None, "title": None, "title_class": None, "position": None,
+    descriptor_slideshow_fields = {"SLIDESHOW": None, "node_name": "SLIDESHOW", "title": None, "title_class": None,
+                                   "position": None,
                                    "width": None, "height": None, "rotation": None,
                                    "frame_title": None, "pictures": []}
-    descriptor_story_fields = {"STORY": None, "id": None, "title": None, "name": None, "author": None,
+    descriptor_story_fields = {"STORY": None, "node_name": "STORY", "id": None, "title": None, "name": None,
+                               "author": None,
                                "date": None, "content": None, "snippet": "S_STORY_SNIPPET"}
 
     # Snippets
-    descriptor_story_snippet_fields = {"STORY_SNIPPET": None, "id": None, "title": None, "name": None, "author": None,
+    descriptor_story_snippet_fields = {"STORY_SNIPPET": None, "node_name": "STORY_SNIPPET", "id": None, "title": None,
+                                       "name": None, "author": None,
                                        "date": None, "snippet": None, "photo": "S_PICTURE",
                                        "content": None, "story_url": None, "read_more": "S_BUTTON"}
-    descriptor_calendar_snippet_fields = {"CALENDAR_SNIPPET": None, "events": [], "event_count": None, "width": None,
+    descriptor_calendar_snippet_fields = {"CALENDAR_SNIPPET": None, "node_name": "CALENDAR_SNIPPET", "events": [],
+                                          "event_count": None, "width": None,
                                           "audience": [], "categories": []}
-    descriptor_slideshow_snippet_fields = {"SLIDESHOW_SNIPPET": None, "id": None, "title": None, "text": None,
+    descriptor_slideshow_snippet_fields = {"SLIDESHOW_SNIPPET": None, "node_name": "SLIDESHOW_SNIPPET", "id": None,
+                                           "title": None, "text": None,
                                            "slides": "S_SLIDESHOW"}
-    descriptor_event_snippet_fields = {"EVENT_SNIPPET": None, "name": None, "date": None, "time": None, "venue": None}
-    descriptor_sign_snippet_fields = {"SIGN_SNIPPET": None, "name": None, "content_type": None, "content": None,
+    descriptor_event_snippet_fields = {"EVENT_SNIPPET": None, "node_name": "EVENT_SNIPPET", "name": None, "date": None,
+                                       "time": None, "venue": None}
+    descriptor_sign_snippet_fields = {"SIGN_SNIPPET": None, "node_name": "SIGN_SNIPPET", "name": None,
+                                      "content_type": None, "content": None,
                                       "styling": None}
 
     # Complex/predefined types
     descriptor_row_with_single_cell_fields = {"SINGLECELLROW": "REMOVE",
                                               "ROW": {"columns": [
                                                   {"COLUMN": None, "cells": ["S_CELL"],
-                                                   "column_width": None, "descriptor": "COLUMN"}],
-                                                  "descriptor": "ROW"},
+                                                   "column_width": None, "descriptor": "COLUMN",
+                                                   "node_name": "COLUMN"}],
+                                                  "descriptor": "ROW", "node_name": "ROW"},
                                               "descriptor": "SINGLECELLROW"}
     descriptor_single_cell_table_fields = {"ONECELL": "REMOVE", "PAGE": "S_SINGLECELLROW", "descriptor": "PAGE"}
     descriptor_three_cell_row_fields = {"THREECELLROW": "REMOVE",
-                                        "ROW": {"columns": [{"COLUMN": None, "descriptor": "COLUMN",
-                                                             "cells": ["S_CELL"]},
-                                                            {"COLUMN": None,
-                                                             "cells": ["S_CELL"]},
-                                                            {"COLUMN": None,
-                                                             "cells": ["S_CELL"]},
-                                                            ],
-                                                "descriptor": "ROW"},
+                                        "ROW": {
+                                            "columns": [{"COLUMN": None, "descriptor": "COLUMN", "node_name": "COLUMN",
+                                                         "cells": ["S_CELL"]},
+                                                        {"COLUMN": None, "node_name": "COLUMN",
+                                                         "cells": ["S_CELL"]},
+                                                        {"COLUMN": None, "node_name": "COLUMN",
+                                                         "cells": ["S_CELL"]},
+                                                        ],
+                                            "descriptor": "ROW", "node_name": "ROW"},
                                         "descriptor": "THREECELLROW"}
 
     descriptor_front_page_fields = {"FRONTPAGE": "REMOVE",
-                                    "PAGE": {"name": None,
+                                    "PAGE": {"name": None, "node_name": "PAGE",
                                              "rows": ["S_THREECELLROW", "S_THREECELLROW", "S_THREECELLROW"]},
                                     "descriptor": "PAGE"}
 
-    descriptor_test_fields = {"ONECELL": "REMOVE", "PAGE": "S_SINGLECELLROW", "descriptor": "PAGE"}
+    descriptor_test_fields = {"ONECELL": "REMOVE", "PAGE": "S_SINGLECELLROW", "descriptor": "PAGE", "node_name": "PAGE"}
 
     json_field_dictionary = dict()
     json_field_dictionary['PAGE'] = descriptor_page_layout
@@ -367,6 +436,8 @@ class JSONStorageManager(object):
     json_field_dictionary['FRONTPAGE'] = descriptor_front_page_fields
 
     # json_field_dictionary[''] = cls.
+    json_primary_templates = ['PAGE', 'ROW', 'COLUMN', 'CELL', 'BUTTON', 'PICTURE', 'SLIDESHOW', 'STORY',
+                              'STORY_SNIPPET', 'CALENDAR_SNIPPET', 'EVENT_SNIPPET', 'SIGN_SNIPPET', 'SLIDESHOW_SNIPPET']
 
     def __init__(self, db_exec):
         self.db_exec = db_exec
@@ -389,7 +460,7 @@ class JSONStore(db.Model):
         if commit:
             try:
                 session.commit()
-            except IntegrityError as e:    # TODO: log error and report
+            except IntegrityError as e:  # TODO: log error and report
                 raise e
             except Exception as e:
                 foo = 3

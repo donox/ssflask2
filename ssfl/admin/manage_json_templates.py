@@ -13,8 +13,9 @@ from utilities.miscellaneous import get_temp_file_name
 from utilities.sst_exceptions import log_sst_error
 from utilities.toml_support import toml_to_dict, elaborate_toml_dict, dict_to_toml_file
 
-
 # supported_functions = [('jcreate', 'Create New JSON DB entry'),
+#                        ('jtomldn', 'Download as TOML'),
+#                        ('jtomlup', 'Upload TOML file'),
 #                        ('jedit', 'Edit Story JSON'),
 #                        ('jcal', 'Edit Calendar JSON'),
 #                        ('jpage', 'Edit Page JSON'),
@@ -141,11 +142,10 @@ def manage_json_templates(db_exec, form):
                 form.errors['Nonexistent JSON template'] = ['Specified template does not exist']
                 return False
             # TODO:  This should customize audience, categories, -> keyword arguments to create plugin
-            calendar = Calendar(db_exec, cal_width)
+            calendar = Calendar(db_exec)
             calendar.create_daily_plugin(cal_display_count)
             content = calendar.get_calendar_snippet_data()
             template['event_count'] = cal_display_count
-            template['width'] = content['width']
             json_table_mgr.add_json(json_name, template)    # IS THIS RIGHT - was cal_result_template - redundant?
             return True
 
@@ -210,7 +210,9 @@ def manage_json_templates(db_exec, form):
                 toml_load = toml.load(fl, dict)
                 toml_dict = toml_to_dict(toml_load)
                 toml_dict_expanded = elaborate_toml_dict(db_exec, toml_dict)
-                json_obj = json.dumps(toml_dict_expanded)
+                new_obj = json_table_mgr.expand_json_descriptor(toml_dict_expanded)
+                json_obj = new_obj
+                # json_obj = json.dumps(toml_dict_expanded)
                 existing_template = json_table_mgr.get_json_from_name(json_name)
                 if (existing_template and toml_overwrite) or (not existing_template and not toml_overwrite):
                     json_table_mgr.add_json(json_name, json_obj)
@@ -232,7 +234,6 @@ def manage_json_templates(db_exec, form):
                 dict_to_toml_file(json.loads(json_store_obj.content), file_path)
                 return send_file(file_path, mimetype='application/octet', as_attachment=True,
                                    attachment_filename=toml_download_name)
-                return file_path, json_store_obj, toml_download_name + '.toml'
             return True
 
         else:

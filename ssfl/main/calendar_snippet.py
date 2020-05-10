@@ -15,12 +15,11 @@ calendar_categories = ['resident clubs', 'event', 'wellness', 'religion', 'commu
 
 
 class Calendar(object):
-    def __init__(self, db_exec, width):
+    def __init__(self, db_exec):
         self.db_exec = db_exec
         self.cal_data = dict()
-        self.cal_data['width'] = width
 
-    def create_daily_plugin(self, event_count, audiences=calendar_audiences, categories=calendar_categories):
+    def create_daily_plugin(self, event_count: str, audiences=calendar_audiences, categories=calendar_categories):
         start = dt.datetime.now()
         end = dt.datetime.now() + dt.timedelta(hours=96)
         events = SelectedEvents(self.db_exec, start, end, audiences, categories)
@@ -29,6 +28,8 @@ class Calendar(object):
         jsm = self.db_exec.create_json_manager()
         empty_event = jsm.get_json_from_name('P_EVENT_SNIPPET')
         current_count = event_count
+        if type(current_count) is str and current_count.isdigit():     # frequent user input failure
+            current_count = int(current_count)
         for event in events.all_events:
             evt_dict = empty_event.copy()
             evt_dict['name'] = event.event_name

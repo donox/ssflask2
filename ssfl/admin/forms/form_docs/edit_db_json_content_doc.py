@@ -1,32 +1,42 @@
-# Documentation fields for form manage_photo
+# Documentation fields for form DBJSONEditForm
 docs = dict()
 
-entry = dict()
 
 # Fields used in all choices
-docs['json'] = entry
-x = """The ID is the actual database ID of the page to be uploaded or downloaded. Either the ID or the page_name below 
-must be specified.
+docs['all'] = entry = dict()
+x = """Select the function to be performed.
 """
-entry['page_id'] = [x]
+entry['work_function'] = [x]
 
-x = """The page_name (a.k.a. page_slug) of the page to be uploaded or downloaded.  It is an error if the page does
+# Fields requiring a page slug
+docs['dp'] = entry
+x = """The page_name (a.k.a. page_slug) of the page to be deleted or downloaded.  It is an error if the page does
 not exist in the database.
 """
 entry['page_name'] = [x]
 
-x = """For downloading the TOML file, this is the name (without an extension) to be given to the downloaded file.
+
+docs['json'] = entry = dict()
+x = """The ID is the actual database ID of the JSON descriptor to be operated on. If left
+blank, then json_name below must be specified.
+"""
+entry['json_id'] = [x]
+
+x = """The name or slug for this JSON descriptor. It identifies the same descriptor as
+the JSON ID and only one needs to be specified.
+"""
+entry['json_name'] = [x]
+
+docs['file'] = entry = dict()
+x = """The name of the file to be written.
 """
 entry['file_name'] = [x]
 
-x = """This indicates whether to upload a file or download it.  A check indicates that this is a download. Note that
-this is somewhat redundant with which field above was selected.
+docs['proto'] = entry = dict()
+x = """Save this JSON as a Prototype template for completion via other commands.
 """
-entry['direction'] = [x]
+entry['is_prototype'] = [x]
 
-x = """When uploading a file, use this to select the file on your machine to be uploaded.
+x = """Remove unnecessary whitespace from the JSON string representation.
 """
-entry['upload_file'] = [x]
-
-
-entry['xx'] = ''
+entry['compress'] = [x]

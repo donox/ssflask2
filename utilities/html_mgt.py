@@ -4,6 +4,7 @@ from xml.etree.ElementTree import tostring
 import copy
 import re
 from utilities.shortcodes import Shortcode
+from db_mgt.db_exec import DBExec
 
 XHTML_NAMESPACE = 'http://www.w3.org/1999/xhtml'
 XHTML = "{%s}" % XHTML_NAMESPACE
@@ -24,7 +25,7 @@ def find_null_elements(el: etree.Element):
 class PageBody(object):
     """Utility operations to organize and structure the body of an html page.
     """
-    def __init__(self, db_exec):
+    def __init__(self, db_exec: DBExec):
         # TODO: set directories via config
         self.working_dir = '/home/don/devel/flaskSamples/'
         self.doc_as_html = None  # Not set if page is loaded from database
@@ -65,8 +66,7 @@ class PageBody(object):
             self.body = body
             self.update_cached_page()
 
-    @staticmethod
-    def normalize_page(target_page):
+    def normalize_page(self, target_page):
         """Convert page to a standard form etree.
 
             A normalized page has:
@@ -94,36 +94,33 @@ class PageBody(object):
             else:
                 body.append(el)
         # Note this fundamentally depends on side-effects - the parent node has its children modified appropriately
-        PageBody._normalize_remove_children_tails(body)
-        PageBody._convert_element_with_text(body)
-        PageBody._break_strings(body)
+        self._normalize_remove_children_tails(body)
+        self._convert_element_with_text(body)
+        self._break_strings(body)
         # foo = tostring(body, 'utf-8').decode('utf-8').replace('<html:', '<').replace('/html:', '/')
         return body
 
-    @staticmethod
-    def _normalize_remove_children_tails(el: etree.Element) -> None:
+    def _normalize_remove_children_tails(self, el: etree.Element) -> None:
         """Create new children element list with none having a tail."""
         if not len(el):
             return
         children = [x for x in el.getchildren()]
         new_children_list = []
         for child in children:
-            new_children_list += PageBody._convert_element_with_tail(child)
+            new_children_list += self._convert_element_with_tail(child)
         for x in children:
             el.remove(x)
         for x in new_children_list:
             el.append(x)
 
-    @staticmethod
-    def _convert_element_with_tail(el: etree.Element) -> [etree.Element, etree.Element]:
+    def _convert_element_with_tail(self, el: etree.Element) -> [etree.Element, etree.Element]:
         """Make tail into span node and remove it from element, returning both"""
         enclose_span = etree.Element(XHTML + "span", nsmap=NSMAP)
         enclose_span.text = el.tail
         el.tail = ''
         return [el, enclose_span]
 
-    @staticmethod
-    def _convert_element_with_text(el: etree.Element) -> None:
+    def _convert_element_with_text(self, el: etree.Element) -> None:
         """Convert an element with text to a child of a span."""
         if not len(el):
             return
@@ -136,24 +133,26 @@ class PageBody(object):
         el.insert(0, enclose_span)
         el.text = ''
 
-    @staticmethod
-    def _break_strings(el: etree.Element) -> None:
+    def _break_strings(self, el: etree.Element) -> None:
         """Break any strings containing latex elements into separate children, replacing text."""
-        if len(el):
-            children = [x for x in el.getchildren()]
-            for x in children:
-                PageBody._break_strings(x)
-            return
-        if el.text:
-            el_break = PageBody._break_text_string(el.text)
-            for x in el_break:
-                if x.text:
-                    el.append(x)
-            el.text = ''
-            return
+        try:
+            if len(el):
+                children = [x for x in el.getchildren()]
+                for x in children:
+                    self._break_strings(x)
+                return
+            if el.text:
+                el_break = self._break_text_string(el.text)
+                for x in el_break:
+                    if x.text:
+                        el.append(x)
+                el.text = ''
+                return
+        except Exception as e:
+            self.db_exec.add_error_to_form('Break Strings', f'Error in internal method on element {el}')
 
-    @staticmethod
-    def _break_text_string(text_string):
+
+    def _break_text_string(self, text_string):
         """Convert text string containing new lines to list of <span> elements."""
         ts1 = re.sub('[ \t]+', ' ', text_string)        # Replace tabs
         ts2 = re.sub('\n ', '\n', ts1)                  # Replace space following line feed
@@ -166,8 +165,8 @@ class PageBody(object):
             res.append(el)
         return res
 
-    @staticmethod
-    def create_empty_element(tag):
+
+    def create_empty_element(self, tag):
         return etree.Element(XHTML + tag, nsmap=NSMAP)
 
     def update_cached_page(self):

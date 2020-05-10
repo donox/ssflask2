@@ -14,13 +14,13 @@ def dict_to_toml(pydict: dict) -> dict:
         pydict: Arbitrary Python dictionary
 
     Returns:
-        Python dictionary with None values replaced with '.??.'
+        Python dictionary with None values replaced with '_xxx_'
 
     """
     result = dict()
     for key, value in pydict.items():
         if not value:
-            result[key] = '.??.'
+            result[key] = '_xxx_'
         elif type(value) is dict:
             result[key] = dict_to_toml(value)
         elif type(value) is list:
@@ -40,11 +40,11 @@ def toml_to_dict(toml_dict: dict) -> dict:
         toml_dict: Python dict containing result of toml.load or toml.loads.
 
     Returns:
-        Python dict with instances of '.??. replaced with None.
+        Python dict with instances of '_xxx_' replaced with None.
     """
     result = dict()
     for key, value in toml_dict.items():
-        if value == '.??.':
+        if value == '_xxx_':
             result[key] = None
         elif type(value) is dict:
             result[key] = toml_to_dict(value)
@@ -79,7 +79,7 @@ def indent_toml(toml_str: str) -> str:
             new_depth = len(lc)
             if new_depth < depth:
                 depth = new_depth
-                res.append('    ' * (depth-1) + line)
+                res.append('    ' * (depth - 1) + line)
             else:
                 res.append('    ' * depth + line)
                 depth = new_depth
@@ -105,6 +105,7 @@ def dict_to_toml_file(py_dict: dict, file_path: str) -> None:
         fl.write(out_str)
         fl.close()
 
+
 def elaborate_toml_list(db_exec: DBExec, toml_list: list) -> list:
     new_val = list()
     for el in toml_list:
@@ -129,14 +130,14 @@ def elaborate_toml_dict(db_exec: DBExec, toml_dict: dict) -> dict:
                 if elem:
                     toml_dict['element'] = elaborate_toml_dict(db_exec, elem)
                 else:
+                    db_exec.add_error_to_form('Unknown Template',
+                                              f'Template: {elem_name} not found. Has it been created?')
                     raise NoSuchTOMLItem(f'TOML Item: {elem_name} does not exist.')
             elif type(value) is dict:
                 toml_dict[key] = elaborate_toml_dict(db_exec, value)
             elif type(value) is list:
                 toml_dict[key] = elaborate_toml_list(db_exec, value)
         return toml_dict
-    except NoSuchTOMLItem as e:
-        raise e
     except Exception as e:
+        db_exec.add_error_to_form('Exception', f'TOML Support error: {e.args}')
         raise e
-

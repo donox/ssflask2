@@ -32,8 +32,7 @@ def sst_main_calendar():
     context = dict()
     context['APP_ROOT'] = request.base_url
     log_request('fullcalendar', 'fullcalendar', context)
-    foo = render_template('main/calendar.jinja2', **context)
-    return foo
+    return render_template('main/calendar.jinja2', **context)
 
 
 @main_bp.route('/main', methods=['GET'])
@@ -63,12 +62,12 @@ def sst_main():
 
 @main_bp.route('/main/page/<string:page_ident>', methods=['GET'])
 @login_required
-def sst_get_specific_test_page(page_ident):
+def sst_get_specific_page(page_ident):
     """Get specific page by id or name."""
     db_exec = DBExec()
     try:
         new_page = MultiStoryPage(db_exec)
-        new_res = new_page.make_single_page_context(page_ident)    # TODO:  ALLOW PAGE ID
+        new_res = new_page.make_single_page_context(page_ident)
         context = new_res['PAGE']['rows'][0]['ROW']['columns'][0]['cells'][0]
         context['story'] = context['element']
         context['story']['body'] = context['story']['content']
@@ -89,6 +88,7 @@ def sst_get_menu_page(page):
      Form: 
      Processor: build_page.py
     """
+    # This route used in nav template.
     db_exec = DBExec()
     try:
         bp = BuildPage(db_exec, None)

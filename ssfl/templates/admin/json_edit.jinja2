@@ -11,155 +11,82 @@
     <section class="container">
         <div class="columns">
             <form action="{{ url_for('admin_bp.up_down_load_json_template') }}" method="post">
-             {% with %}
-                    {% set el_name=form.json_id %}
-                    {% set el_class="input" %}
-                    {% set el_placeholder="0000" %}
-                    {% include 'base/form_entry.jinja2' %}
-                {% endwith %}
-{#                <div class="input">#}
-{#                    {{ form.json_id.label }}#}
-{#                    {{ form.json_id(placeholder='0000') }}#}
-{#                    {% if form.json_id.errors %}#}
-{#                        <ul class="errors">#}
-{#                            {% for error in form.json_id.errors %}#}
-{#                                <li>{{ error }}</li>#}
-{#                            {% endfor %}#}
-{#                        </ul>#}
-{#                    {% endif %}#}
-{#                </div>#}
-                <div>Note: Reset function should be avoided (unless you are sure)</div>
-                         {% with %}
+
+                {#  work_function         #}
+                {% with %}
                     {% set el_name=form.work_function %}
                     {% set el_class="input" %}
                     {% set el_placeholder="0000" %}
                     {% include 'base/form_entry.jinja2' %}
                 {% endwith %}
-{#                <div class="input">#}
-{##}
-{#                    {{ form.work_function.label }}#}
-{#                    {{ form.work_function(placeholder='0000') }}#}
-{#                    {% if form.work_function.errors %}#}
-{#                        <ul class="errors">#}
-{#                            {% for error in form.work_function.errors %}#}
-{#                                <li>{{ error }}</li>#}
-{#                            {% endfor %}#}
-{#                        </ul>#}
-{#                    {% endif %}#}
-{#                </div>#}
-            {% with %}
+
+                {#  jdown jup jcsv         #}
+                {% with %}
+                    {% set el_name=form.json_id %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="0000" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
+                {#  jdown jup jcsv         #}
+                {% with %}
                     {% set el_name=form.json_name %}
                     {% set el_class="input" %}
                     {% set el_placeholder="JSON template name(e.g., foo-bar-xx)" %}
                     {% include 'base/form_entry.jinja2' %}
                 {% endwith %}
-{#                <div class="input">#}
-{#                    {{ form.json_name.label }}#}
-{#                    {{ form.json_name(placeholder='JSON template name(e.g., foo-bar-xx)') }}#}
-{#                    {% if form.json_name.errors %}#}
-{#                        <ul class="errors">#}
-{#                            {% for error in form.json_name.errors %}#}
-{#                                <li>{{ error }}</li>#}
-{#                            {% endfor %}#}
-{#                        </ul>#}
-{#                    {% endif %}#}
-{#                </div>#}
-            {% with %}
+
+                {#  jdown jup jcsv - this goes away when save_file fixed         #}
+                {% with %}
                     {% set el_name=form.directory %}
                     {% set el_class="file" %}
                     {% set el_placeholder=form.default_directory %}
                     {% include 'base/form_entry.jinja2' %}
                 {% endwith %}
-{#                <div class="file">#}
-{#                    {{ form.directory.label }}#}
-{#                    {{ form.directory(placeholder=form.default_directory) }}#}
-{#                    {% if form.directory.errors %}#}
-{#                        <ul class="errors">#}
-{#                            {% for error in form.file_name.errors %}#}
-{#                                <li>{{ error }}</li>#}
-{#                            {% endfor %}#}
-{#                        </ul>#}
-{#                    {% endif %}#}
-{#                </div>#}
-            {% with %}
+
+                {#  jdown jup jcsv          #}
+                {% with %}
                     {% set el_name=form.file_name %}
                     {% set el_class="file" %}
                     {% set el_placeholder='Path name to store data' %}
                     {% include 'base/form_entry.jinja2' %}
                 {% endwith %}
-{#                <div class="file">#}
-{#                    {{ form.file_name.label }}#}
-{#                    {{ form.file_name(placeholder='Path name to store data') }}#}
-{#                    {% if form.file_name.errors %}#}
-{#                        <ul class="errors">#}
-{#                            {% for error in form.file_name.errors %}#}
-{#                                <li>{{ error }}</li>#}
-{#                            {% endfor %}#}
-{#                        </ul>#}
-{#                    {% endif %}#}
-{#                </div>#}
-            {% with %}
+
+                {#  jdown jup jcsv         #}
+                {% with %}
                     {% set el_name=form.file_type %}
                     {% set el_class="input" %}
                     {% set el_placeholder='json, csv' %}
                     {% include 'base/form_entry.jinja2' %}
                 {% endwith %}
-{#                <div class="file">#}
-{#                    {{ form.file_type.label }}#}
-{#                    {{ form.file_type(placeholder='Path name to store data') }}#}
-{#                    {% if form.file_type.errors %}#}
-{#                        <ul class="errors">#}
-{#                            {% for error in form.file_type.errors %}#}
-{#                                <li>{{ error }}</li>#}
-{#                            {% endfor %}#}
-{#                        </ul>#}
-{#                    {% endif %}#}
-{#                </div>#}
-            {% with %}
+
+                {#  jup jcsv         #}
+                {% with %}
                     {% set el_name=form.is_prototype %}
                     {% set el_class="input" %}
                     {% set el_placeholder='True' %}
                     {% include 'base/form_entry.jinja2' %}
                 {% endwith %}
-{#                <div class="file">#}
-{#                    {{ form.is_prototype.label }}#}
-{#                    {{ form.is_prototype(placeholder=True) }}#}
-{#                    {% if form.is_prototype.errors %}#}
-{#                        <ul class="errors">#}
-{#                            {% for error in form.is_prototype.errors %}#}
-{#                                <li>{{ error }}</li>#}
-{#                            {% endfor %}#}
-{#                        </ul>#}
-{#                    {% endif %}#}
-{#                </div>#}
-            {% with %}
+
+                {#  jup jcsv         #}
+                {% with %}
                     {% set el_name=form.compress %}
                     {% set el_class="input" %}
                     {% set el_placeholder='True' %}
                     {% include 'base/form_entry.jinja2' %}
                 {% endwith %}
-{#                <div class="file">#}
-{#                    {{ form.compress.label }}#}
-{#                    {{ form.compress(placeholder=True) }}#}
-{#                    {% if form.compress.errors %}#}
-{#                        <ul class="errors">#}
-{#                            {% for error in form.compress.errors %}#}
-{#                                <li>{{ error }}</li>#}
-{#                            {% endfor %}#}
-{#                        </ul>#}
-{#                    {% endif %}#}
-{#                </div>#}
+
                 <div class="button">
                     <input id="submit" type="submit" value="Submit">
                 </div>
-                  {% if form.errors %}
+                {% if form.errors %}
                     <ul class="errors">
                         {% for error, val in form.errors.items() %}
                             {% if val is iterable and val is string %}
                                 <li>{{ error }} : {{ val }}</li>
                             {% else %}
                                 {% for val_el in val %}
-                                     <li>{{ error }} : {{ val_el }}</li>
+                                    <li>{{ error }} : {{ val_el }}</li>
                                 {% endfor %}
                             {% endif %}
                         {% endfor %}
@@ -168,19 +95,20 @@
                 {{ form.csrf_token }}
             </form>
         </div>
-            <script>
-        $ = jQuery;
-        $('#js1').change(function(){
-            $('.jdown').parent().hide();
-            $('.jup').parent().hide();
-            $('.jcsv').parent().hide();
-            $('.jreset').parent().hide();
-{#            $('.jdelete').parent().hide();#}
-{#            $('.jreload').parent().hide();#}
-            let opt = $('#js1 option:selected').val();
-            $('.' + opt).parent().show();
-        });
-        //# sourceURL=edit_json_file.js
+        <script>
+            $ = jQuery;
+            $('#js1').change(function () {
+                $('.jdown').parent().hide();
+                $('.jup').parent().hide();
+                $('.jcsv').parent().hide();
+                $('.jreset').parent().hide();
+                let opt = $('#js1 option:selected').val();
+                $('.' + opt).parent().show();
+            });
+            $(document).ready(function () {
+
+            })
+            //# sourceURL=edit_json_file.js
         </script>
     </section>
 {% endblock %}

@@ -12,11 +12,11 @@
     <div class="container-fluid font-weight-bolder">
         {% for row in PAGE.rows %} {# Each item corresponds to all stories horizontally across the page #}
             <div class="row">
-                {% for col in row.ROW.columns %}
+                {% for col in row.columns %}
                     <div class="col {{ col.classes }}">
                         <div class="container-fluid">
                             {% for cell in col.cells %}
-                                <div class="{{ cell.classes }}" style="{{ cell.styles }}">
+                                <div class="{{ cell.classes }} overflow-auto" style="{{ cell.styles }}">
                                     {% if cell.element_type == 'CALENDAR_SNIPPET' %}
                                         {% set calendar = cell.element %}
                                         {% include 'main/snippet_calendar.jinja2' %}

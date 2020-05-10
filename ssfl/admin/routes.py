@@ -37,6 +37,8 @@ from .manage_json_templates import manage_json_templates
 from .manage_photo_functions import manage_photo_functions
 from .miscellaneous_functions import miscellaneous_functions
 from import_data.db_process_imports import db_process_imports
+from .forms.manage_admin_reports_form import ManageAdminReportsForm
+from .manage_admin_reports import manage_admin_reports
 
 # Set up a Blueprint
 admin_bp = Blueprint('admin_bp', __name__,
@@ -53,12 +55,14 @@ def flash_errors(form):
             else:
                 flash(u"%s error: %s" % (field, error), 'error')
 
+
 @admin_bp.route('/test', methods=['GET'])
 @login_required
 def test():
     sst_admin_access_log.make_info_entry(f"Route: /admin/run_ace")
 
     return app.send_static_file('dist/index.html')
+
 
 @admin_bp.route('/run_ace', methods=['GET'])
 @login_required
@@ -74,6 +78,7 @@ def run_js_test():
     sst_admin_access_log.make_info_entry(f"Route: /admin/run_js_test")
     context = dict()
     return render_template('/admin/run_js_test.jinja2', **context)
+
 
 @admin_bp.route('/admin/delete_row', methods=['POST'])
 @login_required
@@ -179,40 +184,6 @@ def sst_admin_calendar():
     return build_route('admin/calendar.jinja2', ManageCalendarForm(), manage_calendar, '/admin/calendar')()
 
 
-@admin_bp.route('/admin/calendarX', methods=['GET', 'POST'])
-@login_required
-def sst_admin_calendarX():
-    """Transfer content to-from DB for local editing."""
-    """
-     Route: '/admin/calendar' => manage_calendar
-     Template: calendar.jinja2
-     Form: manage_calendar_form.py
-     Processor: manage_calendar.py
-    """
-    sst_admin_access_log.make_info_entry(f"Route: /admin/sst_admin_calendar")
-    form = ManageCalendarForm()
-    db_exec = DBExec()
-    db_exec.set_current_form(form)
-    if request.method == 'GET':
-        context = dict()
-        context['form'] = form
-        return render_template('admin/calendar.jinja2', **context)
-    elif request.method == 'POST':
-        context = dict()
-        context['form'] = form
-        if form.validate_on_submit():
-            db_session = create_session(get_engine())
-            res = manage_calendar(db_session, form)
-            close_session(db_session)
-            if type(res) != bool:
-                return res
-            if res:
-                return render_template('admin/calendar.jinja2', **context)  # redirect to success url
-        return render_template('admin/calendar.jinja2', **context)
-    else:
-        raise RequestInvalidMethodError('Invalid method type: {}'.format(request.method))
-
-
 ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'docx', 'csv', 'toml'])
 
 
@@ -232,31 +203,6 @@ def sst_miscellaneous():
     """
     return build_route('admin/miscellaneous_functions.jinja2', MiscellaneousFunctionsForm(), miscellaneous_functions,
                        '/admin/sst_miscellaneous')()
-    # sst_admin_access_log.make_info_entry(f"Route: /admin/translate_to_html")
-    # form = MiscellaneousFunctionsForm()
-    # db_exec = DBExec()
-    # db_exec.set_current_form(form)
-    # try:
-    #     if request.method == 'GET':
-    #         context = dict()
-    #         context['form'] = form
-    #         return render_template('admin/miscellaneous_functions.jinja2', **context)
-    #     elif request.method == 'POST':
-    #         context = dict()
-    #         context['form'] = form
-    #         if form.validate_on_submit():
-    #             func, res = miscellaneous_functions(db_exec, form)
-    #             if func in ['dpdb', 'df', 'show_layout'] and res:
-    #                 flash('You were successful', 'success')
-    #                 return render_template('admin/miscellaneous_functions.jinja2', **context)  # redirect to success url
-    #             else:
-    #                 return send_file(res, mimetype="text/csv", as_attachment=True)
-    #         flash_errors(form)
-    #         return render_template('admin/miscellaneous_functions.jinja2', **context)
-    #     else:
-    #         raise RequestInvalidMethodError('Invalid method type: {}'.format(request.method))
-    # finally:
-    #     db_exec.terminate()
 
 
 @admin_bp.route('/admin/manage_index_page', methods=['GET', 'POST'])
@@ -325,7 +271,7 @@ def make_story_json_template():
                        '/admin/manageTemplate')()
 
 
-@admin_bp.route('/json', methods=['GET', 'POST'])
+@admin_bp.route('/admin/json', methods=['GET', 'POST'])
 @login_required
 def up_down_load_json_template():
     """
@@ -334,33 +280,10 @@ def up_down_load_json_template():
      Form: edit_json_content_form.py
      Processor: edit_json_file.py
     """
-    sst_admin_access_log.make_info_entry(f"Route: /admin/json/")
-    form = DBJSONEditForm()
-    db_exec = DBExec()
-    db_exec.set_current_form(form)
-    try:
-        if request.method == 'GET':
-            context = dict()
-            context['form'] = DBJSONEditForm()
-        elif request.method == 'POST':
-            context = dict()
-            context['form'] = form
-            if form.validate_on_submit():
-                res = edit_json_file(db_exec, form)
-                if res:
-                    flash(f'JSON edit succeeded', 'success')
-                else:
-                    form.errors['submit'] = 'Error processing json_edit_page'
-                    flash_errors(form)
-        else:
-            raise RequestInvalidMethodError('Invalid method type: {}'.format(request.method))
-    except Exception as e:
-        log_sst_error(sys.exc_info(), get_traceback=True)
-        form.errors['submit'] = 'Error processing JSON_edit page'
-        flash_errors(form)
-    finally:
-        db_exec.terminate()
-        return render_template('admin/json_edit.jinja2', **context)  # Executed in all cases
+    # TODO:  THIS ROUTE IS BROKEN - DEPENDS ON BEING ON LOCAL MACHINE.
+    #        Can functions be moved to json_make_template above - at min. needs refactoring.
+    return build_route('admin/json_edit.jinja2', DBJSONEditForm(), edit_json_file,
+                       '/admin/json')()
 
 
 @admin_bp.route('/admin/sst_import_database', methods=['GET', 'POST'])
@@ -397,9 +320,22 @@ def manage_page_data():
     Template: db_get_database_data.jinja2
     Display:  db_display_database_data.jinja2
     Form: get_database_data_form.py
-    Processor: get_database_data_form.py
+    Processor: db_manage_pages.py
     """
-    return build_route('admin/db_get_database_data.jinja2', DBGetDatabaseData(), db_manage_pages, '/admin/get_database_data')()
+    return build_route('admin/db_get_database_data.jinja2', DBGetDatabaseData(), db_manage_pages,
+                       '/admin/get_database_data')()
+
+@admin_bp.route('/admin/make_report', methods=['GET', 'POST'])
+@login_required
+def make_admin_report():
+    """
+    Route: '/admin/make_report' => manage_admin_reports
+    Template: make_report.jinja2
+    Form: manage_admin_reports_form.py
+    Processor: manage_admin_reports.py
+    """
+    return build_route('admin/manage_admin_reports.jinja2', ManageAdminReportsForm(), manage_admin_reports,
+                       '/admin/make_report')()
 
 
 def build_route(template, processing_form, processing_function, route_name):
