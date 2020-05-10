@@ -1,0 +1,16 @@
+STORY_SNIPPET = "_xxx_"
+node_name = "STORY_SNIPPET"
+title = "_xxx_"
+name = "_xxx_"
+author = "_xxx_"
+
+[photo]
+    node_name = "PICTURE"
+    id = "_xxx_"
+    
+    [read_more]
+    node_name = "BUTTON"
+    button_type = "_xxx_"
+    target = "_xxx_"
+    text_content = "_xxx_"
+    

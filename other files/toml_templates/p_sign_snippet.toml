@@ -1,0 +1,7 @@
+SIGN_SNIPPET = "_xxx_"		# NOT REALLY IMPLEMENTED YET
+node_name = "SIGN_SNIPPET"
+name = "_xxx_"
+content_type = "_xxx_"
+content = "_xxx_"
+styling = "_xxx_"
+descriptor = "SIGN_SNIPPET"

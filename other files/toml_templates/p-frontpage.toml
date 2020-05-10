@@ -1,0 +1,56 @@
+[PAGE]
+    [[PAGE.rows]]
+            [[PAGE.rows.columns]]
+                [[PAGE.rows.columns.cells]]
+                    element_type = "STORY"
+                     element = "_xxx_"
+		     is-snippet = true          
+                    
+            [[PAGE.rows.columns]]
+                [[PAGE.rows.columns.cells]]
+                    element_type = "STORY"
+                    element = "_xxx_"  
+		     is-snippet = true 
+
+            [[PAGE.rows.columns]]
+                [[PAGE.rows.columns.cells]]
+                    element_type = "STORY"
+                    element = "_xxx_"
+		     is-snippet = true  
+	[[PAGE.rows]]
+
+            [[PAGE.rows.columns]]
+                [[PAGE.rows.columns.cells]]
+                    element_type = "STORY"
+                    element = "_xxx_" 
+		     is-snippet = true             
+                    
+            [[PAGE.rows.columns]]
+                [[PAGE.rows.columns.cells]]
+                    element_type = "STORY"
+                    element = "_xxx_" 
+		     is-snippet = true   
+
+            [[PAGE.rows.columns]]
+                [[PAGE.rows.columns.cells]]
+                    element_type = "STORY"
+                    element = "_xxx_"
+		     is-snippet = true   
+	[[PAGE.rows]]
+            [[PAGE.rows.columns]]
+                [[PAGE.rows.columns.cells]]
+                    element_type = "STORY"
+                    element = "_xxx_" 
+		     is-snippet = true             
+                    
+            [[PAGE.rows.columns]]
+                [[PAGE.rows.columns.cells]]
+                    element_type = "STORY"
+                   element = "_xxx_" 
+		     is-snippet = true    
+
+            [[PAGE.rows.columns]]
+                [[PAGE.rows.columns.cells]]
+                    element_type = "STORY"
+                   element = "_xxx_"
+		     is-snippet = true    

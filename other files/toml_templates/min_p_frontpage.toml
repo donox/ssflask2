@@ -1,0 +1,58 @@
+[PAGE]
+    [[PAGE.rows]]
+        [[PAGE.rows.ROW]]
+            [[PAGE.rows.ROW.columns]]
+                [[PAGE.rows.ROW.columns.cells]]  # Can dupe these 4 lines for multiple cells
+                    element_type = "_xxx_"
+                    element = "_xxx_"  
+		    is-snippet = true          
+                    
+            [[PAGE.rows.ROW.columns]]
+                [[PAGE.rows.ROW.columns.cells]]
+                    element_type = "_xxx_"
+                    element = "_xxx_" 
+		    is-snippet = true  
+
+            [[PAGE.rows.ROW.columns]]
+                [[PAGE.rows.ROW.columns.cells]]
+                    element_type = "_xxx_"
+                    element = "_xxx_" 
+		    is-snippet = true  
+
+         [[PAGE.rows.ROW]]
+            [[PAGE.rows.ROW.columns]]
+                [[PAGE.rows.ROW.columns.cells]]
+                    element_type = "_xxx_"
+                    element = "_xxx_"
+		    is-snippet = true             
+                    
+            [[PAGE.rows.ROW.columns]]
+                [[PAGE.rows.ROW.columns.cells]]
+                    element_type = "_xxx_"
+                    element = "_xxx_"
+		    is-snippet = true   
+
+            [[PAGE.rows.ROW.columns]]
+                [[PAGE.rows.ROW.columns.cells]]
+                    element_type = "_xxx_"
+                    element = "_xxx_" 
+		    is-snippet = true 
+
+        [[PAGE.rows.ROW]]
+            [[PAGE.rows.ROW.columns]]
+                [[PAGE.rows.ROW.columns.cells]]
+                    element_type = "_xxx_"
+                    element = "_xxx_" 
+		    is-snippet = true            
+                    
+            [[PAGE.rows.ROW.columns]]
+                [[PAGE.rows.ROW.columns.cells]]
+                    element_type = "_xxx_"
+                    element = "_xxx_" 
+		    is-snippet = true  
+
+            [[PAGE.rows.ROW.columns]]
+                [[PAGE.rows.ROW.columns.cells]]
+                    element_type = "_xxx_"
+                    element = "_xxx_" 
+		    is-snippet = true 
