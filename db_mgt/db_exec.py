@@ -4,6 +4,7 @@ from .page_tables import PageManager
 from .json_tables import JSONTableManager
 from .event_tables import EventManager
 from .admin_report_table_manager import AdminReportManager
+from .user_models import UserManager
 from ssfl.admin.manage_events.event_operations import CalendarEventManager
 from flask import flash
 
@@ -63,7 +64,8 @@ class DBExec(object):
         return mgr
 
     def create_user_manager(self):
-        pass
+        mgr = UserManager(self.db_session)
+        return mgr
 
     def create_event_manager(self):
         mgr = EventManager(self.db_session)

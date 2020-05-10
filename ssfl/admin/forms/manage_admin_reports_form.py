@@ -18,7 +18,7 @@ class ManageAdminReportsForm(FlaskForm):
     Processor: manage_admin_reports.py
     """
     supported_functions = [('ar_report', 'Make New Report'),
-                           ('xx', 'YYY'),
+                           ('ar_display', 'Display Recent Reports'),
                            ('xx', 'YYY')]
     entry_types = [('problem', 'Problem'),
                    ('ui', 'Look and Feel'),
@@ -39,6 +39,9 @@ class ManageAdminReportsForm(FlaskForm):
         if not res:
             return False
         if self.work_function.data == 'ar_report':
+            # We don't check database for page
+            return True
+        if self.work_function.data == 'ar_display':
             # We don't check database for page
             return True
         return False

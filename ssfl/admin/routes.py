@@ -331,6 +331,7 @@ def make_admin_report():
     """
     Route: '/admin/make_report' => manage_admin_reports
     Template: make_report.jinja2
+    Display:  display_admin_report.jinja2
     Form: manage_admin_reports_form.py
     Processor: manage_admin_reports.py
     """
