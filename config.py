@@ -91,8 +91,8 @@ class Config:
 
     # Admin
     FLASK_ADMIN_SWATCH = 'cerulean'
-    EMAIL_PROBLEM_REPORTS = True
-    PROBLEM_REPORT_RECIPIENTS  = 'don@theoxleys.com'
+    EMAIL_PROBLEM_REPORTS = os.environ.get('EMAIL_PROBLEM_REPORTS')
+    PROBLEM_REPORT_RECIPIENTS = os.environ.get('PROBLEM_REPORT_RECIPIENTS')
 
     # Some standard things
     FLASK_ENV = DevConfig
