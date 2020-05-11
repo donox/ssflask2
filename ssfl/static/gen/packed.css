@@ -804,7 +804,8 @@ button {
     padding: 4px;
 }
 
-/* Collection of styles to help in evaluating layout - normally not invoked 8 */
+/* Collection of styles to help in evaluating layout - normally not invoked */
+/*
 .devBorder {
     border: #0000e6 solid 1px;
 }
@@ -832,3 +833,4 @@ button {
 .devStyle div div div {
     background-color: #ffd83d;
 }
+*/
