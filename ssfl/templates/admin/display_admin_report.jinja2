@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<!--
+    Route: '/admin/make_report' => manage_admin_reports
+    Template: make_report.jinja2
+    Display:  display_admin_report.jinja2
+    Form: manage_admin_reports_form.py
+    Processor: manage_admin_reports.py
+-->
+{% extends 'base/layout.jinja2' %}
+
+{% block content %}
+    <section class="container">
+        <div class="XXX">
+            {% if function == 'ar_display' %}
+                <h3 class="h3">Recent Reports in "{{ search_field }}" Searched with "{{ search_string }}"</h3>
+            {% endif %}
+            {% if function == 'ar_display'  %}
+                <table class="table table-bordered table-sm">
+                    <thead class="thead-dark">
+                    {% for field in fields %}
+                        <th>{{ field }}</th>
+                    {% endfor %}
+                    </thead>
+                    <tbody>
+                    {% for field in values %}
+                        <tr>
+                            {% with %}
+                                {% set button=field.view_button %}
+                                <td>{% include 'base/button_form.jinja2' %}</td>
+                                {% set button=field.del_button %}
+                                <td>{% include 'base/button_form.jinja2' %}</td>
+                                <td>{{ field.id }}</td>
+                                <td>{{ field.entry_type }}</td>
+                                <td>{{ field.creator }}</td>
+                                <td>{{ field.created }}</td>
+                                <td>{{ field.status }}</td>
+                                <td>{{ field.content }}</td>
+                            {% endwith %}
+                        </tr>
+                    {% endfor %}</tbody>
+                </table>
+            {% endif %}
+        </div>
+     <script>
+            $ = jQuery;
+            $('#js1').change(function () {
+                $('.ar_report').parent().hide();
+                $('.ar_display').parent().hide();
+                $('.xx').parent().hide();
+                let opt = $('#js1 option:selected').val();
+                $('.' + opt).parent().show();
+            });
+            //# sourceURL=json_make_template.js
+
+
+        </script>
+    </section>
+{% endblock %}

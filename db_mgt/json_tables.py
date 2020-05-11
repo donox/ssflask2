@@ -57,7 +57,7 @@ class JSONTableManager(BaseTableManager):
                 parent = self.get_json_from_name(parent_slug)
                 if not parent:
                     raise ValueError(f'No template named {parent_slug} - did you forget a leading "P_"?')
-                is_prototype = False        # TODO: Where should this be set???
+                is_prototype = False  # TODO: Where should this be set???
                 res = copy.deepcopy(parent)
                 merge_json_descriptors(child_dict, res, is_prototype)
                 return res
@@ -382,9 +382,9 @@ class JSONStorageManager(object):
                                            "slides": "S_SLIDESHOW"}
     descriptor_event_snippet_fields = {"EVENT_SNIPPET": None, "node_name": "EVENT_SNIPPET", "name": None, "date": None,
                                        "time": None, "venue": None}
-    descriptor_sign_snippet_fields = {"SIGN_SNIPPET": None, "node_name": "SIGN_SNIPPET", "name": None,
-                                      "content_type": None, "content": None,
-                                      "styling": None}
+    descriptor_sign_snippet_fields = {"SIGN_SNIPPET": None, "node_name": "SIGN_SNIPPET", "name": None, "width": None,
+                                      "height": None, "sign_type": None, "sign_background": None, "sign_border": None,
+                                      "content": None, "styling": None}
 
     # Complex/predefined types
     descriptor_row_with_single_cell_fields = {"SINGLECELLROW": "REMOVE",

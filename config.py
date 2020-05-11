@@ -7,8 +7,6 @@ class DevConfig:
 
 class Config:
 
-    TESTING = os.environ.get('TESTING')
-    DEBUG = os.environ.get('DEBUG')
     SECRET_KEY = os.environ.get('SECRET_KEY')
     SESSION_COOKIE_NAME = os.environ.get('SESSION_COOKIE_NAME')
     SERVER_NAME = os.environ.get('SERVER_NAME')
@@ -80,8 +78,21 @@ class Config:
     DROPZONE_ALLOWED_FILE_TYPE = 'image/*'
     DROPZONE_REDIRECT_VIEW = 'photo_bp.dropzone_results'
 
+    # NEEDED FOR FLASK-MAIL
+    MAIL_SERVER = 'smtp.ionos.com'
+    MAIL_PORT = 587
+    MAIL_USERNAME = 'info@sunnyside-times.com'
+    MAIL_PASSWORD = 'Luci2012!'
+    MAIL_USE_TLS = False
+    MAIL_USE_SSL = False
+    MAIL_DEFAULT_SENDER = 'info@Sunnyside-Times.com'
+    MAIL_MAX_EMAILS = 20
+    MAIL_ASCII_ATTACHMENTS = False
+
     # Admin
     FLASK_ADMIN_SWATCH = 'cerulean'
+    EMAIL_PROBLEM_REPORTS = True
+    PROBLEM_REPORT_RECIPIENTS  = 'don@theoxleys.com'
 
     # Some standard things
     FLASK_ENV = DevConfig

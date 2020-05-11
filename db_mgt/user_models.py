@@ -22,6 +22,10 @@ class UserManager(BaseTableManager):
         sql = f'delete from users where id={uid};'
         res = self.db_session.execute(sql)
 
+    def get_user_name_from_id(self, uid):
+        sql = f'select username from users where id={uid}'
+        res = self.db_session.execute(sql).first()
+        return res[0]
 
 
 class User(db.Model, UserMixin):

@@ -2,6 +2,7 @@ import csv
 from ssfl.main.story import Story
 from db_mgt.json_tables import JSONStorageManager as jsm
 from ssfl.main.calendar_snippet import Calendar
+from ssfl.main.sign_snippet import Sign
 from config import Config
 from json import dumps
 from typing import Dict, AnyStr, Any
@@ -278,6 +279,8 @@ class MultiStoryPage(object):
             elem_show['width'] = existing['width']
             elem_show['height'] = existing['height']
             elem_show['rotation'] = existing['rotation']
+            if 'background' in existing:            # Can remove if all descriptors have this
+                elem_show['background'] = existing['background']
 
             res = list()
             photo_list = existing['pictures'].split(',')
@@ -299,11 +302,9 @@ class MultiStoryPage(object):
         foo = 3
 
     def _fill_sign_snippet(self, elem):
-        pass
-        # content = elem['content']
-        # name = elem['name']
-        # content_type = elem['content_type']
-        # styling = elem['styling']
+        sign = Sign(self.db_exec)
+        res = sign.create_notice(elem)
+        elem['sign_snippet'] = res
 
     def make_multi_element_page_context(self) -> Dict[AnyStr, Any]:
         """Create context for a page based on current descriptor.

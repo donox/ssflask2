@@ -7,6 +7,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from flask_dropzone import Dropzone
 from flask_babelex import Babel
+from flask_mail import Mail
 
 
 from sqlalchemy.ext.declarative import declarative_base
@@ -23,12 +24,6 @@ else:
     local_server = False
     env_path = '/home/doxley/ssflask2/.env_PA'
     load_dotenv(dotenv_path=env_path)
-
-# Monkey-patch flask_mail to fix problem in configuration variable - line 548 - DEBUG being converted to int
-import flask_mail as fm
-from ssfl.login import my_flask_mail as mfm
-
-fm.Mail = mfm.Mail
 
 # Config Loggers
 from utilities.logging_support import SsTLogger
@@ -56,14 +51,15 @@ def create_app():
     app = Flask(__name__, instance_relative_config=False)
     app.config.from_object('config.Config')
 
-    # Initialize Flask-BabelEx
+    # Initialize Flask Apps
     babel = Babel(app)
+
     from db_mgt.user_models import User, Role
 
-    # Set up Flask-Assets
     assets = Environment(app)
+    mail = Mail()
+    mail.init_app(app)
 
-    # Initialize Flask-SQLAlchemy
     db.init_app(app)
     # migrate = Migrate(app, db)  Not using alembic
 
