@@ -79,17 +79,20 @@ class Config:
     DROPZONE_REDIRECT_VIEW = 'photo_bp.dropzone_results'
 
     # NEEDED FOR FLASK-MAIL
-    MAIL_SERVER = '127.0.0.1'
-    MAIL_USERNAME = 'Sunnyside-Times.com'
-    MAIL_PASSWORD = 'password'
+    MAIL_SERVER = 'smtp.ionos.com'
+    MAIL_PORT = 587
+    MAIL_USERNAME = 'info@sunnyside-times.com'
+    MAIL_PASSWORD = 'Luci2012!'
     MAIL_USE_TLS = False
     MAIL_USE_SSL = False
-    MAIL_DEFAULT_SENDER = 'Sunnyside-Times'
+    MAIL_DEFAULT_SENDER = 'info@Sunnyside-Times.com'
     MAIL_MAX_EMAILS = 20
     MAIL_ASCII_ATTACHMENTS = False
 
     # Admin
     FLASK_ADMIN_SWATCH = 'cerulean'
+    EMAIL_PROBLEM_REPORTS = True
+    PROBLEM_REPORT_RECIPIENTS  = 'don@theoxleys.com'
 
     # Some standard things
     FLASK_ENV = DevConfig

@@ -5,6 +5,8 @@ import datetime as dt
 from flask_login import current_user
 from flask import render_template
 from utilities.miscellaneous import extract_fields_to_dict
+from ssfl.user_interaction.mail_handling import ManageMail
+from config import Config
 
 
 def manage_admin_reports(db_exec: DBExec, form):
@@ -27,9 +29,16 @@ def manage_admin_reports(db_exec: DBExec, form):
         user_mgr = db_exec.create_user_manager()
         if function_to_execute == 'ar_report':  # 'Make a new Report'
             user = current_user.id
+            user_name = user_mgr.get_user_name_from_id(user)
             new_report = AdminReport(creator=user, entry_type=entry_type, content=content, status='active',
                                      created=dt.datetime.now())
             report_mgr.add_report_to_database(new_report, commit=True)
+            if Config.EMAIL_PROBLEM_REPORTS:
+                mail = ManageMail()
+                mail.add_title(f'{user_name} Reported Problem No. {new_report.id} of Type: {entry_type}')
+                mail.add_content(content)
+                mail.add_recipients(Config.PROBLEM_REPORT_RECIPIENTS.split(','))
+                mail.send_message()
             return True
         if function_to_execute == 'ar_display':
             nbr_reports = 10

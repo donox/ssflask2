@@ -7,6 +7,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from flask_dropzone import Dropzone
 from flask_babelex import Babel
+from flask_mail import Mail
 
 
 from sqlalchemy.ext.declarative import declarative_base
@@ -50,14 +51,15 @@ def create_app():
     app = Flask(__name__, instance_relative_config=False)
     app.config.from_object('config.Config')
 
-    # Initialize Flask-BabelEx
+    # Initialize Flask Apps
     babel = Babel(app)
+
     from db_mgt.user_models import User, Role
 
-    # Set up Flask-Assets
     assets = Environment(app)
+    mail = Mail()
+    mail.init_app(app)
 
-    # Initialize Flask-SQLAlchemy
     db.init_app(app)
     # migrate = Migrate(app, db)  Not using alembic
 
