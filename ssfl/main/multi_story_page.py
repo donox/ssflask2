@@ -343,20 +343,17 @@ class MultiStoryPage(object):
                         width = cell['width']
                         if width:
                             col_extra_classes += f'col-sm-{width} col-md-{width} col-lg-{width}'
-                    if 'height' in cell:
-                        height = cell['height']
-                        if height:
-                            styles += f'height:{height}px;'
+                    height = cell.get('height', None)
+                    if height:
+                        styles += f'max-height:{height}px;'
                     cell['styles'] = styles
                     classes = ""
-                    if 'overflow' in cell:          # overflow causes scrollbars if needed
-                        overflow = cell['overflow']
-                        if overflow:
-                            classes += f' overflow-{overflow} '
-                    if 'classes' in cell:
-                        extra_classes = cell['classes']
-                        if extra_classes:
-                            classes += f' {extra_classes}'
+                    overflow = cell.get('overflow', None)        # overflow causes scrollbars if needed
+                    if overflow:
+                        classes += f' overflow-{overflow} '
+                    extra_classes = cell.get('classes', None)
+                    if extra_classes:
+                        classes += f' {extra_classes}'
                     cell['classes'] = classes
                     elem = cell['element']
                     if cell['is-snippet']:
