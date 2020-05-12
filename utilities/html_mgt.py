@@ -26,8 +26,6 @@ class PageBody(object):
     """Utility operations to organize and structure the body of an html page.
     """
     def __init__(self, db_exec: DBExec):
-        # TODO: set directories via config
-        self.working_dir = '/home/don/devel/flaskSamples/'
         self.doc_as_html = None  # Not set if page is loaded from database
         self.title = None  # If html element use self.title.text to get text, else title is text (from db generally)
         self.author = None
@@ -105,23 +103,32 @@ class PageBody(object):
         if not len(el):
             return
         children = [x for x in el.getchildren()]
+        for child in children:
+            self._normalize_remove_children_tails(child)
         new_children_list = []
         for child in children:
-            new_children_list += self._convert_element_with_tail(child)
+            if child.tail:
+                new_children_list += self._convert_element_with_tail(child)
+            else:
+                new_children_list.append(child)
         for x in children:
             el.remove(x)
         for x in new_children_list:
             el.append(x)
 
     def _convert_element_with_tail(self, el: etree.Element) -> [etree.Element, etree.Element]:
-        """Make tail into span node and remove it from element, returning both"""
+        """Make tail into span node and remove it from element, returning both
+
+            This allows both the element and its new sibling to the right to be appended to the parent."""
         enclose_span = etree.Element(XHTML + "span", nsmap=NSMAP)
         enclose_span.text = el.tail
         el.tail = ''
         return [el, enclose_span]
 
     def _convert_element_with_text(self, el: etree.Element) -> None:
-        """Convert an element with text to a child of a span."""
+        """Convert an element with text to a child of a span.
+
+            We wrap the text in a <span> and place it as the first child of the element."""
         if not len(el):
             return
         if not el.text:
@@ -162,7 +169,10 @@ class PageBody(object):
         for segment in tsl:
             el = etree.Element(XHTML + 'span', nsmap=NSMAP)
             el.text = segment
-            res.append(el)
+            # the inner 'not's are converting the values to booleans so if el has content in one subelement,
+            # the inner expression will evaluate false.
+            if not (not el.getchildren() and not el.text and not el.tail):
+                res.append(el)
         return res
 
 
