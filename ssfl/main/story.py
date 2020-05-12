@@ -105,8 +105,8 @@ class Story(object):
             if el.text is not '':
                 elem.append(el)
 
-        if False:                       # TODO: REMOVEQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ
-            self.pb.update_cached_page()
+        # if False:                       # Force no caching - if needed
+        self.pb.update_cached_page()
         story = self.pb.get_story_body()
         self.story['title'], author, snippet = self.pb.get_title_author_snippet()
         self.story['tab_title'] = self.story['title']

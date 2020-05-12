@@ -139,7 +139,10 @@ class SSTPhotoManager(BaseTableManager):
             return None
 
     def get_photo_from_id(self, photo_id):
-        sql = f'select * from sst_photos where id={photo_id};'
+        pid = photo_id
+        if photo_id < 10000:                # TODO: Remove after migration complete
+            pid = self.get_new_photo_id_from_old(photo_id)
+        sql = f'select * from sst_photos where id={pid};'
         return self._get_photo(sql)
 
     def _get_photo(self, sql):
@@ -251,28 +254,31 @@ class SSTPhotoManager(BaseTableManager):
         This requires mapping via something other than ID's, so we will get the file name of the original photo
         and try to match that.  To do this properly, we need to get the folder name also which must be taken from
         the gallery."""
-        sql = f'select photo_id from v_photo_picture where wp_picture_id={old_id};'
+        sql = f'select id from sst_photos where old_id={old_id};'
         new_id = self.db_session.execute(sql).first()
-        if not new_id:
-            return None
-        new_id = new_id[0]
-        # Now find the photo in Photo (the imported table).
-        sql = f'select image_slug, file_name, gallery_id from photo where id={new_id};'
-        res = self.db_session.execute(sql).first()
-        if not res:
-            return None
-        slug, file_name, new_gal = res
-        sql = f'select path_name from photo_gallery where id={new_gal};'
-        folder = self.db_session.execute(sql).first()
-        if not folder:
-            return None
-        folder = folder[0]
-        sql = f'select id from sst_photos where file_name="{file_name}" and folder_name="{folder}";'
-        target_id = self.db_session.execute(sql).first()
-        if not target_id:
-            return None
-        else:
-            return target_id[0]
+        return new_id[0]
+        # sql = f'select photo_id from v_photo_picture where wp_picture_id={old_id};'
+        # new_id = self.db_session.execute(sql).first()
+        # if not new_id:
+        #     return None
+        # new_id = new_id[0]
+        # # Now find the photo in Photo (the imported table).
+        # sql = f'select image_slug, file_name, gallery_id from photo where id={new_id};'
+        # res = self.db_session.execute(sql).first()
+        # if not res:
+        #     return None
+        # slug, file_name, new_gal = res
+        # sql = f'select path_name from photo_gallery where id={new_gal};'
+        # folder = self.db_session.execute(sql).first()
+        # if not folder:
+        #     return None
+        # folder = folder[0]
+        # sql = f'select id from sst_photos where file_name="{file_name}" and folder_name="{folder}";'
+        # target_id = self.db_session.execute(sql).first()
+        # if not target_id:
+        #     return None
+        # else:
+        #     return target_id[0]
 
     def get_recent_photos(self, nbr_to_get):
         sql = f'select id from sst_photos order by image_date desc limit {nbr_to_get};'
@@ -424,6 +430,7 @@ class Picture(object):
 class SSTPhoto(db.Model):
     __tablename__ = 'sst_photos'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    old_id = db.Column(db.Integer)
     slug = db.Column(db.String(), nullable=False)  # Name used in urls
     file_name = db.Column(db.String())
     folder_name = db.Column(db.String())

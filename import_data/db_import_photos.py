@@ -127,6 +127,8 @@ class ImportPhotoData(object):
         field_gallery_id = self.get_field_index('galleryid', 'wp_ngg_pictures')
         for photo_row in self.get_wp_picture_data():
             wp_id = photo_row[field_photo_id]
+            if wp_id == 1531:
+                foo = 3
             if wp_id > max_photo:
                 filename = photo_row[field_photo_filename]
                 slug = photo_row[field_photo_slug]
@@ -139,7 +141,7 @@ class ImportPhotoData(object):
                     metadata = photo_row[field_photo_meta_data]
                     if len(metadata) > 2000:
                         metadata = ''
-                    pho = SSTPhoto(slug=slug, folder_name=gallery_res['rem_path'], file_name=filename, caption=caption,
+                    pho = SSTPhoto(old_id=wp_id, slug=slug, folder_name=gallery_res['rem_path'], file_name=filename, caption=caption,
                                 alt_text=alt_text, image_date=imagedate, json_metadata=metadata, metadata_update=None)
                     pho.add_to_db(self.db_exec, commit=True)
                 else:
