@@ -4,6 +4,7 @@ from ssfl.main.multi_story_page import MultiStoryPage
 from db_mgt.setup import create_session, get_engine
 from utilities import sst_exceptions
 import sys
+from flask_user import PasswordManager
 
 
 class MainRoutesTests(BaseTestCase):

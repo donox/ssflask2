@@ -10,8 +10,41 @@ class UserManager(BaseTableManager):
     def __init__(self, db_session):
         super().__init__(db_session)
 
+    def get_user_by_id(self, user_id):
+        sql = f'select * from users where id={user_id}'
+        res = self.db_session.execute(sql).fetchone()
+        if res:
+            gv = self.get_group_field_value(res)
+            # We populate only the fields we really use.
+            group = User(id=gv('id'), username=gv('username'), email=gv('email'))
+            roles = self.get_user_roles(group.id)
+            group.roles = roles
+            return group
+        else:
+            return None
+
+    def get_user_roles(self, user_id):
+        sql = f'select role_id from user_roles where user_id={user_id};'
+        res = self.db_session.execute(sql).fetchall()
+        roles = []
+        if res:
+            for role in res:
+                sql2 = f'select name from roles where id={role[0]}'
+                res2 = self.db_session.execute(sql2).fetchone()
+                if res2:
+                    roles.append(res2[0])
+        return roles
+
     def get_user_id_from_email(self, email_address):
         sql = f'select id from users where email="{email_address}"; '
+        res = self.db_session.execute(sql).fetchone()
+        if res:
+            return res[0]
+        else:
+            return None
+
+    def get_user_id_from_name(self, user_name):
+        sql = f'select id from users where username="{user_name}"; '
         res = self.db_session.execute(sql).fetchone()
         if res:
             return res[0]

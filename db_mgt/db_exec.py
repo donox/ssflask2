@@ -3,7 +3,8 @@ from .sst_photo_tables import SSTPhotoManager
 from .page_tables import PageManager
 from .json_tables import JSONTableManager
 from .event_tables import EventManager
-from .admin_report_table_manager import AdminReportManager
+from .admin_report_tables import AdminReportManager
+from .group_tables import GroupTableManager
 from .user_models import UserManager
 from ssfl.admin.manage_events.event_operations import CalendarEventManager
 from flask import flash
@@ -29,6 +30,7 @@ class DBExec(object):
         self.available_managers['calendar'] = (False, self.create_calendar_manager)
         self.available_managers['page_body'] = (False, self.create_page_body_manager)
         self.available_managers['report'] = (False, self.create_report_manager)
+        self.available_managers['group'] = (False, self.create_group_manager)
         for manager in managers:
             if manager not in self.available_managers:
                 raise SystemError(f'Attempt to create invalid model manager: {manager}')
@@ -50,6 +52,10 @@ class DBExec(object):
 
     def get_db_session(self):
         return self.db_session
+
+    def create_group_manager(self):
+        mgr = GroupTableManager(self.db_session)
+        return mgr
 
     def create_sst_photo_manager(self):
         mgr = SSTPhotoManager(self.db_session)

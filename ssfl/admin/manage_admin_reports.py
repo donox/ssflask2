@@ -1,6 +1,6 @@
 import os
 from db_mgt.db_exec import DBExec
-from db_mgt.admin_report_table_manager import AdminReport, AdminReportManager
+from db_mgt.admin_report_tables import AdminReport, AdminReportManager
 import datetime as dt
 from flask_login import current_user
 from flask import render_template

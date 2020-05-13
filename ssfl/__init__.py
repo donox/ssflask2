@@ -76,12 +76,14 @@ def create_app():
     from .main import routes as main_routes
     from ssfl.login import routes as login_routes
     from .photos import routes as photo_routes
+    from .sysadmin import routes as sys_admin_routes
 
     # Register Blueprints
     app.register_blueprint(main_routes.main_bp)
     app.register_blueprint(admin_routes.admin_bp)
     app.register_blueprint(login_routes.login_bp)
     app.register_blueprint(photo_routes.photo_bp)
+    app.register_blueprint(sys_admin_routes.sysadmin_bp)
 
     # Create Static Bundles
     js_bundle = Bundle('js/*', 'dist/bundle.js', output='gen/packed.js')
