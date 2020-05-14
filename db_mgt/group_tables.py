@@ -49,6 +49,18 @@ class GroupTableManager(BaseTableManager):
             self.db_exec.add_error_to_form('Delete Group', f'Error deleting group: {e.args}')
             raise SsTSystemError('SQLAlchemy generated error', e.args)
 
+    def get_all_groups(self):
+        sql = f'select * from sstgroup'
+        res = self.db_session.execute(sql).fetchall()
+        all_groups = []
+        for row in res:
+            gv = self.get_group_field_value(row)
+            group = Group(id=gv('id'), owner=gv('owner'), group_name=gv('group_name'),
+                          group_purpose=gv('group_purpose'),
+                          status=gv('status'), created=gv('created'))
+            all_groups.append(group)
+        return all_groups
+
     def check_for_member_in_group(self, group_id, member_id):
         sql = f'select id from sstgroup_member where group_id={group_id} and member_id={member_id};'
         res = self.db_session.execute(sql).first()
@@ -72,10 +84,10 @@ class GroupTableManager(BaseTableManager):
             return True
         return False
 
-    def get_group_members(self, group_id):
+    def get_group_members(self, db_exec, group_id):
         sql = f'select member_id from sstgroup_member where group_id={group_id};'
         res = self.db_session.execute(sql).fetchall()
-        user_mgr = self.db_exec.get_user_manager()
+        user_mgr = db_exec.create_user_manager()
         members = []
         for row in res:
             member_id = row[0]

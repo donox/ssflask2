@@ -9,6 +9,7 @@ import datetime
 class UserManager(BaseTableManager):
     def __init__(self, db_session):
         super().__init__(db_session)
+        self.get_group_field_value = self.get_table_value('users')
 
     def get_user_by_id(self, user_id):
         sql = f'select * from users where id={user_id}'
