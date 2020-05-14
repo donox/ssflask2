@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<!--
+     oute: '/main/work_with_groups' => work_with_groups
+     Template: work_with_groups.jinja2
+     Form: work_with_groups_form.py
+     Processor: work_with_groups.py
+-->
+{% extends 'base/layout.jinja2' %}
+
+{% block content %}
+    <section class="container">
+        <div class="XXX">
+            <h3 class="h3">Manage Groups</h3>
+            <form action="{{ url_for('main.work_with_groups') }}" method="post">
+                {% with %}
+                    {% set el_name=form.work_function %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="0000" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
+                {% with %}
+                    {% set el_name=form.group_name %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="ind*ley" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
+                {% with %}
+                    {% set el_name=form.subject %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="ind*ley" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
+                {% with %}
+                    {% set el_name=form.message %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="ind*ley" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
+
+                <div class="button">
+                    <input id="submit" type="submit" value="Submit">
+                </div>
+                {% if form.errors %}
+                    <ul class="errors">
+                        {% for error, val in form.errors.items() %}
+                            {% if val is iterable and val is string %}
+                                <li>{{ error }} : {{ val }}</li>
+                            {% else %}
+                                {% for val_el in val %}
+                                    <li>{{ error }} : {{ val_el }}</li>
+                                {% endfor %}
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                {{ form.csrf_token }}
+            </form>
+
+        </div>
+        <script>
+            $ = jQuery;
+            $('#js1').change(function () {
+                $('.gr_cg').parent().hide();
+                $('.gr_del').parent().hide();
+                $('.gr_am').parent().hide();
+                $('.gr_rm').parent().hide();
+                $('.gr_lg').parent().hide();
+                $('.gr_lm').parent().hide();
+                let opt = $('#js1 option:selected').val();
+                $('.' + opt).parent().show();
+                localStorage.setItem('manage_groups', opt);
+            });
+            $(document).ready(function () {
+                let opt_val = localStorage.getItem('manage_groups');
+                $('#js1').trigger('change');
+                if (opt_val) {
+                    $('#js1 option:selected').val(opt_val);
+                } else {
+                    $('#js1 option:selected').val('jcreate');
+                }
+            });
+            //# sourceURL=json_make_template.js
+
+        </script>
+    </section>
+{% endblock %}

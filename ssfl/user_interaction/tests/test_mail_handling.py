@@ -7,7 +7,7 @@ class TestTemplateHandling(BaseTestCase):
     def setup(self):
         pass
 
-    def test_tree_walk(self):
+    def test_send_mail(self):
         mail_mgr = ManageMail()
         mail_mgr.add_content('Now is the time')
         mail_mgr.add_recipients(['don@theoxleys', 'donoxley@gmail.com'])
