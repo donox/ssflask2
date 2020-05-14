@@ -16,7 +16,23 @@ class Sign(object):
         self.json_mgr = db_exec.create_json_manager()
 
     def create_notice(self, elem):
+        result = dict()
         sign_descriptor = self.json_mgr.get_json_from_name('f_sign_test')
-        elem['content'] = sign_descriptor['content']
-        elem['title'] = None
+        result['content'] = sign_descriptor['content']
+        result['title'] = None
+        height = sign_descriptor.get('height', 75)
+        if type(height) is str and height.isdigit():
+            height = int(height)
+        result['height'] = height
+        border = sign_descriptor.get('border', 'Solid')
+        if border not in Sign.sign_borders:
+            border = 'Solid'
+        result['sign-border'] = border
+        background = sign_descriptor.get('background', 'Solid')
+        if background not in Sign.sign_backgrounds:
+            background = 'Solid'
+        result['background'] = background
+        styling = sign_descriptor.get('styling', 'margin-top: 12px')
+        result['styling'] = styling
+        return result
 

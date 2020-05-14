@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<!--
+     Route: '/sysadmin/manage_groups' => manage_groups
+     Template: manage_groups.jinja2
+     Display: display_group_and_members.jinja2
+     Form: manage_groups_form.py
+     Processor: manage_groups.py
+-->
+{% extends 'base/layout.jinja2' %}
+
+{% block content %}
+    <section class="container">
+        <div class="XXX">
+            {% if function == 'gr_lg' %}
+                <h3 class="h3">Existing Groups</h3>
+                <table class="table table-bordered table-sm">
+                    <thead class="thead-dark">
+                    {% for field in fields %}
+                        <th>{{ field }}</th>
+                    {% endfor %}
+                    </thead>
+                    <tbody>
+                    {% for field in values %}
+                        <tr>
+                            {% with %}
+                                {#                                {% set button=field.view_button %}#}
+                                {#                                <td>{% include 'base/button_form.jinja2' %}</td>#}
+                                {#                                {% set button=field.del_button %}#}
+                                {#                                <td>{% include 'base/button_form.jinja2' %}</td>#}
+                                <td>{{ field.id }}</td>
+                                <td>{{ field.group_name }}</td>
+                                <td>{{ field.owner }}</td>
+                                <td>{{ field.group_purpose }}</td>
+                                <td>{{ field.status }}</td>
+                                <td>{{ field.created }}</td>
+                                <td>{{ field.nbr_members }}</td>
+                            {% endwith %}
+                        </tr>
+                    {% endfor %}</tbody>
+                </table>
+            {% endif %}
+            {% if function == 'gr_lm' %}
+                <h3 class="h3">Members of Group {{ group_name }}</h3>
+                <table class="table table-bordered table-sm">
+                    <thead class="thead-dark">
+                    {% for field in fields %}
+                        <th>{{ field }}</th>
+                    {% endfor %}
+                    </thead>
+                    <tbody>
+                    {% for field in values %}
+                        <tr>
+                            {% with %}
+                                {#                                {% set button=field.view_button %}#}
+                                {#                                <td>{% include 'base/button_form.jinja2' %}</td>#}
+                                {#                                {% set button=field.del_button %}#}
+                                {#                                <td>{% include 'base/button_form.jinja2' %}</td>#}
+                                <td>{{ field.member_name}}</td>
+                            {% endwith %}
+                        </tr>
+                    {% endfor %}</tbody>
+                </table>
+            {% endif %}
+        </div>
+        <script>
+            $ = jQuery;
+            $('#js1').change(function () {
+                $('.ar_report').parent().hide();
+                $('.ar_display').parent().hide();
+                $('.xx').parent().hide();
+                let opt = $('#js1 option:selected').val();
+                $('.' + opt).parent().show();
+            });
+            //# sourceURL=json_make_template.js
+
+
+        </script>
+    </section>
+{% endblock %}

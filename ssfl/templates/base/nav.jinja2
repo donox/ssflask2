@@ -119,20 +119,36 @@
                         </a>
                     </div>
                 </div>
-            </div>
 
-            <div class="navbar-end">
-                <div class="navbar-item">
-                    <div class="buttons">
-                        {# <a class="button is-primary">#}
-                        {# <strong>Sign up</strong>#}
-                        {# </a>#}
-                        {# <a class="button is-light">#}
-                        {# Log in#}
-                        {# </a>#}
+                <div class="navbar-item has-dropdown is-hoverable has-text-white">
+                    <a class="navbar-link">
+                        Site SysAdmin
+                    </a>
+
+                    <div class="navbar-dropdown">
+                        <a class="navbar-item" href="{{ url_for('sysadmin_bp.manage_groups') }}">
+                            Manage Groups
+                        </a>
+                        <a class="navbar-item" href="{{ url_for('admin_bp.sst_admin_calendar') }}">
+                            Manage Calendar
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
+
+        <div class="navbar-end">
+            <div class="navbar-item">
+                <div class="buttons">
+                    {# <a class="button is-primary">#}
+                    {# <strong>Sign up</strong>#}
+                    {# </a>#}
+                    {# <a class="button is-light">#}
+                    {# Log in#}
+                    {# </a>#}
+                </div>
+            </div>
+        </div>
+    </div>
     </div>
 </nav>

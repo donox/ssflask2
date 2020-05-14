@@ -15,10 +15,15 @@ def find_page_from_url(db_exec, url_string):
     if not last_element:
         if len(split_path) > 1:
             last_element = split_path[-2]
-    if not last_element:
-        raise ValueError('Invalid url: {}'.format(url_string))
-    target_page = page_mgr.fetch_page(None, last_element.lower())
-    return target_page
+    if last_element:
+        target_page = page_mgr.fetch_page(None, last_element.lower())
+        return target_page
+    elif 'sunnyside-times' in u[1].lower():
+        # link seems to want the home page
+        # TODO: Make not yet implemented page
+        raise ValueError(f'Invalid url: {url_string}')
+    else:
+        raise ValueError(f'Invalid url: {url_string}')
 
 
 def find_download_from_url(url_string):
