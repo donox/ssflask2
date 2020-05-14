@@ -35,7 +35,7 @@ def sst_main_calendar():
     return render_template('main/calendar.jinja2', **context)
 
 
-@main_bp.route('/main', methods=['GET'])
+@main_bp.route('/', methods=['GET'])
 @login_required
 def sst_main():
     """Main page route."""
