@@ -45,7 +45,7 @@ def manage_group_functions(db_exec: DBExec, form):
                 return False
             group_mgr.remove_group(group_id)
             return True
-        elif function_to_execute == 'gr_am':  # Download a csv file of the Page Table
+        elif function_to_execute == 'gr_am':  # Add Member to an existing group
             group_id = group_mgr.get_group_id_from_name(group_name)
             if not group_id:
                 form.errors['group_name'] = ['Group Does Not Exist']
@@ -58,7 +58,7 @@ def manage_group_functions(db_exec: DBExec, form):
             if not res:
                 form.errors['Already There'] = [f'{member_name} is already a member of {group_name}']
             return res
-        elif function_to_execute == 'gr_rm':
+        elif function_to_execute == 'gr_rm':            # Remove member from an existing group
             group_id = group_mgr.get_group_id_from_name(group_name)
             if not group_id:
                 form.errors['group_name'] = ['Group Does Not Exist']
@@ -108,6 +108,6 @@ def manage_group_functions(db_exec: DBExec, form):
             return False
     except Exception as e:
         # TODO: handle error/log, and return useful message to user
-        form.errors['work_function'] = ['miscellaneous_functions - Exception occurred processing page']
+        form.errors['work_function'] = ['manage groups - Exception occurred processing page']
         form.errors['work_function'] = [e.args]
         return False

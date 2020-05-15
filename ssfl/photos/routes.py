@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, send_file, \
     abort, flash, render_template_string
-from flask_login import login_required
+from flask_user import login_required, roles_required
 from db_mgt.db_exec import DBExec
 from ssfl import sst_admin_access_log
 from utilities.toml_support import dict_to_toml_file
@@ -28,7 +28,7 @@ def flash_errors(form):
 
 
 @photo_bp.route('/photos/manage_photos', methods=['GET', 'POST'])
-@login_required
+@roles_required(['Editor', 'Admin'])
 def manage_photos():
     """Manage photos."""
     """
@@ -42,7 +42,7 @@ def manage_photos():
 
 
 @photo_bp.route('/photos/upload_photos', methods=['GET', 'POST'])
-@login_required
+@roles_required(['Editor', 'Admin', 'Writer'])
 def upload_photos():
     """Upload group of photos and build meta information collection."""
     """

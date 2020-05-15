@@ -5,7 +5,7 @@ import dateutil.parser
 from flask import Blueprint, render_template, url_for, request, send_file, \
     abort, jsonify, flash, Response
 from flask import current_app as app
-from flask_login import login_required
+from flask_user import roles_required
 
 from config import Config
 from db_mgt.db_exec import DBExec
@@ -57,7 +57,7 @@ def flash_errors(form):
 
 
 @admin_bp.route('/test', methods=['GET'])
-@login_required
+@roles_required(['SysAdmin',  'Admin'])
 def test():
     sst_admin_access_log.make_info_entry(f"Route: /admin/run_ace")
 
@@ -65,7 +65,7 @@ def test():
 
 
 @admin_bp.route('/run_ace', methods=['GET'])
-@login_required
+@roles_required(['SysAdmin',  'Admin'])
 def run_ace():
     sst_admin_access_log.make_info_entry(f"Route: /admin/run_ace")
     context = dict()
@@ -73,7 +73,7 @@ def run_ace():
 
 
 @admin_bp.route('/run_js_test', methods=['GET'])
-@login_required
+@roles_required(['SysAdmin',  'Admin'])
 def run_js_test():
     sst_admin_access_log.make_info_entry(f"Route: /admin/run_js_test")
     context = dict()
@@ -81,7 +81,7 @@ def run_js_test():
 
 
 @admin_bp.route('/admin/delete_row', methods=['POST'])
-@login_required
+@roles_required(['SysAdmin',  'Admin'])
 def delete_row():
     db_exec = DBExec()
     context = dict()
@@ -99,7 +99,7 @@ def delete_row():
 
 
 @admin_bp.route('/admin/events', methods=['GET'])
-@login_required
+@roles_required(['SysAdmin',  'Admin'])
 def get_events():
     """Retrieve events to support FullCalendar
 
@@ -159,7 +159,7 @@ def site_map():
 
 
 @admin_bp.route('/admin/edit', methods=['GET', 'POST'])
-@login_required
+@roles_required(['SysAdmin',  'Admin'])
 def sst_admin_edit():
     """Transfer content to-from DB for local editing."""
     """
@@ -172,7 +172,7 @@ def sst_admin_edit():
 
 
 @admin_bp.route('/admin/calendar', methods=['GET', 'POST'])
-@login_required
+@roles_required(['SysAdmin',  'Admin'])
 def sst_admin_calendar():
     """Transfer content to-from DB for local editing."""
     """
@@ -192,7 +192,7 @@ def allowed_file(filename):
 
 
 @admin_bp.route('/admin/sst_miscellaneous', methods=['GET', 'POST'])
-@login_required
+@roles_required(['SysAdmin',  'Admin'])
 def sst_miscellaneous():
     """Translate file to HTML and store in database."""
     """
@@ -206,7 +206,7 @@ def sst_miscellaneous():
 
 
 @admin_bp.route('/admin/manage_index_page', methods=['GET', 'POST'])
-@login_required
+@roles_required(['SysAdmin',  'Admin'])
 def manage_index_page():
     """Manage Index Page CRUD and Index Items CRUD."""
     """
@@ -245,7 +245,7 @@ def manage_index_page():
 
 
 @admin_bp.route('/admin/sst_import_page', methods=['GET', 'POST'])
-@login_required
+@roles_required(['SysAdmin',  'Admin'])
 def sst_import_page():
     """Import Word Document, translate it and store in database."""
     """
@@ -259,7 +259,7 @@ def sst_import_page():
 
 
 @admin_bp.route('/admin/manageTemplate', methods=['GET', 'POST'])
-@login_required
+@roles_required(['SysAdmin',  'Admin'])
 def make_story_json_template():
     """
      Route: '/admin/manageTemplate' => make_story_json_template
@@ -272,7 +272,7 @@ def make_story_json_template():
 
 
 @admin_bp.route('/admin/json', methods=['GET', 'POST'])
-@login_required
+@roles_required(['SysAdmin',  'Admin'])
 def up_down_load_json_template():
     """
      Route: '/admin/json' => edit_json_file
@@ -287,7 +287,7 @@ def up_down_load_json_template():
 
 
 @admin_bp.route('/admin/sst_import_database', methods=['GET', 'POST'])
-@login_required
+@roles_required(['SysAdmin',  'Admin'])
 def sst_import_database():
     """Functions to import data from wp db to flask db.."""
     """
@@ -301,7 +301,7 @@ def sst_import_database():
 
 
 @admin_bp.route('/manage_photos', methods=['GET', 'POST'])
-@login_required
+@roles_required(['SysAdmin',  'Admin'])
 def manage_photos():
     """
      Route: '/admin/manage_photos' => manage_photo_functions
@@ -313,7 +313,7 @@ def manage_photos():
 
 
 @admin_bp.route('/admin/manage_page_data', methods=['GET', 'POST'])
-@login_required
+@roles_required(['SysAdmin',  'Admin'])
 def manage_page_data():
     """
     Route: '/admin/get_database_data' => get_database_data
@@ -326,7 +326,7 @@ def manage_page_data():
                        '/admin/get_database_data')()
 
 @admin_bp.route('/admin/make_report', methods=['GET', 'POST'])
-@login_required
+@roles_required(['SysAdmin',  'Admin'])
 def make_admin_report():
     """
     Route: '/admin/make_report' => manage_admin_reports
