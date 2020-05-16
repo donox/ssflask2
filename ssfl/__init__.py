@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from flask_dropzone import Dropzone
 from flask_babelex import Babel
 from flask_mail import Mail
+from cache import cache
 
 
 from sqlalchemy.ext.declarative import declarative_base
@@ -65,6 +66,9 @@ def create_app():
 
     # Set up User Manager and (implicitly) Login Manager
     user_manager = UserManager(app, db, User, RoleClass=Role)
+
+    # Init cache handling
+    cache.init_app(app)
 
     # Initialize DropZone photo/file uploading
     dropzone = Dropzone(app)
