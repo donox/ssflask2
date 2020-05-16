@@ -13,9 +13,11 @@ from ssfl.admin.routes import build_route, flash_errors
 from db_mgt.setup import get_engine, create_session, close_session
 from ssfl import sst_admin_access_log
 from ssfl.sysadmin.manage_groups import manage_group_functions
+from ssfl.sysadmin.manage_users import manage_users_functions
 from utilities.sst_exceptions import RequestInvalidMethodError
 from utilities.sst_exceptions import log_sst_error
 from .forms.manage_groups_form import ManageGroupsForm
+from .forms.manage_users_form import ManageUsersForm
 from import_data.db_process_imports import db_process_imports
 
 # Set up a Blueprint
@@ -44,6 +46,11 @@ def run_ace():
 @roles_required('SysAdmin')
 def manage_groups():
     return build_route('sysadmin/manage_groups.jinja2', ManageGroupsForm(), manage_group_functions, '/sysadmin/manage_groups')()
+
+@sysadmin_bp.route('/sysadmin/manage_users', methods=['GET', 'POST'])
+@roles_required('SysAdmin')
+def manage_users():
+    return build_route('sysadmin/manage_users.jinja2', ManageUsersForm(), manage_users_functions, '/sysadmin/manage_users')()
 
 
 
