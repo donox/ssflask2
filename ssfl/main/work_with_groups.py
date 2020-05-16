@@ -1,14 +1,4 @@
-import app
 from db_mgt.db_exec import DBExec
-from db_mgt.page_tables import Page, PageManager
-from db_mgt.group_tables import Group, GroupMembers, GroupTableManager
-from utilities.miscellaneous import get_temp_file_name, extract_fields_to_dict
-import csv
-from lxml import etree, html
-import lxml
-from flask import send_file, render_template
-from utilities.sst_exceptions import SsTSystemError
-from datetime import datetime as dt
 from ssfl.user_interaction.mail_handling import ManageMail
 
 
