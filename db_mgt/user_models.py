@@ -12,17 +12,22 @@ class UserManager(BaseTableManager):
         self.get_group_field_value = self.get_table_value('users')
 
     def get_user_by_id(self, user_id):
+        """Get user without filling in roles."""
+        # Problem filling in roles as the user.roles field is a SQLAlchemy structure.
         sql = f'select * from users where id={user_id}'
         res = self.db_session.execute(sql).fetchone()
         if res:
             gv = self.get_group_field_value(res)
             # We populate only the fields we really use.
-            group = User(id=gv('id'), username=gv('username'), email=gv('email'))
-            roles = self.get_user_roles(group.id)
-            group.roles = roles
-            return group
+            user = User(id=gv('id'), username=gv('username'), email=gv('email'))
+            return user
         else:
             return None
+
+    def get_available_roles(self):
+        sql = f'select name from roles'
+        res = self.db_session.execute(sql).fetchall()
+        return [x[0] for x in res]
 
     def get_user_roles(self, user_id):
         sql = f'select role_id from user_roles where user_id={user_id};'
@@ -35,6 +40,24 @@ class UserManager(BaseTableManager):
                 if res2:
                     roles.append(res2[0])
         return roles
+
+    def get_role_id(self, role_name):
+        sql = f'select id from roles where name="{role_name}";'
+        res = self.db_session.execute(sql).fetchone()
+        return res[0]
+
+
+    def remove_role_from_user(self, role, user_id):
+        role_id = self.get_role_id(role)
+        sql = f'delete from user_roles where role_id={role_id} and user_id={user_id};'
+        self.db_session.execute(sql)
+        self.db_session.commit()
+
+    def add_role_to_user(self, role, user_id):
+        role_id = self.get_role_id(role)
+        sql = f'insert into user_roles (user_roles.role_id, user_roles.user_id) values ({role_id}, {user_id});'
+        self.db_session.execute(sql)
+        self.db_session.commit()
 
     def get_user_id_from_email(self, email_address):
         sql = f'select id from users where email="{email_address}"; '
@@ -55,11 +78,21 @@ class UserManager(BaseTableManager):
     def delete_user_by_id(self, uid):
         sql = f'delete from users where id={uid};'
         res = self.db_session.execute(sql)
+        sql = f'delete from user_roles where user_id={uid};'
+        res = self.db_session.execute(sql)
+        self.db_session.commit()
 
     def get_user_name_from_id(self, uid):
         sql = f'select username from users where id={uid}'
         res = self.db_session.execute(sql).first()
         return res[0]
+
+    def update_user(self, user):
+        sql = f'update users set first_name="{user.first_name}", last_name="{user.last_name}", '
+        sql += f'password="{user.password}", email="{user.email}" where id={user.id};'
+        # SQLAlchemy apparently gives no indication of success/failure
+        self.db_session.execute(sql)
+        self.db_session.commit()
 
 
 class User(db.Model, UserMixin):
@@ -68,6 +101,8 @@ class User(db.Model, UserMixin):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     username = db.Column(db.String, nullable=False, unique=False)
+    first_name = db.Column(db.String(50), nullable=False, unique=False)
+    last_name = db.Column(db.String(50), nullable=False, unique=False)
     email = db.Column(db.String(40), unique=True, nullable=False)
     password = db.Column(db.String(200), primary_key=False, unique=False, nullable=False)
     website = db.Column(db.String(60), index=False, unique=False, nullable=True)

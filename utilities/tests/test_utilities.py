@@ -1,6 +1,5 @@
 from test_base import BaseTestCase
 import utilities.miscellaneous as misc
-import utilities.compose_page as cp
 from db_mgt import json_tables as jt
 
 

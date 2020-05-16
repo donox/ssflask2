@@ -84,3 +84,4 @@ def factor_string(in_str: str, pos_list: List[int]) -> List[str]:
         return res
     except Exception as e:
         raise ValueError(f'Error factoring string beginning: {in_str[:20]}')
+

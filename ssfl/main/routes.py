@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request
-from flask_login import login_required
+from flask_user import roles_required
 
 from db_mgt.index_page_tables import IndexPage
 from db_mgt.setup import get_engine, create_session, close_session
@@ -10,6 +10,9 @@ from ssfl.main.multi_story_page import MultiStoryPage
 from ssfl.main.views.calendar_view import RandomCalendarAPI
 from utilities.toml_support import dict_to_toml_file
 from config import Config
+from ssfl.admin.routes import build_route
+from .forms.work_with_groups_form import WorkWithGroupsForm
+from .work_with_groups import work_with_groups_processor
 
 # Set up a Blueprint
 main_bp = Blueprint('main', __name__,
@@ -27,7 +30,7 @@ def log_request(file, tag, context):
 
 
 @main_bp.route('/main/fullcalendar', methods=['GET'])
-@login_required
+@roles_required('User')
 def sst_main_calendar():
     context = dict()
     context['APP_ROOT'] = request.base_url
@@ -36,7 +39,7 @@ def sst_main_calendar():
 
 
 @main_bp.route('/', methods=['GET'])
-@login_required
+@roles_required('User')
 def sst_main():
     """Main page route."""
     """
@@ -61,7 +64,7 @@ def sst_main():
 
 
 @main_bp.route('/main/page/<string:page_ident>', methods=['GET'])
-@login_required
+@roles_required('User')
 def sst_get_specific_page(page_ident):
     """Get specific page by id or name."""
     db_exec = DBExec()
@@ -79,7 +82,7 @@ def sst_get_specific_page(page_ident):
 
 
 @main_bp.route('/menu/<string:page>', methods=['GET'])
-@login_required
+@roles_required('User')
 def sst_get_menu_page(page):
     """Load index page by name."""
     """
@@ -100,7 +103,7 @@ def sst_get_menu_page(page):
 
 
 @main_bp.route('/index/<string:page>', methods=['GET'])
-@login_required
+@roles_required('User')
 def sst_get_index_page(page):
     """
      Route: '/index/<string:page>' => manage_index_pages
@@ -118,3 +121,15 @@ def sst_get_index_page(page):
     context['APP_ROOT'] = request.url_root
     close_session(db_session)
     return render_template('main/index_page_layout.jinja2', **context)
+
+
+@main_bp.route('/main/work_with_groups', methods=['GET', 'POST'])
+@roles_required('User')
+def work_with_groups():
+    """
+     Route: '/main/work_with_groups' => work_with_groups_processor
+     Template: work_with_groups.jinja2
+     Form: work_with_groups_form.py
+     Processor: work_with_groups_processor.py
+    """
+    return build_route('main/work_with_groups.jinja2', WorkWithGroupsForm(), work_with_groups_processor, '/main/work_with_groups')()

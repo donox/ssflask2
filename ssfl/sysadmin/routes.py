@@ -5,7 +5,7 @@ import dateutil.parser
 from flask import Blueprint, render_template, url_for, request, send_file, \
     abort, jsonify, flash, Response
 from flask import current_app as app
-from flask_login import login_required
+from flask_user import login_required, roles_required
 
 from config import Config
 from db_mgt.db_exec import DBExec
@@ -13,9 +13,11 @@ from ssfl.admin.routes import build_route, flash_errors
 from db_mgt.setup import get_engine, create_session, close_session
 from ssfl import sst_admin_access_log
 from ssfl.sysadmin.manage_groups import manage_group_functions
+from ssfl.sysadmin.manage_users import manage_users_functions
 from utilities.sst_exceptions import RequestInvalidMethodError
 from utilities.sst_exceptions import log_sst_error
 from .forms.manage_groups_form import ManageGroupsForm
+from .forms.manage_users_form import ManageUsersForm
 from import_data.db_process_imports import db_process_imports
 
 # Set up a Blueprint
@@ -25,7 +27,7 @@ sysadmin_bp = Blueprint('sysadmin_bp', __name__,
 
 
 @sysadmin_bp.route('/test', methods=['GET'])
-@login_required
+@roles_required('SysAdmin')
 def test():
     sst_admin_access_log.make_info_entry(f"Route: /admin/run_ace")
 
@@ -33,7 +35,7 @@ def test():
 
 
 @sysadmin_bp.route('/run_ace', methods=['GET'])
-@login_required
+@roles_required('SysAdmin')
 def run_ace():
     sst_admin_access_log.make_info_entry(f"Route: /admin/run_ace")
     context = dict()
@@ -41,14 +43,19 @@ def run_ace():
 
 
 @sysadmin_bp.route('/sysadmin/manage_groups', methods=['GET', 'POST'])
-@login_required
+@roles_required('SysAdmin')
 def manage_groups():
     return build_route('sysadmin/manage_groups.jinja2', ManageGroupsForm(), manage_group_functions, '/sysadmin/manage_groups')()
+
+@sysadmin_bp.route('/sysadmin/manage_users', methods=['GET', 'POST'])
+@roles_required('SysAdmin')
+def manage_users():
+    return build_route('sysadmin/manage_users.jinja2', ManageUsersForm(), manage_users_functions, '/sysadmin/manage_users')()
 
 
 
 @sysadmin_bp.route('/admin/edit', methods=['GET', 'POST'])
-@login_required
+@roles_required('SysAdmin')
 def sst_admin_edit():
     """Transfer content to-from DB for local editing."""
     """
@@ -61,11 +68,4 @@ def sst_admin_edit():
 
 
 
-def xbuild_route(template, processing_form, processing_function, route_name):
-    def route():
-        db_exec = DBExec()
-        db_exec.set_current_form(processing_form)
-        context = dict()
-        context['form'] = processing_form
-        sst_admin_access_log.make_info_entry(f"Route: {route_name}")
 
