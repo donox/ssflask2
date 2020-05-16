@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request
 from flask_user import roles_required
+from cache import cache
 
 from db_mgt.index_page_tables import IndexPage
 from db_mgt.setup import get_engine, create_session, close_session
@@ -29,6 +30,7 @@ def log_request(file, tag, context):
     dict_to_toml_file(context, Config.TEMP_FILE_LOC +'cmd_logs/' + file)
 
 
+
 @main_bp.route('/main/fullcalendar', methods=['GET'])
 @roles_required('User')
 def sst_main_calendar():
@@ -40,6 +42,7 @@ def sst_main_calendar():
 
 @main_bp.route('/', methods=['GET'])
 @roles_required('User')
+@cache.cached()
 def sst_main():
     """Main page route."""
     """
@@ -65,6 +68,7 @@ def sst_main():
 
 @main_bp.route('/main/page/<string:page_ident>', methods=['GET'])
 @roles_required('User')
+@cache.cached()
 def sst_get_specific_page(page_ident):
     """Get specific page by id or name."""
     db_exec = DBExec()
@@ -83,6 +87,7 @@ def sst_get_specific_page(page_ident):
 
 @main_bp.route('/menu/<string:page>', methods=['GET'])
 @roles_required('User')
+@cache.cached()
 def sst_get_menu_page(page):
     """Load index page by name."""
     """
