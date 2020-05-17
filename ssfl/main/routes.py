@@ -27,8 +27,7 @@ main_bp.add_url_rule('/cal/', defaults={'count': 6},
 
 def log_request(file, tag, context):
     context['tag'] = tag
-    dict_to_toml_file(context, Config.TEMP_FILE_LOC +'cmd_logs/' + file)
-
+    dict_to_toml_file(context, Config.TEMP_FILE_LOC + 'cmd_logs/' + file)
 
 
 @main_bp.route('/main/fullcalendar', methods=['GET'])
@@ -107,6 +106,30 @@ def sst_get_menu_page(page):
         db_exec.terminate()
 
 
+@main_bp.route('/main/quick-links', methods=['GET'])
+@roles_required('User')
+# @cache.cached()
+def sst_get_quick_links():
+    """Load Quick Links page."""
+    """
+     Route: '/menu/<string:page>' => build_page
+     Template: specific_page.jinja2
+     Form: 
+     Processor: build_page.py
+    """
+    # This route used in nav template.
+    db_exec = DBExec()
+    try:
+        json_mgr = db_exec.create_json_manager()
+        quick_links = json_mgr.get_json_from_name('quick-links')
+        context = {'page': quick_links,
+                   'APP_ROOT': request.url_root}
+        res = render_template('main/quick_links.jinja2', **context)
+        return res
+    finally:
+        db_exec.terminate()
+
+
 @main_bp.route('/index/<string:page>', methods=['GET'])
 @roles_required('User')
 def sst_get_index_page(page):
@@ -137,4 +160,5 @@ def work_with_groups():
      Form: work_with_groups_form.py
      Processor: work_with_groups_processor.py
     """
-    return build_route('main/work_with_groups.jinja2', WorkWithGroupsForm(), work_with_groups_processor, '/main/work_with_groups')()
+    return build_route('main/work_with_groups.jinja2', WorkWithGroupsForm(), work_with_groups_processor,
+                       '/main/work_with_groups')()
