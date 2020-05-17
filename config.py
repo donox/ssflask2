@@ -89,6 +89,10 @@ class Config:
     MAIL_MAX_EMAILS = 20
     MAIL_ASCII_ATTACHMENTS = False
 
+    # NEEDED for FLASK-CACHING
+    CACHE_TYPE = 'simple'
+    CACHE_DEFAULT_TIMEOUT = 3600
+
     # Admin
     FLASK_ADMIN_SWATCH = 'cerulean'
     EMAIL_PROBLEM_REPORTS = os.environ.get('EMAIL_PROBLEM_REPORTS')
