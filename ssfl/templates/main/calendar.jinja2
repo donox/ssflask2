@@ -32,170 +32,170 @@
             background-color: red;
         }
     </style>
-
+    <script type="text/javascript" src="/static/dist/bundle.js"></script>
     <script>
         //# sourceURL=calendarextra.js
         document.addEventListener('DOMContentLoaded', function () {
             let calendarEl = document.getElementById('calendar');
             let calendar = new FullCalendar.Calendar(calendarEl, {
-                plugins: ['dayGrid'],
-                header: {
-                    left: 'il_button, al_button evt_button, well_button, rel_button, club_button, community_button',
-                    center: 'title, dayGridMonth, dayGridWeek, dayGridDay',
-                    right: 'prev,next today '
-                },
-                editable: false,
-                themeSystem: 'bootstrap',  //alternate is bootstrap and fontAwesome (include above)
-                firstDay: 0, //  1(Monday) this can be changed to 0(Sunday) for the USA system
-                selectable: true,
-                defaultView: 'dayGridMonth',
-                customButtons: {
-                    il_button: {
-                        text: 'IL',
-                        click: function () {
-                            button_state.set_audience(this.firstChild.valueOf());
-                            let src = calendar.getEventSources();
-                            src[0].refetch();
-                            calendar.render();
+                    plugins: ['dayGrid'],
+                    header: {
+                        left: 'il_button, al_button evt_button, well_button, rel_button, club_button, community_button',
+                        center: 'title, dayGridMonth, dayGridWeek, dayGridDay',
+                        right: 'prev,next today '
+                    },
+                    editable: false,
+                    themeSystem: 'bootstrap',  //alternate is bootstrap and fontAwesome (include above)
+                    firstDay: 0, //  1(Monday) this can be changed to 0(Sunday) for the USA system
+                    selectable: true,
+                    defaultView: 'dayGridMonth',
+                    customButtons: {
+                        il_button: {
+                            text: 'IL',
+                            click: function () {
+                                button_state.set_audience(this.firstChild.valueOf());
+                                let src = calendar.getEventSources();
+                                src[0].refetch();
+                                calendar.render();
+                            },
+                        },
+                        al_button: {
+                            text: 'AL',
+                            click: function () {
+                                button_state.set_audience(this.firstChild.valueOf());
+                                let src = calendar.getEventSources();
+                                src[0].refetch();
+                                calendar.render();
+                            },
+                        },
+                        evt_button: {
+                            text: 'Event',
+                            click: function () {
+                                button_state.set_category(this.firstChild.valueOf());
+                                let src = calendar.getEventSources();
+                                src[0].refetch();
+                                calendar.render();
+                            },
+                        },
+                        rel_button: {
+                            text: 'Religion',
+                            click: function () {
+                                button_state.set_category(this.firstChild.valueOf());
+                                let src = calendar.getEventSources();
+                                src[0].refetch();
+                                calendar.render();
+                            },
+                        },
+                        well_button: {
+                            text: 'Wellness',
+                            click: function () {
+                                button_state.set_category(this.firstChild.valueOf());
+                                let src = calendar.getEventSources();
+                                src[0].refetch();
+                                calendar.render();
+                            },
+                        },
+                        club_button: {
+                            text: 'Resident Clubs',
+                            click: function () {
+                                button_state.set_category(this.firstChild.valueOf());
+                                let src = calendar.getEventSources();
+                                src[0].refetch();
+                                calendar.render();
+                            },
+                        },
+                        community_button: {
+                            text: 'Community',
+                            click: function () {
+                                button_state.set_category(this.firstChild.valueOf());
+                                let src = calendar.getEventSources();
+                                src[0].refetch();
+                                calendar.render();
+                            },
                         },
                     },
-                    al_button: {
-                        text: 'AL',
-                        click: function () {
-                            button_state.set_audience(this.firstChild.valueOf());
-                            let src = calendar.getEventSources();
-                            src[0].refetch();
-                            calendar.render();
-                        },
+                    eventMouseEnter: function (info) {
+                        // alert('Event: ' + info.event.title);
+                        // alert('Coordinates: ' + info.jsEvent.pageX + ',' + info.jsEvent.pageY);
+                        // alert('View: ' + info.view.type);
+
+                        // change the border color for elements mouse has passed over just for fun
+                        // info.el.style.borderColor = 'green';
+                        let tmpnode = document.createElement('div');
+                        tmpnode.style.top = info.jsEvent.pageY - 20;
+                        tmpnode.style.left = info.jsEvent.pageX + 25;
+                        tmpnode.style.backgroundColor = 'lightcoral';
+                        tmpnode.style.opacity = '100%'
+                        tmpnode.setAttribute('class', 'event_popup');
+
+                        let tmpnode2 = document.createElement('p');
+                        tmpnode2.setAttribute('class', 'event_desc');
+                        tmpnode2.textContent = info.event.extendedProps.description;
+                        tmpnode.appendChild(tmpnode2);
+
+                        tmpnode2 = document.createElement('p');
+                        tmpnode2.setAttribute('class', 'event_loc');
+                        tmpnode2.textContent = info.event.extendedProps.venue;
+                        tmpnode.appendChild(tmpnode2);
+
+                        tmpnode2 = document.createElement('p');
+                        tmpnode2.setAttribute('class', 'event_cost');
+                        tmpnode2.textContent = info.event.extendedProps.cost;
+                        tmpnode.appendChild(tmpnode2);
+
+                        info.el.appendChild(tmpnode);
                     },
-                    evt_button: {
-                        text: 'Event',
-                        click: function () {
-                            button_state.set_category(this.firstChild.valueOf());
-                            let src = calendar.getEventSources();
-                            src[0].refetch();
-                            calendar.render();
-                        },
+
+                    eventMouseLeave: function (info) {
+                        info.el.lastChild.remove();
                     },
-                    rel_button: {
-                        text: 'Religion',
-                        click: function () {
-                            button_state.set_category(this.firstChild.valueOf());
-                            let src = calendar.getEventSources();
-                            src[0].refetch();
-                            calendar.render();
-                        },
+
+                    axisFormat: 'h:mm',
+                    columnFormat: {
+                        month: 'ddd',    // Mon
+                        week: 'ddd d', // Mon 7
+                        day: 'dddd M/D',  // Monday 9/7
+                        agendaDay: 'dddd d'
                     },
-                    well_button: {
-                        text: 'Wellness',
-                        click: function () {
-                            button_state.set_category(this.firstChild.valueOf());
-                            let src = calendar.getEventSources();
-                            src[0].refetch();
-                            calendar.render();
-                        },
+                    titleFormat: {
+                        month: 'long',
+                        year: 'numeric', // September 2009
+                        day: 'numeric',
+                        weekday: 'long',
                     },
-                    club_button: {
-                        text: 'Resident Clubs',
-                        click: function () {
-                            button_state.set_category(this.firstChild.valueOf());
-                            let src = calendar.getEventSources();
-                            src[0].refetch();
-                            calendar.render();
-                        },
+                    allDaySlot: false,
+                    selectHelper: false,
+
+                    droppable: false, // this allows things to be dropped onto the calendar !!!
+                    eventSources: [function (info, success, fail) {
+                        $.ajax({
+                            url: '/admin/events',
+                            type: 'GET',
+                            dataType: 'json',
+                            data: {
+                                start: info.start.toISOString(),
+                                end: info.end.toISOString(),
+                                category: button_state.get_category(),
+                                audience: button_state.get_audience(),
+                            },
+                            success: function (doc) {
+                                let events = eval(doc);
+                                success(events);
+                            },
+                            error: function (doc) {
+                                alert("FAILED");
+                                let events = eval(doc);
+                                fail(events);
+                            }
+                        });
                     },
-                    community_button: {
-                        text: 'Community',
-                        click: function () {
-                            button_state.set_category(this.firstChild.valueOf());
-                            let src = calendar.getEventSources();
-                            src[0].refetch();
-                            calendar.render();
-                        },
+                    ],
+                    eventRender: function (info) {
+                        // Triggers for each event - should be event after all events have been rendered (datesRender),
+                        //   but that does not appear to operate as expected (on rerender).
+                        button_state.color_buttons(info);
                     },
-                },
-                eventMouseEnter: function (info) {
-                    // alert('Event: ' + info.event.title);
-                    // alert('Coordinates: ' + info.jsEvent.pageX + ',' + info.jsEvent.pageY);
-                    // alert('View: ' + info.view.type);
-
-                    // change the border color for elements mouse has passed over just for fun
-                    // info.el.style.borderColor = 'green';
-                    let tmpnode = document.createElement('div');
-                    tmpnode.style.top = info.jsEvent.pageY - 20;
-                    tmpnode.style.left = info.jsEvent.pageX + 25;
-                    tmpnode.style.backgroundColor = 'lightcoral';
-                    tmpnode.style.opacity = '100%'
-                    tmpnode.setAttribute('class', 'event_popup');
-
-                    let tmpnode2 = document.createElement('p');
-                    tmpnode2.setAttribute('class', 'event_desc');
-                    tmpnode2.textContent = info.event.extendedProps.description;
-                    tmpnode.appendChild(tmpnode2);
-
-                    tmpnode2 = document.createElement('p');
-                    tmpnode2.setAttribute('class', 'event_loc');
-                    tmpnode2.textContent = info.event.extendedProps.venue;
-                    tmpnode.appendChild(tmpnode2);
-
-                    tmpnode2 = document.createElement('p');
-                    tmpnode2.setAttribute('class', 'event_cost');
-                    tmpnode2.textContent = info.event.extendedProps.cost;
-                    tmpnode.appendChild(tmpnode2);
-
-                    info.el.appendChild(tmpnode);
-                },
-
-                eventMouseLeave: function (info) {
-                    info.el.lastChild.remove();
-                },
-
-                axisFormat: 'h:mm',
-                columnFormat: {
-                    month: 'ddd',    // Mon
-                    week: 'ddd d', // Mon 7
-                    day: 'dddd M/D',  // Monday 9/7
-                    agendaDay: 'dddd d'
-                },
-                titleFormat: {
-                    month: 'long',
-                    year: 'numeric', // September 2009
-                    day: 'numeric',
-                    weekday: 'long',
-                },
-                allDaySlot: false,
-                selectHelper: false,
-
-                droppable: false, // this allows things to be dropped onto the calendar !!!
-                eventSources: [function (info, success, fail) {
-                    $.ajax({
-                        url: '/admin/events',
-                        type: 'GET',
-                        dataType: 'json',
-                        data: {
-                            start: info.start.toISOString(),
-                            end: info.end.toISOString(),
-                            category: button_state.get_category(),
-                            audience: button_state.get_audience(),
-                        },
-                        success: function (doc) {
-                            let events = eval(doc);
-                            success(events);
-                        },
-                        error: function (doc) {
-                            alert("FAILED");
-                            let events = eval(doc);
-                            fail(events);
-                        }
-                    });
-                },
-                ],
-                eventRender: function (info) {
-                    // Triggers for each event - should be event after all events have been rendered (datesRender),
-                    //   but that does not appear to operate as expected (on rerender).
-                    button_state.color_buttons(info);
-                },
-        })
+                })
             ;
             calendar.render();
         });
