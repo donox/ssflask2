@@ -17,11 +17,8 @@ from ssfl.admin.manage_events.import_word_docx import import_docx_and_add_to_db
 from utilities.sst_exceptions import RequestInvalidMethodError
 from utilities.sst_exceptions import log_sst_error
 from .edit_database_file import edit_database_file
-from .edit_json_file import edit_json_file
 from .forms.db_json_manage_templates_form import DBJSONManageTemplatesForm
 from .forms.edit_db_content_form import DBContentEditForm
-from .forms.edit_db_json_content_form import DBJSONEditForm
-from .forms.get_database_data_form import DBGetDatabaseData
 from import_data.forms.import_database_functions_form import ImportDatabaseFunctionsForm
 from .forms.import_word_doc_form import ImportMSWordDocForm
 from .forms.manage_calendar_form import ManageCalendarForm
@@ -269,21 +266,6 @@ def make_story_json_template():
     """
     return build_route('admin/json_make_template.jinja2', DBJSONManageTemplatesForm(), manage_json_templates,
                        '/admin/manageTemplate')()
-
-
-@admin_bp.route('/admin/json', methods=['GET', 'POST'])
-@roles_required(['SysAdmin',  'Admin'])
-def up_down_load_json_template():
-    """
-     Route: '/admin/json' => edit_json_file
-     Template: json_edit.jinja2
-     Form: edit_json_content_form.py
-     Processor: edit_json_file.py
-    """
-    # TODO:  THIS ROUTE IS BROKEN - DEPENDS ON BEING ON LOCAL MACHINE.
-    #        Can functions be moved to json_make_template above - at min. needs refactoring.
-    return build_route('admin/json_edit.jinja2', DBJSONEditForm(), edit_json_file,
-                       '/admin/json')()
 
 
 @admin_bp.route('/admin/sst_import_database', methods=['GET', 'POST'])
