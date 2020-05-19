@@ -1,10 +1,11 @@
 import os
 import sys
-
+import mimetypes
 import dateutil.parser
 from flask import Blueprint, render_template, url_for, request, send_file, \
-    abort, jsonify, flash, Response
+    abort, jsonify, flash, Response, send_from_directory
 from flask import current_app as app
+from flask import session as flask_session
 from flask_user import roles_required
 
 from config import Config
@@ -26,6 +27,7 @@ from .forms.manage_index_pages_form import ManageIndexPagesForm
 from .forms.manage_photo_functions_form import DBPhotoManageForm
 from .forms.miscellaneous_functions_form import MiscellaneousFunctionsForm
 from .forms.get_database_data_form import DBGetDatabaseData
+from ssfl.sysadmin.forms.manage_files_form import ManageFilesForm
 from .manage_events.event_retrieval_support import SelectedEvents
 from .get_database_data import db_manage_pages
 from .manage_events.manage_calendar import manage_calendar
@@ -56,7 +58,7 @@ def flash_errors(form):
 @admin_bp.route('/test', methods=['GET'])
 @roles_required(['SysAdmin',  'Admin'])
 def test():
-    sst_admin_access_log.make_info_entry(f"Route: /admin/run_ace")
+    sst_admin_access_log.make_info_entry(f"Route: /test")
 
     return app.send_static_file('dist/index.html')
 
@@ -94,6 +96,36 @@ def delete_row():
         photo_mgr.delete_photo(row_id)
     return render_template('admin/db_get_database_data.jinja2', **context)
 
+@admin_bp.route('/admin/delete_file', methods=['POST'])
+@roles_required(['SysAdmin',  'Admin'])
+def delete_file():
+    try:
+        db_exec = DBExec()
+        context = dict()
+        form = ManageFilesForm()
+        context['form'] = form
+        user_mgr = db_exec.create_user_manager()
+        user = user_mgr.get_current_user()
+        user_roles = user_mgr.get_user_roles(user.id)
+        file = request.form['filename']
+        directory = request.form['directory']
+        terminal = directory[0:-1].split('/')               # Remove trailing '/' from path
+        terminal = terminal[-1]
+        if not(terminal == 'downloads' or 'sysadmin' in user_roles or 'admin' in user_roles):
+            form.errors['Insufficient Privileges'] = ['User does not have privileges needed to delete file']
+        else:
+            filepath = directory + file
+            sst_admin_access_log.make_info_entry(f"Route: /admin/delete_file: {filepath}")
+            if not os.path.exists(filepath):
+                form.errors['File Existence'] = [f'File: {filepath} does not exist']
+            else:
+                os.remove(filepath)
+        return render_template('sysadmin/manage_files.jinja2', **context)
+    except Exception as e:
+        foo = 3
+    finally:
+        db_exec.terminate()
+
 
 @admin_bp.route('/admin/events', methods=['GET'])
 @roles_required(['SysAdmin',  'Admin'])
@@ -130,6 +162,24 @@ def get_image(image_path):
             return Response(open(path, 'rb'), direct_passthrough=True)
         else:
             return abort(404, f'File: {image_path} does not exist.')
+    finally:
+        db_exec.terminate()
+
+
+@admin_bp.route('/sys_download_file/', methods=['GET', 'POST'])
+@roles_required('User')
+def sst_download_page():
+    """Download a page using send_file. """
+    db_exec = DBExec()
+    try:
+        directory = request.args['directory']
+        filename = request.args['filename']
+        mime = mimetypes.guess_type(filename)
+        # log_request(f'Download page: {filename} from  {directory}', 'download', context)
+        return send_from_directory(directory, filename, mimetype=mime[0], as_attachment=True,
+                                   attachment_filename=filename)
+    except Exception as e:
+        foo = 3
     finally:
         db_exec.terminate()
 

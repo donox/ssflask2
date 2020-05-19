@@ -1,6 +1,7 @@
-from flask import Blueprint, render_template, request
+from flask import Blueprint, render_template, request, send_from_directory
 from flask_user import roles_required
 from cache import cache
+import mimetypes
 
 from db_mgt.index_page_tables import IndexPage
 from db_mgt.setup import get_engine, create_session, close_session
@@ -28,6 +29,23 @@ main_bp.add_url_rule('/cal/', defaults={'count': 6},
 def log_request(file, tag, context):
     context['tag'] = tag
     dict_to_toml_file(context, Config.TEMP_FILE_LOC + 'cmd_logs/' + file)
+
+
+@main_bp.route('/main/download_file', methods=['GET'])
+@roles_required('User')
+def sst_download_page():
+    """Download a page using send_file. """
+    db_exec = DBExec()
+    try:
+        directory = request.args['directory']
+        filename = request.args['filename']
+        context = {'APP_ROOT': request.base_url,
+                   'directory': directory,
+                   'filename': filename}
+        # log_request(f'Download page: {filename} from  {directory}', 'download', context)
+        return render_template('admin/download_file.jinja2', **context)
+    finally:
+        db_exec.terminate()
 
 
 @main_bp.route('/main/fullcalendar', methods=['GET'])
@@ -154,6 +172,7 @@ def sst_get_index_page(page):
 @main_bp.route('/main/work_with_groups', methods=['GET', 'POST'])
 @roles_required('User')
 def work_with_groups():
+    """Manage groups """
     """
      Route: '/main/work_with_groups' => work_with_groups_processor
      Template: work_with_groups.jinja2

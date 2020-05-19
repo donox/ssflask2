@@ -15,11 +15,13 @@ from ssfl import sst_admin_access_log
 from ssfl.sysadmin.manage_groups import manage_group_functions
 from ssfl.sysadmin.manage_users import manage_users_functions
 from ssfl.sysadmin.sst_login_commands import sst_login_commands
+from ssfl.sysadmin.manage_files_commands import manage_files_commands
 from utilities.sst_exceptions import RequestInvalidMethodError
 from utilities.sst_exceptions import log_sst_error
 from .forms.manage_groups_form import ManageGroupsForm
 from .forms.manage_users_form import ManageUsersForm
 from .forms.sst_login_form import SSTLoginForm
+from .forms.manage_files_form import ManageFilesForm
 from import_data.db_process_imports import db_process_imports
 
 # Set up a Blueprint
@@ -67,6 +69,20 @@ def manage_users():
     """
     return build_route('sysadmin/manage_users.jinja2', ManageUsersForm(), manage_users_functions,
                        '/sysadmin/manage_users')()
+
+@sysadmin_bp.route('/sysadmin/manage_files', methods=['GET', 'POST'])
+@roles_required('SysAdmin')
+def manage_files():
+    """Functions to manage files."""
+    """
+     Route: '/sysadmin/manage_files' => manage_files_commands
+     Template: manage_files.jinja2
+     Display: display_manage_files.jinja2
+     Form: manage_files_form.py
+     Processor: manage_files_commands.py
+    """
+    return build_route('sysadmin/manage_files.jinja2', ManageFilesForm(), manage_files_commands,
+                       '/sysadmin/manage_files')()
 
 
 @sysadmin_bp.route('/sysadmin/sst_login', methods=['GET', 'POST'])
