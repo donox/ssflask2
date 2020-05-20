@@ -104,22 +104,14 @@ def delete_file():
         context = dict()
         form = ManageFilesForm()
         context['form'] = form
-        user_mgr = db_exec.create_user_manager()
-        user = user_mgr.get_current_user()
-        user_roles = user_mgr.get_user_roles(user.id)
         file = request.form['filename']
         directory = request.form['directory']
-        terminal = directory[0:-1].split('/')               # Remove trailing '/' from path
-        terminal = terminal[-1]
-        if not(terminal == 'downloads' or 'sysadmin' in user_roles or 'admin' in user_roles):
-            form.errors['Insufficient Privileges'] = ['User does not have privileges needed to delete file']
+        filepath = directory + file
+        sst_admin_access_log.make_info_entry(f"Route: /admin/delete_file: {filepath}")
+        if not os.path.exists(filepath):
+            form.errors['File Existence'] = [f'File: {filepath} does not exist']
         else:
-            filepath = directory + file
-            sst_admin_access_log.make_info_entry(f"Route: /admin/delete_file: {filepath}")
-            if not os.path.exists(filepath):
-                form.errors['File Existence'] = [f'File: {filepath} does not exist']
-            else:
-                os.remove(filepath)
+            os.remove(filepath)
         return render_template('sysadmin/manage_files.jinja2', **context)
     except Exception as e:
         foo = 3

@@ -13,7 +13,8 @@
         <div class="XXX">
             {% if function == 'mf_disp' %}
                 <h3 class="h3">Files in Directory {{ directory }}</h3>
-                <table class="table table-bordered table-sm">
+                {% if fields%}
+                    <table class="table table-bordered table-sm">
                     <thead class="thead-dark">
                     {% for field in fields %}
                         <th>{{ field }}</th>
@@ -36,6 +37,9 @@
                         </tr>
                     {% endfor %}</tbody>
                 </table>
+                {% else %}
+                    <div class="h4">Directory {{ directory }} is empty</div>
+                {% endif %}
             {% endif %}
         </div>
         <script>

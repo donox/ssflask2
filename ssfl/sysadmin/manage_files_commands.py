@@ -1,20 +1,27 @@
 import os
 from db_mgt.db_exec import DBExec
 import os
-import sys
-from db_mgt.user_models import UserManager, User, Role, UserRoles
-from utilities.miscellaneous import get_temp_file_name, extract_fields_to_dict
+
 from flask import send_file, render_template
-from utilities.sst_exceptions import SsTSystemError
-from datetime import datetime as dt
-from flask_user.password_manager import PasswordManager
-from email_validator import validate_email, EmailNotValidError
-from flask import current_app as app
+
 from config import Config
 from stat import *  # ST_SIZE, ....
+from werkzeug.utils import secure_filename
 
 result_template = 'sysadmin/display_files.jinja2'
 report_fields = ['view', 'delete', 'file_name', 'size', 'created', 'modified']
+file_directory_paths = {'downloads': Config.USER_DIRECTORY_BASE + 'downloads/',
+                        'gen_pages': Config.USER_DIRECTORY_BASE + 'gen_pages/',
+                        'plots': Config.USER_DIRECTORY_BASE + 'plots/',
+                        'definition_files': Config.USER_DIRECTORY_BASE + 'definition_files/',
+                        'uploads': Config.USER_DIRECTORY_BASE + 'uploads/',
+                        'photo_uploads': Config.USER_DIRECTORY_BASE + 'photo_uploads/'}
+# ('downloads', 'downloads'),
+#                               ('gen_pages', 'gen_pages'),
+#                               ('plots', 'plots'),
+#                               ('definition_files', 'definition_files'),
+#                               ('uploads', 'uploads'),
+#                               ('photo_uploads', 'photo_uploads')
 
 def manage_files_commands(db_exec: DBExec, form):
     """Functions that support the commands in the prototype form."""
@@ -27,14 +34,16 @@ def manage_files_commands(db_exec: DBExec, form):
     """
     function_to_execute = form.work_function.data
     file_directory = form.file_directory.data
+    upload_file = form.upload_file.data
+    file_to_load = form.file_name.data
     try:
-        user_mgr = db_exec.create_user_manager()
-        if function_to_execute == 'mf_disp':  # 'Set User Roles'
+        if function_to_execute == 'mf_disp':  # 'Display and/or Delete Files'
             direct = Config.USER_DIRECTORY_BASE + file_directory + '/'
             list_dir = os.listdir(direct)
             files = [x for x in list_dir if os.path.isfile(''.join([direct, x]))]
             context = {'function': function_to_execute,
-                       'file_list': {}}
+                       'file_list': {},
+                       'directory': file_directory}
             report_list = []
             for file in files:
                 file_path = direct + file
@@ -68,39 +77,11 @@ def manage_files_commands(db_exec: DBExec, form):
             context['reports'] = report_list
             result = render_template(result_template, **context)
             return result
-        # elif function_to_execute == 'usr_add':
-        #     try:
-        #         do_stuff()
-        #         return True           #if success
-        # elif function_to_execute == 'usr_del':
-        #     user_id = user_mgr.get_user_id_from_name(user_name)
-        #     if not user_id:
-        #         form.errors['No Such User'] = [f'User: {user_name} not found.']
-        #         return False
-        #     user_mgr.delete_user_by_id(user_id)
-        #     return True
-        # elif function_to_execute == 'usr_mod':
-        #     user_id = user_mgr.get_user_id_from_name(user_name)
-        #     if not user_id:
-        #         form.errors['No Such User'] = [f'User: {user_name} not found.']
-        #         return False
-        #     user = user_mgr.get_user_by_id(user_id)
-        #     if user_email:
-        #         try:
-        #             valid = validate_email(user_email)
-        #             user.email = valid.email
-        #         except EmailNotValidError as e:
-        #             form.errors['Invalid Email'] = [f'Invalid email.  Validation returned {e.args}']
-        #             return False
-        #     user_name_parts = user_name.split()
-        #     user.last_name = user_name_parts[-1]
-        #     user.first_name = ' '.join(user_name_parts[0:-1])
-        #     if user_password:
-        #         pm = PasswordManager(app)
-        #         user.password = pm.hash_password(user_password)
-        #     user_mgr.update_user(user)
-        #     return True
-
+        elif function_to_execute == 'mf_upld':
+            secure_filename(upload_file.filename)
+            file_path = file_directory_paths[file_directory] + file_to_load
+            upload_file.save(file_path)
+            return True
         else:
             form.errors['work_function'] = ['Selected Work Function Not Yet Implemented']
             return False

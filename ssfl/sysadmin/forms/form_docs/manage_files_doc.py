@@ -1,21 +1,22 @@
 # Documentation fields for form xxx_form
 
-# Route: '/sysadmin/manage_caching' = > manage_caches
-# Template: manage_caching.jinja2
-# Form: manage_caching.py
-# Processor: manage_caches.py
+# Route: '/sysadmin/manage_files' = > manage_files_commands
+# Template: manage_files.jinja2
+# Display: display_manage_files.jinja2
+# Form: manage_files_form.py
+# Processor: manage_files_commands.py
 
 docs = dict()
-# It's handy to pull functions and variables from Form for reference - can remove when done?
-#                           [('gr_cg', 'Create a New Group'),
-#                            ('gr_del', 'Delete an Existing Group'),
+#                           [('mf_disp', 'Display Files in Directory'),
+#                            ('mf_upld', 'Upload File to Directory'),
+#                            ('mf_xxx', 'Add a New User'),
+#                            # ('mf_xxx', 'Modify an Existing User')]
 
 # function_to_execute = form.work_function.data
-#     field_1 = form.field_1.data
-#     field_2 = form.field_2.data
+# file_directory = form.file_directory.data
+# upload_file = form.upload_file.data
+# file_to_load = form.file_name.data
 
-# Generally create an entry for each field.  This creates the dictionary that is used in the render_kw parameter
-# to the form field.  Note the
 
 # Fields used in all choices
 docs['all'] = entry = dict()
@@ -27,13 +28,19 @@ entry['work_function'] = [x]
 docs['mf_disp'] = entry
 x = """Choose File Directory to be displayed
 """
-entry['field1_name'] = [x]
+entry['file_directory'] = [x]
 
-# Fields requiring a group owner
-docs['abc_xxx'] = entry
-x = """The name for ...
+# Field identifying file to upload
+docs['mf_upld'] = entry
+x = """This is the file name (with extension) under which the file will be stored.
 """
-entry['field3_name'] = [x]
+entry['upload_file'] = [x]
+
+# Field selecting the file to be uploaded
+docs['mf_upld'] = entry
+x = """Select the file you want to upload
+"""
+entry['file_name'] = [x]
 
 
 

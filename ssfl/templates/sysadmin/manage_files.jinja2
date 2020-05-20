@@ -12,22 +12,31 @@
     <section class="container">
         <div class="XXX">
             <h3 class="h3">Manage Files</h3>
-            <form action="{{ url_for('sysadmin_bp.manage_files') }}" method="post">
+            <form action="{{ url_for('sysadmin_bp.manage_files') }}" method="post" enctype="multipart/form-data">
                 {% with %}
                     {% set el_name=form.work_function %}
                     {% set el_class="input" %}
                     {% set el_placeholder="0000" %}
                     {% include 'base/form_entry.jinja2' %}
                 {% endwith %}
-{#              Add field set for each field on the form.  Set name in the el_name variable #}
                 {% with %}
                     {% set el_name=form.file_directory %}
                     {% set el_class="input" %}
                     {% set el_placeholder="ind*ley" %}
                     {% include 'base/form_entry.jinja2' %}
                 {% endwith %}
-
-
+                {% with %}
+                    {% set el_name=form.file_name %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="ind*ley" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+                {% with %}
+                    {% set el_name=form.upload_file %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="ind*ley" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
 
                 <div class="button">
                     <input id="submit" type="submit" value="Submit">
@@ -50,26 +59,27 @@
 
         </div>
         <script>
-            // Set command groups to cause showing/hiding of fields by function
-            // Name a local storage variable in localStorage below.
-            // Make a file name for the sourceURL to enable browser to see this code at runtime
+            {# Set command groups to cause showing/hiding of fields by function#}
+            {# Name a local storage variable in localStorage below.#}
+            {# Make a file name for the sourceURL to enable browser to see this code at runtime#}
             $ = jQuery;
             $('#js1').change(function () {
-                $('.usr_sr').parent().hide();
-                $('.usr_del').parent().hide();
-                $('.usr_add').parent().hide();
-                $('.usr_mod').parent().hide();
-                 let opt = $('#js1 option:selected').val();
-            $('.' + opt).parent().show();
-            localStorage.setItem('manage_users', opt);
-        });
-        $(document).ready(function(){
-        let opt_val = localStorage.getItem('manage_users');
-        $('#js1').trigger('change');
-        if (opt_val) {$('#js1 option:selected').val(opt_val);}
-        else {$('#js1 option:selected').val('usr_sr');}
-        });
-            //# sourceURL=manage_users.js
+                $('.mf_disp').parent().hide();
+                $('.mf_upld').parent().hide();
+                let opt = $('#js1 option:selected').val();
+                $('.' + opt).parent().show();
+                localStorage.setItem('manage_files', opt);
+            });
+            $(document).ready(function () {
+                let opt_val = localStorage.getItem('manage_files');
+                $('#js1').trigger('change');
+                if (opt_val) {
+                    $('#js1 option:selected').val(opt_val);
+                } else {
+                    $('#js1 option:selected').val('mf_disp');
+                }
+            });
+            //# sourceURL=manage_files.js
         </script>
     </section>
 {% endblock %}
