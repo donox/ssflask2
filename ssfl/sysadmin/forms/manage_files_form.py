@@ -28,8 +28,7 @@ class ManageFilesForm(FlaskForm):
                           }
     supported_functions = [('mf_disp', 'Display Files in Directory'),
                            ('mf_upld', 'Upload File to Directory'),
-                           ('mf_xxx', 'Add a New User'),
-                           ('mf_xxx', 'Modify an Existing User')]
+                           ('mf_xxx', 'Not Implemented')]
     work_function = SelectField(label='Select Function', choices=supported_functions,
                                 render_kw={"id": "js1", "class": "mf_disp mf_upld abc_xxx abc_xxx",
                                            "docs": docs['all']['work_function']})

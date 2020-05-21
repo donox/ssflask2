@@ -27,10 +27,10 @@ for key, val in exif_to_meta.items():
 
 def make_slug(folder: str, file_name: str) -> str:
     """Make slug by combining folder/file names with hyphes, LC."""
-    file_name = file_name.replace('-',' ').replace('_',' ')
+    file_name = file_name.replace('-', ' ').replace('_', ' ')
     file_name = file_name.split('.')
     file_name = file_name[0]
-    folder = folder.replace('-',' ').replace('_',' ')
+    folder = folder.replace('-', ' ').replace('_', ' ')
     fn = folder + ' ' + file_name
     fn = fn.split(' ')
     slug = '-'.join(fn).lower()
@@ -49,7 +49,10 @@ def upload_photo_file(db_exec, folder, file):
         filename = secure_filename(file.filename)
         photo_folder = Config.USER_DIRECTORY_IMAGES + folder
         sst_syslog.make_info_entry(f'upload_photo_file: photo_exists')
-        photo_mgr.ensure_folder_exists(photo_folder)
+        created = photo_mgr.ensure_folder_exists(photo_folder)
+        if created:              # created is bool - true if folder created.  Any new folder is forced to l/c
+            folder = folder.lower()
+            photo_folder = Config.USER_DIRECTORY_IMAGES + folder
         # sst_syslog.make_info_entry(f'upload_photo_file: photo_exists {gallery}')
         filepath = photo_folder + '/' + filename
         file.save(filepath)

@@ -704,7 +704,7 @@ class LatexElement(ParsedElement):
                     photo_id = photo_tmp.id
                 else:
                     self.top.db_exec.add_error_to_form('Add Photo', f'No such Photo: {tmp}')
-                    raise PhotoOrGalleryMissing(f'Missing photo{tmp}')
+                    raise PhotoOrGalleryMissing(f'Missing photo: {tmp}')
             if caption:
                 top_element.current_photo_frame.add_caption(caption)
             top_element.current_photo_frame.add_photo(photo_id)
@@ -815,6 +815,8 @@ class HTMLElement(ParsedElement):
             for el_structure in self.parsed_result:
                 if type(el_structure) == tuple:
                     el, item = el_structure
+                    if item == '<html>':
+                        foo = 3
                     el_save = el
                     el_item = item
                     if el == 'Open':

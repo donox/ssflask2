@@ -3,7 +3,7 @@ $(document).ready(function () {
     function run_slideshow(){
         $('.slideshow').each(function(){
         let slides = $(this).children();
-        let rotate = $(this).attr('interval') * 100;
+        let rotate = $(this).attr('interval') * 1000;
         let ndx = 0;
         let rotator = function(){
             $.each(slides, function(a,b){

@@ -37,10 +37,10 @@ class SSTPhotoManager(BaseTableManager):
             foo = TestPADB()  # Remove???  ###########
             foo.test_connection()  # Ditto
             if os.path.exists(directory):
-                return
+                return False
             else:
-                os.mkdir(directory)
-                return
+                os.mkdir(directory.lower())
+                return True
         except Exception as e:
             print(f'Failure checking photo directory: {sys.exc_info()}')
             raise e
