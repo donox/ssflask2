@@ -26,6 +26,7 @@ class PageBody(object):
     """Utility operations to organize and structure the body of an html page.
     """
     def __init__(self, db_exec: DBExec):
+        self.db_exec = db_exec
         self.doc_as_html = None  # Not set if page is loaded from database
         self.title = None  # If html element use self.title.text to get text, else title is text (from db generally)
         self.author = None
@@ -36,13 +37,11 @@ class PageBody(object):
         self.db_exec = db_exec
         self.page_in_db = None
         self.page_manager = db_exec.create_page_manager()
-        # TODO: Remove dependence on access to session (seems only needed for page caching)
-        self.session = db_exec.get_db_session()
 
     def load_from_db(self, page_id=None, page_name=None):
         target_page = self.page_manager.fetch_page(page_id, page_name)
         self.page_in_db = target_page
-        content = target_page.fetch_content(self.session)
+        content = target_page.fetch_content(self.db_exec)
         self.title, self.author, self.snippet = target_page.fetch_title_author_snippet()
         xhtml = etree.Element(XHTML + "html", nsmap=NSMAP)  # set namespaces so they don't appear in result HTML
         body = etree.SubElement(xhtml, XHTML + "body")

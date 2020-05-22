@@ -145,7 +145,7 @@ class Page(db.Model):
         # res['snippet'] = self.page_snippet    # Can't pick up content for lack of a session
         return res
 
-    def fetch_content(self, session):
+    def fetch_content(self, db_exec):
         """Get content from page allowing for possibility that it is cached."""
         if self.page_cached:
             tmp = self.page_cached_date
@@ -155,7 +155,7 @@ class Page(db.Model):
                 return self.page_cached_content
             else:
                 self.page_cached = False
-                session.commit()
+                db_exec.get_db_session.commit()
                 return self.page_content
         else:
             return self.page_content
