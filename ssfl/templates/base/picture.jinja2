@@ -1,14 +1,14 @@
-<div class="{{ photo.css_class }} float-left px-3 {{ do_rotation }}" style="max-width: {{ photo.width }}px">
+<div class="{{ photo.css_class }} float-left px-3 {{ do_rotation }}" style="max-width: {{ photo.width }}px;">
     <figure class="figure">
         {%  if photo.title %}
             <figcaption class="figure-caption has-text-black {{ photo.title_class }}">{{ photo.title }}</figcaption>
         {% endif %}
-        <img class="{{ photo.image_class }} figure-img img-fluid rounded"
+        <img class="{{ photo.image_class }} figure-img img-fluid rounded image-wrapper float-left"
              src="{{ photo.url }}?h={{ photo.height }}&w={{ photo.width }}"
              align="{{ photo.alignment }}"
              height="{{ photo.height }}"
              width="{{ photo.width }}"
-             alt="{{ photo.alt_text }}"/>
+             alt="{{ photo.alt_text }}" />
         <figcaption class="figure-caption has-text-black photo.caption_class }}">{{ photo.caption }}</figcaption>
     </figure>
 </div>

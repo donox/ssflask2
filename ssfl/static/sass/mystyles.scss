@@ -1,9 +1,6 @@
 @charset "utf-8";
-
-// Import a Google Font
 @import url('https://fonts.googleapis.com/css?family=Nunito:400,700');
 
-// Set your brand colors
 $purple: #8A4D76;
 $pink: #FA7C91;
 $brown: #757763;
@@ -16,7 +13,7 @@ $blue: #4b5cff;
 h4 {font-size: 125%;
     font-weight: 600}
 
-.imagecaption {             // Make caption size fit figure (and figure css below)
+.imagecaption {             /* Make caption size fit figure (and figure css below) */
     padding: 3px;
     margin: 10px;
     float: left;
@@ -40,7 +37,7 @@ figure figcaption {
     border: 1px dotted blue
 }
 
-.title {                //prevent title overlapping nav bar
+.title {                /* prevent title overlapping nav bar */
     margin-top: 0.5rem;
 }
 

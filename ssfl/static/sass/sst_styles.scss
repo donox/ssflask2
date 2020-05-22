@@ -1,0 +1,32 @@
+.card-body {
+  display: flex;
+}
+.card-title {
+  margin-left: auto;
+  font-family: 'Yatra One', cursive;
+  font-weight: bold;
+  font-size: 110%;
+  color: black;
+}
+
+@media(min-width:768px) {
+  .card-title {
+    word-break: break-all;
+    text-align: center;
+  }
+}
+
+@media(max-width:767px) {
+  .card-title {
+    text-align: center;
+    word-break: break-all;
+  }
+}
+
+.col-10 {
+  height: 65px;
+}
+
+.col-2 {
+  height: 65px;
+}
