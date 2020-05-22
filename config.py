@@ -80,7 +80,7 @@ class Config:
     MAIL_SERVER = 'smtp.ionos.com'
     MAIL_PORT = 587
     MAIL_USERNAME = 'info@sunnyside-times.com'
-    MAIL_PASSWORD = 'MSb6BC8usPwT%H&hBBS#dkQKF4te'
+    MAIL_PASSWORD = 'MSb6BC8usPwT%H&hBBS#dkQKF4te.'
     MAIL_USE_TLS = False
     MAIL_USE_SSL = False
     MAIL_DEFAULT_SENDER = 'info@Sunnyside-Times.com'
