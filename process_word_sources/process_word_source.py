@@ -364,7 +364,10 @@ class TopElement(ParsedElement):
                         raise ValueError(f'Match Type: {match_type} is not recognized.')
                     txt_positions += [match_start, match_end]
                     nxt_position += 2
-            self.text_segments = factor_string(txt.replace('\a', '\\'), txt_positions)
+            if txt_positions:
+                self.text_segments = factor_string(txt.replace('\a', '\\'), txt_positions)
+            else:
+                self.text_segments = [txt]        # This occurs in the case of a Word doc with no embedded LaTeX
             for seg in self.dupe_para_segments:
                 self.text_segments[seg] = '<p></p>'
             return
@@ -815,8 +818,6 @@ class HTMLElement(ParsedElement):
             for el_structure in self.parsed_result:
                 if type(el_structure) == tuple:
                     el, item = el_structure
-                    if item == '<html>':
-                        foo = 3
                     el_save = el
                     el_item = item
                     if el == 'Open':
