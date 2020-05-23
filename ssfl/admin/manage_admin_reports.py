@@ -43,8 +43,7 @@ def manage_admin_reports(db_exec: DBExec, form):
         if function_to_execute == 'ar_display':
             nbr_reports = 10
             reports = report_mgr.get_reports(nbr_reports)
-            context = dict()
-            context['function'] = function_to_execute
+            context = {'function': function_to_execute}
             report_list = []
             for report in reports:
                 field_values = extract_fields_to_dict(report, report_fields)

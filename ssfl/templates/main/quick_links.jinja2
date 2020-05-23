@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<!--
+     Route: '/main/page/<string:page_ident>' => build_page
+     Template: specific_page.jinja2
+     Form:
+     Processor: build_page.py
+-->
+{% extends 'base/layout.jinja2' %}
+
+{% block content %}
+    <div class="title">Links for Quick Access</div>
+    <p class="is-bold">The links on this page are intended to provide quick access to the most popular locations on the
+        Sunnyside Times in a single step.</p>
+    <table class="table">
+        {% for ql_row in page.rows %}
+            {% include 'base/quick-links-row.jinja2' %}
+        {% endfor %}
+    </table>
+{% endblock %}

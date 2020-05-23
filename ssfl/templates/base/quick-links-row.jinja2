@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<!-- template entry for representing a single row in a quick-links like template
+    Each instance of the template provides a title row in a single container and
+    a specified number of button rows which are horizontal containers containing a text entry
+    and button entry.
+
+    parameters: parent node: ql_row
+                title class: title_class
+                title: title
+                number of buttons: button_count
+                buttons: list of buttons for a row
+                    button: context to render a button
+-->
+
+<tr class="row">
+    <td class="container">
+        <div class="row">
+            <div class="{{ ql_row.title_class }} container pt-3 w-50">
+                {{ ql_row.title }}
+            </div>
+        </div>
+        <div class="row">
+            {% for button in ql_row.buttons %}
+                <div class="col-sm pt-3 w-50">
+                    {{ button.title }}
+                </div>
+                <div>
+                    {% include 'base/button.jinja2' %}
+                </div>
+            {% endfor %}
+        </div>
+    </td>
+</tr>

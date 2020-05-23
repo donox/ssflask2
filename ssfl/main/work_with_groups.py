@@ -16,6 +16,9 @@ def work_with_groups_processor(db_exec: DBExec, form):
     message = form.message.data
     #   gr_sm gr_xx gr_xx gr_xx gr_xx gr_xx
     try:
+        # This is callable by a 'User', need to restrict functions by role if necessary.
+        # - for example, can't send message to groups in which the user is not a member, ...
+
         mailer = ManageMail()
         group_mgr = db_exec.create_group_manager()
         user_mgr = db_exec.create_user_manager()

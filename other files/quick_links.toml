@@ -1,0 +1,113 @@
+descriptor = "QUICK_LINKS"
+
+name = "Quick Links"
+node_name = "PAGE"
+[[rows]]
+    INDEX_LINKS = "_xxx_"
+    node_name = "INDEX_LINKS"
+    "title:" = "Dining Information"
+    title_class = "_xxx_"
+    [[rows.buttons]]
+        BUTTON = "_xxx_"
+        node_name = "BUTTON"
+        id = "r1c1"
+        button_type = "_xxx_"
+        target = "../resources-index/tartan-grillmarketplace-grill"
+        text_content = "Tartan Grill"
+        
+        [[rows.buttons]]
+        BUTTON = "_xxx_"
+        node_name = "BUTTON"
+        id = "_xxx_"
+        button_type = "_xxx_"
+        title = "The Bistro is currently CLOSED"
+        target = "../resources-index/tartan-grillmarketplace-grill/1912-bistro"
+        text_content = "1912 Bistro"
+
+         [[rows.buttons]]
+        BUTTON = "_xxx_"
+        node_name = "BUTTON"
+        id = "_xxx_"
+        title = "You may order groceries which Sunnyside will pick-up and deliver."
+        button_type = "_xxx_"
+        target = "../resources-index/tartan-grillmarketplace-grill/1912-bistro"
+        text_content = "Groceries"
+
+        
+[[rows]]
+    INDEX_LINKS = "_xxx_"
+    node_name = "INDEX_LINKS"
+    "title:" = "_xxx_"
+    title_class = "_xxx_"
+    [[rows.buttons]]
+        BUTTON = "_xxx_"
+        node_name = "BUTTON"
+        id = "_xxx_"
+        button_type = "_xxx_"
+        target = "../resources-index/tartan-grillmarketplace-grill/breakfast-specials"
+        text_content = "Breakfast Specials"
+        
+        [[rows.buttons]]
+        BUTTON = "_xxx_"
+        node_name = "BUTTON"
+        id = "_xxx_"
+        button_type = "_xxx_"
+        target = "../resources-index/tartan-grillmarketplace-grill/lunch"
+        text_content = "Lunch"
+        
+        [[rows.buttons]]
+        BUTTON = "_xxx_"
+        node_name = "BUTTON"
+        id = "_xxx_"
+        button_type = "_xxx_"
+        target = "../resources-index/tartan-grillmarketplace-grill/lunch-specials"
+        text_content = "Lunch Specials"
+        
+        [[rows.buttons]]
+        BUTTON = "_xxx_"
+        node_name = "BUTTON"
+        id = "_xxx_"
+        button_type = "_xxx_"
+        target = "../resources-index/tartan-grillmarketplace-grill/dinner"
+        text_content = "Dinner"
+        
+        
+[[rows]]
+    INDEX_LINKS = "_xxx_"
+    node_name = "INDEX_LINKS"
+    "title:" = "News, Weather, and the Like"
+    title_class = "_xxx_"
+    [[rows.buttons]]
+        BUTTON = "_xxx_"
+        node_name = "BUTTON"
+        id = "_xxx_"
+        button_type = "_xxx_"
+        target = "_xxx_"
+        text_content = "News"
+        
+        [[rows.buttons]]
+        BUTTON = "_xxx_"
+        node_name = "BUTTON"
+        id = "_xxx_"
+        button_type = "_xxx_"
+        target = "http://www.wunderground.com/personal-weather-station/dashboard?ID=KVAHARRI41"
+        text_content = "Weather"
+        
+        [[rows.buttons]]
+        BUTTON = "_xxx_"
+        node_name = "BUTTON"
+        id = "_xxx_"
+        button_type = "_xxx_"
+        target = "page/44928"
+        text_content = "CIC"
+        
+        [[rows.buttons]]
+        BUTTON = "_xxx_"
+        node_name = "BUTTON"
+        id = "_xxx_"
+        button_type = "_xxx_"
+        target = "_xxx_"
+        text_content = "_xxx_"
+            
+            
+            

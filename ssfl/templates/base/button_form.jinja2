@@ -1,7 +1,17 @@
+<form class="button" method="{{ button.method }}" action="{{ button.action }}">
+    {% if button.row_id %}
+        <input type="hidden" name="row_id" value="{{ button.row_id }}">
+    {% endif %}
+    {% if button.table %}
+        <input type="hidden" name="table" value="{{ button.table }}">
+    {% endif %}
+    {% if button.directory %}
+        <input type="hidden" name="directory" value="{{ button.directory }}">
+    {% endif %}
+    {% if button.filename %}
+        <input type="hidden" name="filename" value="{{ button.filename }}">
+    {% endif %}
+    <input type="submit" value="{{ button.function }}">
+</form>
 
-    <form class="button" method="{{ button.method }}" action="{{ button.action }}">
-        <input type="hidden" name="row_id"  value="{{ button.row_id }}">
-        <input type="hidden" name="table"  value="{{ button.table }}">
-        <input type="submit" value="{{ button.function }}">
-    </form>
 

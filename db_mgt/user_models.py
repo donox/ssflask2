@@ -4,6 +4,8 @@ from utilities.miscellaneous import make_db_search_string
 from flask_user import UserMixin
 from ssfl import db
 import datetime
+from flask import app
+
 
 
 class UserManager(BaseTableManager):
@@ -23,6 +25,9 @@ class UserManager(BaseTableManager):
             return user
         else:
             return None
+
+    def get_current_user(self):
+        return UserMixin.get_user_by_token(app.session['user_id'])
 
     def get_available_roles(self):
         sql = f'select name from roles'
