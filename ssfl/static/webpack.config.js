@@ -9,7 +9,6 @@ module.exports = {
         dir_path + '/sass/sst_styles.scss',
         dir_path + '/css/nav_mystyles.css',
         dir_path + '/css/calendar.css',
-        dir_path + '/sass/mystyles.scss',
     ],
     output: {
         filename: 'packed.js',

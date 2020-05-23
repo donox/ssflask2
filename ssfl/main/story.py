@@ -70,6 +70,20 @@ class Story(object):
         return self.read_more
 
     def create_story_from_db(self, page_id=None, page_name=None):
+        """Read and expand story object from story in database.
+
+        NOTE that even for a story snippet, the entire story is expanded which may involve substantial work
+        such as building slideshows.  Need to find a means of building only a snippet if that is all that is
+        required.
+
+        Args:
+            page_id: id of page in database - only one of id and slug is required
+            page_name: page slug in database
+
+        Returns:
+            None - all updates are to the story object.
+
+        """
         self.pb = PageBody(self.db_exec)
         self.pb.load_from_db(page_id=page_id, page_name=page_name)
         # Expand shortcodes
