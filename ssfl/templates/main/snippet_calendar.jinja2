@@ -1,10 +1,10 @@
-    <div class="title">Upcoming Events</div>
-    <div>
-        {% for event in calendar.events %}
-            <div class="mt-3">
-                <p class="h5 font-weight-bold">{{ event.name }}</p>
-                <p class="my-0">{{ event.date }} {{ event.time }}</p>
-                <p class="my-0">{{ event.venue }}</p>
-            </div>
-        {% endfor %}
-    </div>
+<h3 class="card-title">Upcoming Events</h3>
+<div>
+    {% for event in calendar.events %}
+        <div class="mt-3">
+            <p class="h5 font-weight-bold">{{ event.name }}</p>
+            <p class="my-0">{{ event.date }} {{ event.time }}</p>
+            <p class="my-0">{{ event.venue }}</p>
+        </div>
+    {% endfor %}
+</div>

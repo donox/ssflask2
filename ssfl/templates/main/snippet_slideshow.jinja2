@@ -1,5 +1,5 @@
 {% if story.title %}
-    <div class="title">{{ story.title | safe }}</div>
+    <h3 class="card-title">{{ story.title | safe }}</h3>
 {% endif %}
 {#<div style="max-width:{{ story.photo.width }}px; float:{{ story.photo.alignment }}">#}
 <div>
@@ -8,3 +8,4 @@
         {% include 'base/slideshow.jinja2' %}
     {% endwith %}
 </div>
+

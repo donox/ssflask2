@@ -1,11 +1,14 @@
 {% if story.title %}
-    <div class="title text-center">{{ story.title | safe }}</div>
+    <h3 class="card-title">{{ story.title | safe }}</h3>
 {% endif %}
-<div style="max-width:{{ story.photo.width }}px; float:{{ story.photo.alignment }}">
-    {% set photo = story.photo %}
-    {% include 'base/picture.jinja2' %}
-</div>
-<div class="message-body">{{ story.snippet| safe }}</div>
+<div class="card-body" style="">
+    <div class="card-img-top" style="max-width:{{ story.photo.width }}px; ">
+        {% set photo = story.photo %}
+            {% include 'base/picture.jinja2' %}
+    </div>
+    {{ story.snippet| safe }}</div>
+
 {% with button=story.read_more %}
     {% include 'base/button.jinja2' %}
 {% endwith %}
+

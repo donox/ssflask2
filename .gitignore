@@ -1,6 +1,6 @@
 /venv/
 /ssfl/static/gallery/
-/ssfl/templates/css/mystyles.css
+/ssfl/static/css/nav_mystyles.css
 /other files/Task List.ods
 
 # Project exclude paths
