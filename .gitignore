@@ -6,3 +6,5 @@
 # Project exclude paths
 /node_modules/
 /ssfl/static/file_content/
+/ssfl/static/gen/packed.css
+/ssfl/static/gen/packed.js
