@@ -1,0 +1,7 @@
+<!-- Used by redirect from route download_file -->
+<title>Python Flask File Download </title>
+{% include 'base/layout.jinja2' %}
+{% block content %}
+<div class="h2">Your file has been downloaded</div>
+    <a href="{{ url_for('admin/sys_download_file', directory=directory, filename=filename) }}"></a>
+{% endblock %}

@@ -51,7 +51,7 @@
                     </a>
 
                     <div class="navbar-dropdown has-text-white">
-                        <a class="navbar-item" href="{{ url_for('main.sst_get_menu_page', page='quick-access') }}">
+                        <a class="navbar-item" href="{{ url_for('main.sst_get_quick_links', page='quick-access') }}">
                             Quick Links
                         </a>
                         <a class="navbar-item" href="{{ url_for('main.sst_get_menu_page', page='news-index') }}">
@@ -94,9 +94,6 @@
                         <a class="navbar-item" href="{{ url_for('admin_bp.sst_admin_edit') }}">
                             Edit DB Page
                         </a>
-                        <a class="navbar-item" href="{{ url_for('admin_bp.up_down_load_json_template') }}">
-                            Upload/edit JSON
-                        </a>
                         <a class="navbar-item" href="{{ url_for('admin_bp.make_story_json_template') }}">
                             Manage JSON templates
                         </a>
@@ -134,6 +131,12 @@
                         </a>
                         <a class="navbar-item" href="{{ url_for('sysadmin_bp.manage_users') }}">
                             Manage Users
+                        </a>
+                        <a class="navbar-item" href="{{ url_for('sysadmin_bp.sst_login') }}">
+                            SsT Login
+                        </a>
+                        <a class="navbar-item" href="{{ url_for('sysadmin_bp.manage_files') }}">
+                            Manage Files
                         </a>
                     </div>
                 </div>

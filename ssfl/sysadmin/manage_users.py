@@ -10,9 +10,8 @@ from email_validator import validate_email, EmailNotValidError
 from flask import current_app as app
 
 
-
 def manage_users_functions(db_exec: DBExec, form):
-    """Functions to manage groups."""
+    """Functions to manage users."""
     """
      Route: '/sysadmin/manage_users' => manage_users
      Template: manage_users.jinja2

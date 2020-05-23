@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<!--
+     Route: '/sysadmin/manage_files' => manage_files_commands
+     Template: manage_files.jinja2
+     Display: display_manage_files.jinja2
+     Form: manage_files_form.py
+     Processor: manage_files_commands.py
+-->
+{% extends 'base/layout.jinja2' %}
+
+{% block content %}
+    <section class="container">
+        <div class="XXX">
+            {% if function == 'mf_disp' %}
+                <h3 class="h3">Files in Directory {{ directory }}</h3>
+                {% if fields%}
+                    <table class="table table-bordered table-sm">
+                    <thead class="thead-dark">
+                    {% for field in fields %}
+                        <th>{{ field }}</th>
+                    {% endfor %}
+                    </thead>
+                    <tbody>
+                    {% for field in values %}
+                        <tr>
+                            {% with %}
+                                {#  'view', 'delete', 'file_name', 'size', 'created', 'modified'#}
+                                {% set button=field.view_button %}
+                                <td>{% include 'base/button_form.jinja2' %}</td>
+                                {% set button=field.del_button %}
+                                <td>{% include 'base/button_form.jinja2' %}</td>
+                                <td>{{ field.file_name }}</td>
+                                <td>{{ field.size }}</td>
+                                <td>{{ field.created }}</td>
+                                <td>{{ field.modified }}</td>
+                            {% endwith %}
+                        </tr>
+                    {% endfor %}</tbody>
+                </table>
+                {% else %}
+                    <div class="h4">Directory {{ directory }} is empty</div>
+                {% endif %}
+            {% endif %}
+        </div>
+        <script>
+            $ = jQuery;
+            $('#js1').change(function () {
+                $('.ar_report').parent().hide();
+                $('.ar_display').parent().hide();
+                $('.xx').parent().hide();
+                let opt = $('#js1 option:selected').val();
+                $('.' + opt).parent().show();
+            });
+            //# sourceURL=json_make_template.js
+
+
+        </script>
+    </section>
+{% endblock %}

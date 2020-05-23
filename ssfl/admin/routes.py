@@ -1,10 +1,11 @@
 import os
 import sys
-
+import mimetypes
 import dateutil.parser
 from flask import Blueprint, render_template, url_for, request, send_file, \
-    abort, jsonify, flash, Response
+    abort, jsonify, flash, Response, send_from_directory
 from flask import current_app as app
+from flask import session as flask_session
 from flask_user import roles_required
 
 from config import Config
@@ -17,11 +18,8 @@ from ssfl.admin.manage_events.import_word_docx import import_docx_and_add_to_db
 from utilities.sst_exceptions import RequestInvalidMethodError
 from utilities.sst_exceptions import log_sst_error
 from .edit_database_file import edit_database_file
-from .edit_json_file import edit_json_file
 from .forms.db_json_manage_templates_form import DBJSONManageTemplatesForm
 from .forms.edit_db_content_form import DBContentEditForm
-from .forms.edit_db_json_content_form import DBJSONEditForm
-from .forms.get_database_data_form import DBGetDatabaseData
 from import_data.forms.import_database_functions_form import ImportDatabaseFunctionsForm
 from .forms.import_word_doc_form import ImportMSWordDocForm
 from .forms.manage_calendar_form import ManageCalendarForm
@@ -29,6 +27,7 @@ from .forms.manage_index_pages_form import ManageIndexPagesForm
 from .forms.manage_photo_functions_form import DBPhotoManageForm
 from .forms.miscellaneous_functions_form import MiscellaneousFunctionsForm
 from .forms.get_database_data_form import DBGetDatabaseData
+from ssfl.sysadmin.forms.manage_files_form import ManageFilesForm
 from .manage_events.event_retrieval_support import SelectedEvents
 from .get_database_data import db_manage_pages
 from .manage_events.manage_calendar import manage_calendar
@@ -59,7 +58,7 @@ def flash_errors(form):
 @admin_bp.route('/test', methods=['GET'])
 @roles_required(['SysAdmin',  'Admin'])
 def test():
-    sst_admin_access_log.make_info_entry(f"Route: /admin/run_ace")
+    sst_admin_access_log.make_info_entry(f"Route: /test")
 
     return app.send_static_file('dist/index.html')
 
@@ -97,6 +96,28 @@ def delete_row():
         photo_mgr.delete_photo(row_id)
     return render_template('admin/db_get_database_data.jinja2', **context)
 
+@admin_bp.route('/admin/delete_file', methods=['POST'])
+@roles_required(['SysAdmin',  'Admin'])
+def delete_file():
+    try:
+        db_exec = DBExec()
+        context = dict()
+        form = ManageFilesForm()
+        context['form'] = form
+        file = request.form['filename']
+        directory = request.form['directory']
+        filepath = directory + file
+        sst_admin_access_log.make_info_entry(f"Route: /admin/delete_file: {filepath}")
+        if not os.path.exists(filepath):
+            form.errors['File Existence'] = [f'File: {filepath} does not exist']
+        else:
+            os.remove(filepath)
+        return render_template('sysadmin/manage_files.jinja2', **context)
+    except Exception as e:
+        foo = 3
+    finally:
+        db_exec.terminate()
+
 
 @admin_bp.route('/admin/events', methods=['GET'])
 @roles_required(['SysAdmin',  'Admin'])
@@ -133,6 +154,24 @@ def get_image(image_path):
             return Response(open(path, 'rb'), direct_passthrough=True)
         else:
             return abort(404, f'File: {image_path} does not exist.')
+    finally:
+        db_exec.terminate()
+
+
+@admin_bp.route('/sys_download_file/', methods=['GET', 'POST'])
+@roles_required('User')
+def sst_download_page():
+    """Download a page using send_file. """
+    db_exec = DBExec()
+    try:
+        directory = request.args['directory']
+        filename = request.args['filename']
+        mime = mimetypes.guess_type(filename)
+        # log_request(f'Download page: {filename} from  {directory}', 'download', context)
+        return send_from_directory(directory, filename, mimetype=mime[0], as_attachment=True,
+                                   attachment_filename=filename)
+    except Exception as e:
+        foo = 3
     finally:
         db_exec.terminate()
 
@@ -269,21 +308,6 @@ def make_story_json_template():
     """
     return build_route('admin/json_make_template.jinja2', DBJSONManageTemplatesForm(), manage_json_templates,
                        '/admin/manageTemplate')()
-
-
-@admin_bp.route('/admin/json', methods=['GET', 'POST'])
-@roles_required(['SysAdmin',  'Admin'])
-def up_down_load_json_template():
-    """
-     Route: '/admin/json' => edit_json_file
-     Template: json_edit.jinja2
-     Form: edit_json_content_form.py
-     Processor: edit_json_file.py
-    """
-    # TODO:  THIS ROUTE IS BROKEN - DEPENDS ON BEING ON LOCAL MACHINE.
-    #        Can functions be moved to json_make_template above - at min. needs refactoring.
-    return build_route('admin/json_edit.jinja2', DBJSONEditForm(), edit_json_file,
-                       '/admin/json')()
 
 
 @admin_bp.route('/admin/sst_import_database', methods=['GET', 'POST'])
