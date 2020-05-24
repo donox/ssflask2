@@ -16,12 +16,14 @@ from ssfl.sysadmin.manage_groups import manage_group_functions
 from ssfl.sysadmin.manage_users import manage_users_functions
 from ssfl.sysadmin.sst_login_commands import sst_login_commands
 from ssfl.sysadmin.manage_files_commands import manage_files_commands
+from ssfl.sysadmin.manage_graphs_commands import manage_graphs_commands
 from utilities.sst_exceptions import RequestInvalidMethodError
 from utilities.sst_exceptions import log_sst_error
 from .forms.manage_groups_form import ManageGroupsForm
 from .forms.manage_users_form import ManageUsersForm
 from .forms.sst_login_form import SSTLoginForm
 from .forms.manage_files_form import ManageFilesForm
+from .forms.manage_graphs_form import ManageGraphsForm
 from import_data.db_process_imports import db_process_imports
 
 # Set up a Blueprint
@@ -70,6 +72,7 @@ def manage_users():
     return build_route('sysadmin/manage_users.jinja2', ManageUsersForm(), manage_users_functions,
                        '/sysadmin/manage_users')()
 
+
 @sysadmin_bp.route('/sysadmin/manage_files', methods=['GET', 'POST'])
 @roles_required('SysAdmin')
 def manage_files():
@@ -96,3 +99,17 @@ def sst_login():
      Processor: edit_database_file.py
     """
     return build_route('sysadmin/sst_login.jinja2', SSTLoginForm(), sst_login_commands, '/sysadmin/sst_login')()
+
+
+@sysadmin_bp.route('/sysadmin/manage_graphs', methods=['GET', 'POST'])
+@roles_required('SysAdmin')
+def manage_graphs():
+    """Transfer content to-from DB for local editing."""
+    """
+     Route: '/sysadmin/manage_graphs' => manage_graph_commands
+     Template: manage_graphs.jinja2
+     Form: manage_graphs_form.py
+     Processor: graph_commands.py
+    """
+    return build_route('sysadmin/manage_graphs.jinja2', ManageGraphsForm(), manage_graphs_commands,
+                       '/sysadmin/manage_graphs')()

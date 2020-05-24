@@ -4,6 +4,8 @@ class Graph(object):
     """Undirected graph to support building/managing relationships."""
     def __init__(self, db_exec: DBExec):
         self.id = 0
+        self.name = None
+        self.purpose = None
         self.db_exec = db_exec
         self.nodes = dict()
         self.edges = dict()
@@ -84,8 +86,8 @@ class Edge(object):
     def deserialize(self, graph: Graph, serial_dict: dict):
         self.graph = graph
         self.id = serial_dict['id']
-        self.node_1 = graph.get_node(serial_dict['start_node'])
-        self.node_2 = graph.get_node(serial_dict['end_node'])
+        self.node_1 = graph.get_node(serial_dict['start'])
+        self.node_2 = graph.get_node(serial_dict['end'])
         self.directed = serial_dict['directed']
 
 
