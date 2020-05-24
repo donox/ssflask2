@@ -159,14 +159,14 @@ class PageBody(object):
 
 
     def _break_text_string(self, text_string):
-        """Convert text string containing new lines to list of <span> elements."""
+        """Convert text string containing new lines to list of <p> elements."""
         ts1 = re.sub('[ \t]+', ' ', text_string)        # Replace tabs
         ts2 = re.sub('\n ', '\n', ts1)                  # Replace space following line feed
         ts3 = re.sub('\n(\n)+', '\n', ts2)              # Replace multiple line feeds with single one
         tsl = ts3.split('\n')                           # Break text into separate lines
         res = []
         for segment in tsl:
-            el = etree.Element(XHTML + 'span', nsmap=NSMAP)
+            el = etree.Element(XHTML + 'p', nsmap=NSMAP)
             el.text = segment
             # the inner 'not's are converting the values to booleans so if el has content in one subelement,
             # the inner expression will evaluate false.
