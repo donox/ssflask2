@@ -222,6 +222,26 @@ class SSTPhotoManager(BaseTableManager):
         except Exception as e:
             raise e
 
+    def get_photo_ids_in_gallery_with_id(self, gallery_id, old_id=False):
+        # To map old gallery ids - we have to convert the gallery and look it up in Photo to get the slug
+        # we can use to find the new photo_id.  It really doesn't make sense to try to look up the new_gallery id
+        # as we don't use galleries and it is just a hook to get from the old ones
+        gal_id = gallery_id
+        if old_id:
+            sql = f'select photo_gallery_id from v_photo_gallery_gallery where wp_gallery_id={gal_id}'
+            gal_id = self.db_session.execute(sql).first()[0]
+        sql = f'select image_slug from photo where gallery_id={gal_id}'
+        res = self.db_session.execute(sql).fetchall()
+        all_ids = []
+        for slug in res:
+            sql = f'select id from sst_photos where slug="{slug[0]}"'
+            new_id = self.db_session.execute(sql).first()[0]
+            all_ids.append(new_id)
+        return all_ids
+
+
+
+
     def get_slideshow(self, db_exec, show_name='NEED PHOTO NAME'):
         slideshow = SlideShow(show_name, db_exec)
         return slideshow

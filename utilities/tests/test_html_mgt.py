@@ -6,6 +6,8 @@ from lxml.html import html5parser as hp
 from lxml import etree
 import lxml
 from xml.etree.ElementTree import tostring
+from utilities.shortcodes import Shortcode
+import re
 
 XHTML_NAMESPACE = 'http://www.w3.org/1999/xhtml'
 XHTML = "{%s}" % XHTML_NAMESPACE
@@ -56,4 +58,18 @@ class TestHtmlMgt(BaseTestCase):
             foo = 3
         except Exception as e:
             foo = 3
+
+    def test_find_pics_in_page(self):
+        page_slugs = [('did-you-know', 3), ('bear-winner2', 2)]
+        for try_page, pic_count in page_slugs:
+            pb = PageBody(self.db_exec)
+            ids = pb.find_photo_ids_in_page(None, try_page)
+            self.assertEqual(len(ids), pic_count, "Did not find right number of photos")
+
+    def test_shortcode_re(self):
+        ngg = '[ngg_images source="galleries" container_ids="68" display_type="photocrati-nextgen_basic_slideshow" gallery_width="300" gallery_height="200" cycle_effect="fade" cycle_interval="10" show_thumbnail_link="0" thumbnail_link_text="Show thumbnails" ngg_triggers_display="never" order_by="imagedate" order_direction="ASC" returns="included" maximum_entity_count="500"]The swing that Stan'
+        matches = re.search(Shortcode.sc_re, ngg)
+        for n, match in enumerate(matches.groups()):
+            if n == 1:
+                self.assertEqual(len(match), 349, "Did not complete full match")
 
