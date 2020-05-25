@@ -1,7 +1,7 @@
 import os
 from db_mgt.db_exec import DBExec
 from linkages.graph import Graph, Edge, Node
-from linkages.keywords import KeywordEdge, KeywordNode, KeywordFacetNode
+from linkages.keywords import KeywordEdge, KeywordNode
 import json
 
 

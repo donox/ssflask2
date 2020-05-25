@@ -9,6 +9,7 @@ from flask_dropzone import Dropzone
 from flask_babelex import Babel
 from flask_mail import Mail
 from cache import cache
+from linkages.persistence import GraphPersistence
 
 
 from sqlalchemy.ext.declarative import declarative_base
@@ -69,6 +70,9 @@ def create_app():
 
     # Init cache handling
     cache.init_app(app)
+
+    # Init graph persistence
+    graph_persistence = GraphPersistence(app)
 
     # Initialize DropZone photo/file uploading
     dropzone = Dropzone(app)

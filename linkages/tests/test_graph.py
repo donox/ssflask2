@@ -1,6 +1,7 @@
 from test_base import BaseTestCase
-from linkages.graph import Graph, Edge, Node
-from linkages.keywords import KeywordNode, KeywordElementNode, KeywordEdge
+from linkages.graph import Graph, Edge, Node, AbstractMakeGraph
+from linkages.keywords import KeywordNode, KeywordEdge, MakeKeywordStoryPhotoGraph
+
 from flask import url_for
 from random import randint
 from db_mgt.db_exec import DBExec
@@ -10,25 +11,28 @@ class GraphTests(BaseTestCase):
 
     def setUp(self):
         self.db_exec = DBExec()
-        self.graph = Graph(self.db_exec)
-        self.nodes = []
-        self.edges = []
-        for i in range(10):
-            node = Node(self.graph)
-            self.nodes.append(node)
-        for i in range(20):
-            j = randint(0, 9)
-            k = randint(0, 9)
-            edge = Edge(self.graph, self.nodes[j], self.nodes[k], directed=True)
-            self.edges.append(edge)
+        # self.graph = Graph(self.db_exec)
+        # self.nodes = []
+        # self.edges = []
+        # for i in range(10):
+        #     node = Node(self.graph)
+        #     self.nodes.append(node)
+        # for i in range(20):
+        #     j = randint(0, 9)
+        #     k = randint(0, 9)
+        #     edge = Edge(self.graph, self.nodes[j], self.nodes[k], directed=True)
+        #     self.edges.append(edge)
 
-    def test_graph(self):
-        all_items = set()
-        for node in self.nodes:
-            all_items.add(node.id)
-        for edge in self.edges:
-            all_items.add(edge.id)
-        self.assertEqual(len(all_items), 30, "Didn't find them all")
+    def test_create_graph(self):
+        test_graph = MakeKeywordStoryPhotoGraph()
+        kw_node = test_graph.make_keyword_node('elephant')
+        st_node = test_graph.make_story_node(45074)
+        ph_node = test_graph.make_photo_node(10041)
+        kw_edge = test_graph.make_keyword_story_photo_edge(kw_node, st_node, None)
+        full_graph = Graph(self.db_exec, test_graph.persona)
+        full_graph.add_node('KeywordNode')
+        foo = 3
+        ## node_init associated with wrong(?) level
 
     def test_make_keyword_node(self):
         kw_node = KeywordNode(self.graph, 'foobah')
