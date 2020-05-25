@@ -4,7 +4,7 @@
      Template: db_get_database_data.jinja2
      Display:  db_display_database_data.jinja2
      Form: get_database_data_form.py
-     Processor: manage_page_data.py
+     Processor: db_get_database_data.py
 -->
 {% extends 'base/layout.jinja2' %}
 
@@ -54,6 +54,8 @@
                     <tbody>
                     {% for field in values %}
                         <tr>
+{#                            {% set button=field.del_button %}#}
+                            <td>--Not Yet Implemented--</td>
                             <td>{{ field.id }}</td>
                             <td>{{ field.slug }}</td>
                             <td>{{ field.file_name }}</td>

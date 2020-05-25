@@ -159,14 +159,14 @@ class PageBody(object):
 
 
     def _break_text_string(self, text_string):
-        """Convert text string containing new lines to list of <span> elements."""
+        """Convert text string containing new lines to list of <p> elements."""
         ts1 = re.sub('[ \t]+', ' ', text_string)        # Replace tabs
         ts2 = re.sub('\n ', '\n', ts1)                  # Replace space following line feed
         ts3 = re.sub('\n(\n)+', '\n', ts2)              # Replace multiple line feeds with single one
         tsl = ts3.split('\n')                           # Break text into separate lines
         res = []
         for segment in tsl:
-            el = etree.Element(XHTML + 'span', nsmap=NSMAP)
+            el = etree.Element(XHTML + 'p', nsmap=NSMAP)
             el.text = segment
             # the inner 'not's are converting the values to booleans so if el has content in one subelement,
             # the inner expression will evaluate false.
@@ -198,6 +198,8 @@ class PageBody(object):
 
     def find_shortcodes(self):
         """Create a generator that will iterate through shortcodes.
+
+        Note that the generator below DEPENDS on the fact that elem is changed, else it will loop forever.
 
         Returns:
             Yields tuple of (shortcode, element containing sc, start, end locations)
@@ -242,6 +244,40 @@ class PageBody(object):
             return ct[0:max_length]
         else:
             return ct
+
+    def find_photo_ids_in_page(self, page_id, page_name):
+        self.load_from_db(page_id=page_id, page_name=page_name)
+        sc_list = self._assist()
+        pics = []
+        for shortcode in sc_list:
+            sc, elem, start, end = shortcode
+            sc_string = elem.text[start:end]
+            sc_obj = Shortcode(self.db_exec, sc_string)
+            sc_obj.parse_shortcode()
+            pics += sc_obj.process_shortcode(pictures_only=True)
+            elem.text = elem.text[end:]
+        return pics
+
+    def _assist(self):
+        """Create a generator that will iterate through shortcodes.
+
+        Note that the generator below DEPENDS on the fact that elem is changed, else it will loop forever.
+
+        Returns:
+            Yields tuple of (shortcode, element containing sc, start, end locations)
+        """
+        finder = r"\[{}(\s.*?)?\](?:([^\[]+)?\[\/{}\])?"
+        sc_list = [re.compile(finder.format(x, x)) for x in ['singlepic', 'src_singlepic', 'ngg_images']]
+        for elem in self.body.iter():
+            if elem.text:
+                for sc in sc_list:
+                    while True:
+                        next_match = re.search(sc, elem.text)
+                        if next_match is None or next_match.groups() is None:
+                            break
+                        start = next_match.start()
+                        end = next_match.end()
+                        yield sc, elem, start, end
 
 
 def stringify_children(node):

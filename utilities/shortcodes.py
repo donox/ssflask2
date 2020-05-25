@@ -25,13 +25,17 @@ class Shortcode(object):
                                     'src_lists_membership': None,
                                     'src_lists_admin': None
                                     }
+        self.picture_processors = {'singlepic': self._process_findpic,
+                                    'src_singlepic': self._process_findpic,
+                                    'ngg_images': self._process_ngg_findpics,
+                                    }
         self.shortcode_string = string_to_match
         self.content_dict = None
         self.page_mgr = db_exec.create_page_manager()
         self.photo_mgr = db_exec.create_sst_photo_manager()
 
     def parse_shortcode(self):
-        # Need to verify/handle case where shortcode has contained string "[xx] yy [/xx]"
+        # Does not handle case where shortcode has contained string "[xx] yy [/xx]"
         if not self.shortcode_string:
             return None
         matches = re.search(Shortcode.sc_re, self.shortcode_string)
@@ -62,6 +66,8 @@ class Shortcode(object):
         if work == '':
             return None
         eq_loc = str.find(work, '=')
+        if eq_loc == -1:
+            return None
         name = work[0:eq_loc]
         name = name.strip()
         st_arg_loc = str.find(work[eq_loc:], '"') + eq_loc + 1
@@ -80,14 +86,52 @@ class Shortcode(object):
                 raise ShortcodeParameterError('Conversion Failure: {} is not of type {}'.format(parm_list,
                                                                                                 str(expected_type)))
 
-    def process_shortcode(self):
+    def process_shortcode(self, pictures_only=False):
         if not self.content_dict:
             return None
         sc = self.content_dict['shortcode']
-        if sc in self.specific_processors.keys():
-            handler = self.specific_processors[sc]
-            if handler:
-                handler()
+        if not pictures_only:
+            if sc in self.specific_processors.keys():
+                handler = self.specific_processors[sc]
+                if handler:
+                    handler()
+        else:
+            if sc in self.picture_processors.keys():
+                handler = self.picture_processors[sc]
+                if handler:
+                    return handler()
+
+    def _process_findpic(self):
+        """Find photo id for relating photo to page"""
+        photo_id = self.content_dict['id']
+        if type(photo_id) is str:
+            photo_id = int(photo_id)
+        photo_id = self.photo_mgr.get_new_photo_id_from_old(photo_id)
+        return [photo_id]
+
+    def _process_ngg_findpics(self):
+        """Find photo id's for relating photo to page"""
+        keys = self.content_dict.keys()
+        photo_ids = None
+        if 'source' in keys:
+            source = self.content_dict['source']
+            if source.lower() == 'galleries':
+                ids = self._get_parm_list('container_ids', int)
+                photo_ids = set()
+                for p_id in ids:
+                    p_list = self._get_photo_list_by_gallery_id(p_id, old_id=True)
+                    photo_ids = photo_ids.union(set(p_list))
+            else:
+                raise ShortcodeParameterError("{} is an invalid source for ngg_images".format(source))
+        elif 'gallery_ids' in keys:
+            ids = self._get_parm_list('gallery_ids', int)
+            photo_ids = set()
+            for p_id in ids:
+                p_list = self._get_photo_list_by_gallery_id(p_id, old_id=True)
+                photo_ids = photo_ids.union(set(p_list))
+        elif 'image_ids' in keys:
+            photo_ids = self._get_parm_list('image_ids', int)
+        return list(photo_ids)
 
     def _process_maxbutton(self):
         try:
@@ -118,8 +162,8 @@ class Shortcode(object):
         res = run_jinja_template('base/button.jinja2', context=context).replace('\n', '')
         self.content_dict['result'] = res
 
-    def _get_photo_list_by_gallery_id(self, gallery_id):
-        photo_ids = [x.id for x in self.photo_mgr.get_photos_in_gallery_with_id(gallery_id)]
+    def _get_photo_list_by_gallery_id(self, gallery_id, old_id=False):
+        photo_ids = self.photo_mgr.get_photo_ids_in_gallery_with_id(gallery_id, old_id=old_id)
         return photo_ids
 
     def _process_singlepic(self):
