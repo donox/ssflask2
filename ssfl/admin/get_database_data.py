@@ -14,7 +14,7 @@ def db_manage_pages(db_exec: DBExec, form):
      Template: db_get_database_data.jinja2
      Display:  db_display_database_data.jinja2
      Form: get_database_data_form.py
-     Processor: manage_page_data.py
+     Processor: db_get_database_data.py
     """
     function_to_execute = form.work_function.data
     search_string = form.search_string.data
@@ -28,7 +28,7 @@ def db_manage_pages(db_exec: DBExec, form):
     try:
         page_mgr = db_exec.create_page_manager()
         photo_mgr = db_exec.create_sst_photo_manager()
-        if function_to_execute == 'mpd_recent':     # 'Display Most Recent Pages'
+        if function_to_execute == 'mpd_recent':  # 'Display Most Recent Pages'
             page_list = page_mgr.get_recent_pages(nbr_pages)
             res = []
             for page in page_list:
@@ -55,7 +55,7 @@ def db_manage_pages(db_exec: DBExec, form):
             result = render_template(result_template, **context)
             return result
 
-        elif function_to_execute == 'mpd_search':           # Display Recent Pages search by field name, string
+        elif function_to_execute == 'mpd_search':  # Display Recent Pages search by field name, string
             page_list = page_mgr.get_records_by_field_search(search_field, search_string, nbr_pages)
             res = []
             for page in page_list:
@@ -69,7 +69,11 @@ def db_manage_pages(db_exec: DBExec, form):
             result = render_template(result_template, **context)
             return result
 
-        elif function_to_execute == 'mpd_photo':         # Display Recent Photos with search by field, string or folder
+        elif function_to_execute == 'mpd_photo':  # Display Recent Photos with search by field, string or folder
+            if not (search_string or folder_search):
+                form.errors['Missing search criteria'] = [
+                    'Must supply either a Search string or a folder name (partial)']
+                return False
             photo_list = photo_mgr.get_records_by_field_search(search_field, folder_search, search_string, nbr_pages)
             res = []
             for photo in photo_list:
@@ -84,7 +88,7 @@ def db_manage_pages(db_exec: DBExec, form):
             result = render_template(result_template, **context)
             return result
 
-        elif function_to_execute == 'dp':           # Download a csv file of the Page Table
+        elif function_to_execute == 'dp':  # Download a csv file of the Page Table
             file = get_temp_file_name('csv', 'csv')
             with open(file, 'w') as outfile:
                 writer = csv.writer(outfile)

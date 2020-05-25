@@ -319,6 +319,8 @@ class SSTPhotoManager(BaseTableManager):
             sql += f'and '
         if folder_search:
             sql += f'folder_name like lower("{find_folder}") '
+        if not (search_string or folder_search):
+            return None
         sql += f'order by image_date desc limit {nbr_to_get}'
         res = self.db_session.execute(sql)
         photos = []

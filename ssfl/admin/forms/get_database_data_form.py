@@ -16,7 +16,7 @@ class DBGetDatabaseData(FlaskForm):
      Template: db_get_database_data.jinja2
      Display:  db_display_database_data.jinja2
      Form: get_database_data_form.py
-     Processor: manage_page_data.py
+     Processor: db_get_database_data.py
     """
     supported_functions = [('mpd_recent', 'Show Most Recent Pages'),
                            ('mpd_search', 'Recent Pages by Field, Search'),
