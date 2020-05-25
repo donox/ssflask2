@@ -1,8 +1,8 @@
 {
-  "name": "src_css",
+  "name": "src_sunnyside-times",
   "version": "1.0.0",
   "description": "Package for files for Sunnyside Resident Website",
-  "main": "ssfl/sass/mystyles.scss",
+  "main": "sst.js",
   "dependencies": {
     "@fullcalendar/core": "^4.3.1",
     "@fullcalendar/daygrid": "^4.3.0",
@@ -15,6 +15,7 @@
     "fullcalendar": "^3.10.1",
     "moment": "^2.24.0",
     "react": "^16.12.0",
+    "sass-loader": "^8.0.2",
     "shebang-loader": "0.0.1",
     "underscore": "^1.9.1"
   },
@@ -30,18 +31,19 @@
     "html-webpack-plugin": "^4.2.0",
     "imports-loader": "^0.8.0",
     "jquery": "^3.5.0",
-    "node-sass": "^4.14.0",
+    "node-sass": "^4.14.1",
     "source-map-loader": "^0.2.4",
-    "style-loader": "^1.2.0",
+    "style-loader": "^1.2.1",
     "webpack": "^4.43.0",
     "webpack-cli": "^3.3.11",
     "webpack-dev-server": "^3.10.3"
   },
   "scripts": {
-    "css-build": "node-sass --omit-source-map-url ssfl/sass/mystyles.scss ssfl/static/css/mystyles.css",
+    "css-build": "node-sass ssfl/static/sass/mystyles.scss ssfl/static/css/nav_mystyles.css",
+    "css-buildX": "node-sass --omit-source-map-url ssfl/static/sass/mystyles.scss ssfl/static/css/nav_mystyles.css",
     "css-watch": "npm run css-build -- --watch",
     "startX": "npm run css-watch",
-    "start": "webpack --config ssfl/static/webpack.dev.js",
+    "start": "webpack --config ssfl/static/webpack.config.js",
     "dev-build": "webpack -d --config ssfl/static/webpack.config.js",
     "list-modules": "webpack --display_modules"
   },

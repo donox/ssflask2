@@ -1,3 +1,4 @@
+$=jQuery;
 $(document).ready(function () {
 
     function run_slideshow(){

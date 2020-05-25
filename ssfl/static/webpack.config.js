@@ -1,11 +1,14 @@
 const path = require('path');
 const webpack = require('webpack');
 
-
 let dir_path = path.resolve('ssfl/static')
 module.exports = {
     entry: [
         dir_path + '/js/index.js',
+        dir_path + '/js/sst_javascript.js',
+        dir_path + '/sass/sst_styles.scss',
+        dir_path + '/css/nav_mystyles.css',
+        dir_path + '/css/calendar.css',
     ],
     output: {
         filename: 'packed.js',
@@ -25,8 +28,8 @@ module.exports = {
     module: {
         rules: [
             {
-                test: /\.css$/i,
-                use: ['style-loader', 'css-loader'],
+                test: /\.(scss|css)$/i,
+                use: ['style-loader', 'css-loader', 'sass-loader'],
             },
             {
                 test: /\.(js|jsx)$/,
