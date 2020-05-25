@@ -616,7 +616,7 @@ $(document).ready(function () {
   function run_slideshow() {
     $('.slideshow').each(function () {
       var slides = $(this).children();
-      var rotate = $(this).attr('interval') * 100;
+      var rotate = $(this).attr('interval') * 1000;
       var ndx = 0;
 
       var rotator = function rotator() {
