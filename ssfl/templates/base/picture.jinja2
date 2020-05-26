@@ -1,5 +1,4 @@
-{# SHOULD WE DEFAULT photo.alignment to left (currently centers) if it is not specified?? #}
-<div class="{{ photo.css_class }} float-{{ photo.alignment }} px-3 {{ do_rotation }}" style="max-width: {{ photo.width }}px;">
+z<div class="{{ photo.css_class }} float-{{ photo.alignment }} px-3 {{ do_rotation }}" style="max-width: {{ photo.width }}px;">
     <figure class="figure">
         {%  if photo.title %}
             <figcaption class="figure-caption has-text-black {{ photo.title_class }}">{{ photo.title }}</figcaption>
@@ -8,7 +7,7 @@
              src="{{ photo.url }}?h={{ photo.height }}&w={{ photo.width }}"
              height="{{ photo.height }}"
              width="{{ photo.width }}"
-             alt="{{ photo.alt_text }}" />
-        <figcaption class="figure-caption has-text-black photo.caption_class }}">{{ photo.caption }}</figcaption>
+             alt="{{ photo.alt_text }}"/>
+        <figcaption class="figure-caption has-text-black {{ photo.caption_class }}">{{ photo.caption }}</figcaption>
     </figure>
-</div>
+</div>w

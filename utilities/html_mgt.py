@@ -81,7 +81,9 @@ class PageBody(object):
         """
         body = etree.Element(XHTML + "div", nsmap=NSMAP)
         # remove line breaks immediately following an element tag
-        el_rep = target_page.page_content.replace('>\n', '>')
+        # !!! We also remove any space following that newline - Could this be removing needed space!!!
+        # el_rep = target_page.page_content.replace('>\n', '>')
+        el_rep = re.sub('>\\n\s*', '>', target_page.page_content)
         body_list = hp.fragments_fromstring(el_rep)
         for el in body_list:
             if type(el) is str:
