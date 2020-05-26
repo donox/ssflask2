@@ -1,5 +1,5 @@
 import os
-
+from flask import send_file
 from db_mgt.page_tables import Page, PageManager
 from utilities.miscellaneous import get_temp_file_name, extract_fields_to_dict, make_re_from_string
 import csv
@@ -88,16 +88,29 @@ def db_manage_pages(db_exec: DBExec, form):
             result = render_template(result_template, **context)
             return result
 
-        elif function_to_execute == 'dp':  # Download a csv file of the Page Table
+        elif function_to_execute == 'mpd_page_csv':  # Download a csv file of the Page Table
             file = get_temp_file_name('csv', 'csv')
             with open(file, 'w') as outfile:
                 writer = csv.writer(outfile)
-                key_list = ['id', 'page_name', 'page_date', 'page_title', 'page_author', 'page_parent']
+                key_list = ['id', 'page_name', 'page_date', 'page_title', 'page_author']
                 writer.writerow(key_list)
                 for vals in page_mgr.generate_page_records(key_list):
                     writer.writerow(vals)
                 outfile.close()
-            return function_to_execute, file
+            return send_file(file, mimetype='application/octet', as_attachment=True,
+                             attachment_filename='Page_Listing.csv')
+
+        elif function_to_execute == 'mpd_photo_csv':  # Download a csv file of the Page Table
+            file = get_temp_file_name('csv', 'csv')
+            with open(file, 'w') as outfile:
+                writer = csv.writer(outfile)
+                key_list = ['id', 'slug', 'file_name', 'folder_name', 'caption', 'image_date']
+                writer.writerow(key_list)
+                for vals in photo_mgr.generate_photo_records(key_list):
+                    writer.writerow(vals)
+                outfile.close()
+            return send_file(file, mimetype='application/octet', as_attachment=True,
+                             attachment_filename='Photo_Listing.csv')
 
 
         else:

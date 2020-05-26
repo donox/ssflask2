@@ -329,6 +329,15 @@ class SSTPhotoManager(BaseTableManager):
             photos.append(new_photo)
         return photos
 
+    def generate_photo_records(self, key_list):
+        res = self.db_session.query(SSTPhoto).all()
+        for record in res:
+            rec = record.__dict__
+            rec_list = []
+            for key in key_list:
+                rec_list.append(rec[key])
+            yield rec_list
+
 
 class SlideShow(object):
     """
