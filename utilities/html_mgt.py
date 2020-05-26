@@ -167,13 +167,16 @@ class PageBody(object):
         ts3 = re.sub('\n(\n)+', '\n', ts2)              # Replace multiple line feeds with single one
         tsl = ts3.split('\n')                           # Break text into separate lines
         res = []
-        for segment in tsl:
-            el = etree.Element(XHTML + 'p', nsmap=NSMAP)
-            el.text = segment
-            # the inner 'not's are converting the values to booleans so if el has content in one subelement,
-            # the inner expression will evaluate false.
-            if not (not el.getchildren() and not el.text and not el.tail):
-                res.append(el)
+        if len(tsl) > 1:                                # There are no newlines in text_string so just return it
+            for segment in tsl:
+                el = etree.Element(XHTML + 'p', nsmap=NSMAP)
+                el.text = segment
+                # the inner 'not's are converting the values to booleans so if el has content in one subelement,
+                # the inner expression will evaluate false.
+                if not (not el.getchildren() and not el.text and not el.tail):
+                    res.append(el)
+        else:
+            res = tsl
         return res
 
 
