@@ -25,14 +25,12 @@ class GraphTests(BaseTestCase):
 
     def test_create_graph(self):
         test_graph = MakeKeywordStoryPhotoGraph()
-        kw_node = test_graph.make_keyword_node('elephant')
-        st_node = test_graph.make_story_node(45074)
-        ph_node = test_graph.make_photo_node(10041)
-        kw_edge = test_graph.make_keyword_story_photo_edge(kw_node, st_node, None)
         full_graph = Graph(self.db_exec, test_graph.persona)
-        full_graph.add_node('KeywordNode')
+        full_graph.add_node('KeywordNode', 'kn-1', 'elephant', synonyms=['mouse', 'trunk'])
+        full_graph.add_node('StoryNode', 'ks-1', 'book-buddies')
+        full_graph.add_node('PhotoNode', 'kp-1', 10044)
+        full_graph.add_edge('KeywordEdge', 'ke-1', 'kn-1', 'kp-1', directed=True)
         foo = 3
-        ## node_init associated with wrong(?) level
 
     def test_make_keyword_node(self):
         kw_node = KeywordNode(self.graph, 'foobah')

@@ -26,7 +26,7 @@ class MakeKeywordStoryPhotoGraph(AbstractMakeGraph):
     def node_persona(self):
         persona = super().node_persona
         persona['node_makers'] = {'KeywordNode': self.make_keyword_node,
-                                  'KStoryNode': self.make_story_node,
+                                  'StoryNode': self.make_story_node,
                                   'PhotoNode': self.make_photo_node}
         return persona
 
@@ -53,27 +53,30 @@ class MakeKeywordStoryPhotoGraph(AbstractMakeGraph):
         pass
 
     def make_keyword_node(self, keyword, *args, **kwargs):
-        node = KeywordNode(keyword, *args, **kwargs)
+        node = KeywordNode(self, keyword, *args, **kwargs)
         return node
 
-    def make_story_node(self, story, *args, **kwargs):
-        node = StoryNode(story, *args, **kwargs)
+    def make_story_node(self,  story, *args, **kwargs):
+        node = StoryNode(self,  story, *args, **kwargs)
         return node
 
-    def make_photo_node(self, photo, *args, **kwargs):
-        node = PhotoNode(photo, *args, **kwargs)
+    def make_photo_node(self,  photo, *args, **kwargs):
+        node = PhotoNode(self, photo, *args, **kwargs)
         return node
 
-    def make_keyword_story_photo_edge(self, keyword_node, photo_node, story_node, *args, **kwargs):
-        edge = KeywordEdge(keyword_node, photo_node, story_node, *args, **kwargs)
+    def make_keyword_story_photo_edge(self, base_edge, keyword_node, node, *args, **kwargs):
+        edge = KeywordEdge(base_edge, keyword_node, node, *args, **kwargs)
         return edge
 
 
 class KeywordNode(object):
 
-    def __init__(self, keyword):
+    def __init__(self, base_node,  keyword, *args, **kwargs):
+        self.base_node = base_node
         self.keyword = keyword
-        self.synonyms = []
+        self.node_type = 'keyword'
+        if 'synonyms' in kwargs:
+            self.synonyms = kwargs['synonyms']
 
     def get_keyword(self):
         return self.keyword
@@ -94,8 +97,10 @@ class KeywordNode(object):
 
 class StoryNode(object):
 
-    def __init__(self, story):
-        self.story = story
+    def __init__(self, base_node, story, *args, **kwargs):
+        self.base_node = base_node
+        self.story = story          # id or slug of story
+        self.node_type = 'story'
         self.page = None
 
     def serialize(self):
@@ -117,9 +122,10 @@ class StoryNode(object):
 
 class PhotoNode(object):
 
-    def __init__(self, story):
-        self.story = story
-        self.photo = None
+    def __init__(self, base_node, photo, *args, **kwargs):
+        self.base_node = base_node
+        self.photo = photo          # id or slug of photo
+        self.node_type = 'photo'
 
     def serialize(self):
         result = {'id': super().get_name(),
@@ -139,11 +145,10 @@ class PhotoNode(object):
 
 
 class KeywordEdge(object):
-    def __init__(self, keyword_node, photo_node, story_node):
-        # One of photo/story is None
+    def __init__(self, base_edge, keyword_node, node, *args, **kwargs):
+        self.base_edge = base_edge      # associated graph edge
         self.keyword_node = keyword_node
-        self.photo_node = photo_node
-        self.story_node = story_node
+        self.target_node_type = node.node_type
 
     def serialize(self):
         result = {'id': self.get_name(),
@@ -155,4 +160,4 @@ class KeywordEdge(object):
     def deserialize(self, graph, serial_str):
         json_dict = json.loads(serial_str)
         self.keyword_node = graph.get_node(json_dict['start_node'])
-        self.facet_node = graph.get_node(json_dict['end_node'])
+        self.photo_node = graph.get_node(json_dict['end_node'])
