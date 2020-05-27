@@ -14,7 +14,7 @@
                 {% endif %}
                 <div class="slideshow" interval="{{ slideshow.rotation }}">
                     {% for photo in slideshow.pictures %}
-                        x{% include 'base/picture.jinja2' %}y
+                        {% include 'base/picture.jinja2' %}
                     {% endfor %}
                 </div>
             </div>
