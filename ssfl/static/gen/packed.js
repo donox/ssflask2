@@ -136,7 +136,7 @@ var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(/*! ../../../node_modules/
 exports = ___CSS_LOADER_API_IMPORT___(false);
 exports.push([module.i, "@import url(https://fonts.googleapis.com/css?family=Nunito:400,700);"]);
 // Module
-exports.push([module.i, ".imagecaption {\n  /* Make caption size fit figure (and figure css below) */\n  padding: 3px;\n  margin: 10px;\n  float: left;\n  border: 1px solid black; }\n\n.title {\n  /* prevent title overlapping nav bar */\n  margin-top: 0.5rem; }\n\nbutton {\n  padding: 4px; }\n\n.card-body {\n  display: flex; }\n\n.card-title {\n  margin-left: auto;\n  font-weight: bold;\n  color: black; }\n\n@media (min-width: 768px) {\n  .card-title {\n    word-break: break-all;\n    text-align: center; } }\n\n@media (max-width: 767px) {\n  .card-title {\n    text-align: center;\n    word-break: break-all; } }\n\n.col-10 {\n  height: 65px; }\n\n.col-2 {\n  height: 65px; }\n", ""]);
+exports.push([module.i, ".imagecaption {\n  /* Make caption size fit figure (and figure css below) */\n  padding: 3px;\n  margin: 10px;\n  float: left;\n  border: 1px solid black; }\n\n.title {\n  /* prevent title overlapping nav bar */\n  margin-top: 0.5rem; }\n\nbutton {\n  padding: 4px; }\n\n.card-body {\n  display: flex;\n  overflow-wrap: break-word; }\n\n.card-title {\n  margin-left: auto;\n  font-weight: bold;\n  color: black;\n  overflow-wrap: break-word; }\n\n@media (min-width: 768px) {\n  .card-title {\n    word-break: break-word;\n    text-align: center; } }\n\n@media (max-width: 767px) {\n  .card-title {\n    text-align: center;\n    word-break: break-word; } }\n\n.col-10 {\n  height: 65px; }\n\n.col-2 {\n  height: 65px; }\n", ""]);
 // Exports
 module.exports = exports;
 

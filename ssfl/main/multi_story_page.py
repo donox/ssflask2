@@ -180,8 +180,8 @@ class MultiStoryPage(object):
         page_id = None
         if 'name' in elem:
             page_name = elem['name']  # will use which ever is set
-        if 'id' in elem:  # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            page_id = elem['id']  # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        if 'id' in elem:
+            page_id = elem['id']
         story = Story(self.db_exec, width)
         story.create_story_from_db(page_id=page_id, page_name=page_name)
         elem['title'] = story.get_title()
@@ -296,11 +296,15 @@ class MultiStoryPage(object):
                     photo = self.photo_manager.get_photo_from_id(int(pid))
                 else:
                     photo = self.photo_manager.get_photo_from_slug(pid)
-                photo_json = self.storage_manager.make_json_descriptor('PICTURE')
-                photo_json['PICTURE']['id'] = photo.id
-                photo_json['PICTURE']['url'] = self.photo_manager.get_photo_url(photo.id)
-                photo_json['PICTURE']['caption'] = photo.caption
-                photo_json['PICTURE']['alt_text'] = photo.alt_text
+                if photo:
+                    photo_json = self.storage_manager.make_json_descriptor('PICTURE')
+                    photo_json['PICTURE']['id'] = photo.id
+                    photo_json['PICTURE']['url'] = self.photo_manager.get_photo_url(photo.id)
+                    photo_json['PICTURE']['caption'] = photo.caption
+                    photo_json['PICTURE']['alt_text'] = photo.alt_text
+                    photo_json['PICTURE']['exists'] = True
+                else:
+                    photo_json['PICTURE']['exists'] = False
                 res.append(photo_json['PICTURE'])
             elem_show['pictures'] = res
         else:

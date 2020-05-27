@@ -23,5 +23,11 @@ be absent.
 """
 entry['folder_search'] = [x]
 
+x = """If checked, the page or photo (as appropriate) will be loaded (photos) or built (stories) to verify that
+the entry is valid.  A blank in the verify field of the spreadsheet indicates success.  Note this command may take a 
+while to run.
+"""
+entry['verify_element'] = [x]
+
 
 

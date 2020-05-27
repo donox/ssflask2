@@ -5,6 +5,7 @@ from utilities.miscellaneous import get_temp_file_name, extract_fields_to_dict, 
 import csv
 from flask import render_template
 from db_mgt.db_exec import DBExec
+from ssfl.main.story import Story
 
 
 def db_manage_pages(db_exec: DBExec, form):
@@ -20,6 +21,7 @@ def db_manage_pages(db_exec: DBExec, form):
     search_string = form.search_string.data
     search_field = form.search_field.data
     folder_search = form.folder_search.data
+    verify_element = form.verify_element.data
     nbr_pages = 10
     page_fields = ['view', 'delete', 'id', 'page_title', 'page_name', 'page_author', 'page_date']
     photo_fields = ['delete', 'id', 'slug', 'file_name', 'folder_name', 'caption', 'image_date']
@@ -92,9 +94,16 @@ def db_manage_pages(db_exec: DBExec, form):
             file = get_temp_file_name('csv', 'csv')
             with open(file, 'w') as outfile:
                 writer = csv.writer(outfile)
-                key_list = ['id', 'page_name', 'page_date', 'page_title', 'page_author']
+                key_list = ['id', 'page_name', 'page_date', 'page_title', 'page_author', 'verify']
                 writer.writerow(key_list)
-                for vals in page_mgr.generate_page_records(key_list):
+                width = 12
+                for vals in page_mgr.generate_page_records(key_list[0:-1]):
+                    if verify_element:
+                        try:
+                            story = Story(db_exec, width)
+                            story.create_story_from_db(page_id=vals[0], page_name=None)
+                        except Exception as e:
+                            vals.append('FAIL')
                     writer.writerow(vals)
                 outfile.close()
             return send_file(file, mimetype='application/octet', as_attachment=True,
@@ -104,9 +113,14 @@ def db_manage_pages(db_exec: DBExec, form):
             file = get_temp_file_name('csv', 'csv')
             with open(file, 'w') as outfile:
                 writer = csv.writer(outfile)
-                key_list = ['id', 'slug', 'file_name', 'folder_name', 'caption', 'image_date']
+                key_list = ['id', 'slug', 'file_name', 'folder_name', 'caption', 'image_date', 'verify']
                 writer.writerow(key_list)
-                for vals in photo_mgr.generate_photo_records(key_list):
+                for vals in photo_mgr.generate_photo_records(key_list[0:-1]):
+                    if verify_element:
+                        photo_slug = vals[1]
+                        res = photo_mgr.get_photo_by_slug_if_exists(photo_slug)
+                        if not res:
+                            vals.append('FAIL')
                     writer.writerow(vals)
                 outfile.close()
             return send_file(file, mimetype='application/octet', as_attachment=True,

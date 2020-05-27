@@ -32,6 +32,9 @@ class DBGetDatabaseData(FlaskForm):
                                render_kw={"class": "mpd_search mpd_photo", "docs": docs['mpd_search']['search_field']})
     folder_search = StringField('Field to Search', validators=[Optional()],
                                 render_kw={"class": "mpd_photo xxx", "docs": docs['mpd_photo']['folder_search']})
+    verify_element = BooleanField('Verify That Page or Photo Will Load', default=False,
+                                  render_kw={"class": "mpd_photo_csv mpd_page_csv",
+                                             "docs": docs['mpd_photo']['verify_element']})
 
     def validate_on_submit(self, db_exec):
         res = super().validate_on_submit()

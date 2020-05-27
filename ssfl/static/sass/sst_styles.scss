@@ -19,17 +19,19 @@ button {
 
 .card-body {
   display: flex;
+  overflow-wrap: break-word;
 }
 .card-title {
   margin-left: auto;
   //font-family: 'Helvetica', cursive;
   font-weight: bold;
   color: black;
+  overflow-wrap: break-word;
 }
 
 @media(min-width:768px) {
   .card-title {
-    word-break: break-all;
+    word-break: break-word;
     text-align: center;
   }
 }
@@ -37,7 +39,7 @@ button {
 @media(max-width:767px) {
   .card-title {
     text-align: center;
-    word-break: break-all;
+    word-break: break-word;
   }
 }
 
