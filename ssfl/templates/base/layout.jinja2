@@ -29,8 +29,8 @@
 </head>
 <body>
 
-<div class="container-fluid text-dark">
-    {% include 'base/nav.jinja2' %}
+<div class="main container-fluid text-dark">
+{% include 'base/nav.jinja2' %}
     {% set flash_message_type = 'error' %}
     {% include 'base/flashed_messages.jinja2' %}
     {% block content %}{% endblock %}
