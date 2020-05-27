@@ -4,6 +4,7 @@ from config import Config
 from db_mgt.sst_photo_tables import SlideShow
 from utilities.miscellaneous import run_jinja_template
 from utilities.sst_exceptions import ShortcodeError, ShortcodeParameterError, ShortcodeSystemError
+from ssfl import sst_syslog
 
 
 class Shortcode(object):
@@ -50,10 +51,12 @@ class Shortcode(object):
                     # print("n: {}, {}".format(n, match.title()))
                     if n > 0:
                         arg_list = match.title()
-                        while len(arg_list) > 0:
+                        loop_count = 50
+                        while len(arg_list) > 0 and loop_count:         # Use loop_count to defend against infinite loop
                             try:
                                 parm1, parm2, arg_list = self._get_next_arg(arg_list)
                                 res[parm1.lower()] = parm2
+                                loop_count -= 1
                             except:
                                 print("No match arg on {}".format(arg_list))
                 except:
@@ -169,6 +172,9 @@ class Shortcode(object):
     def _process_singlepic(self):
         try:
             photo_id = self.content_dict['id']
+            if not photo_id:
+                sst_syslog.make_error_entry(f'No photo ID to _process_singlepic')
+                return None
             if type(photo_id) is str:
                 photo_id = int(photo_id)
             photo_id = self.photo_mgr.get_new_photo_id_from_old(photo_id)
@@ -183,13 +189,14 @@ class Shortcode(object):
             if 'align' in self.content_dict:
                 photo_position = self.content_dict['align']
                 if photo_position not in ['left', 'middle', 'right', 'top', 'bottom']:
-                    raise ValueError(
-                        'Unknown photo position: {}'.format(photo_position))  # TODO: return error to script
+                    sst_syslog.make_error_entry(f'Unknown photo position: {photo_position}')
+                    photo_position = 'middle'
                 photoframe.set_position(photo_position)
             res = photoframe.get_html()
             self.content_dict['result'] = res
         except Exception as e:
-            raise e
+            # Capture error, but don't raise exception to avoid returning exception to end user
+            sst_syslog.make_error_entry(f'Error occurred in _process_single_pic {e.args}')
 
     def _process_ngg_images(self):
         """Process Imagely shortcode ngg_images with relevant parameters."""

@@ -1,4 +1,5 @@
-<div class="{{ photo.css_class }} float-{{ photo.alignment }} px-3 {{ do_rotation }}" style="max-width: {{ photo.width }}px;">
+{% if photo.exists %}
+    <div class="{{ photo.css_class }} float-{{ photo.alignment }} px-3 {{ do_rotation }}" style="max-width: {{ photo.width }}px;">
     <figure class="figure">
         {%  if photo.title %}
             <figcaption class="figure-caption has-text-black {{ photo.title_class }}">{{ photo.title }}</figcaption>
@@ -11,3 +12,6 @@
         <figcaption class="figure-caption has-text-black {{ photo.caption_class }}">{{ photo.caption }}</figcaption>
     </figure>
 </div>
+    {% else %}
+    <div class="h3">Photo Not Found</div>
+{% endif %}
