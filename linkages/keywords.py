@@ -82,7 +82,7 @@ class KeywordNode(object):
         return self.keyword
 
     def serialize(self):
-        result = {'id': super().get_name(),
+        result = {'id': self.base_node.get_name(),
                   'keyword': self.keyword,
                   'synonyms': self.synonyms}
         return json.dumps(result)
@@ -104,7 +104,7 @@ class StoryNode(object):
         self.page = None
 
     def serialize(self):
-        result = {'id': super().get_name(),
+        result = {'id': self.base_node.get_name(),
                   'node_type': 'story',
                   }
         return json.dumps(result)
@@ -128,7 +128,7 @@ class PhotoNode(object):
         self.node_type = 'photo'
 
     def serialize(self):
-        result = {'id': super().get_name(),
+        result = {'id': self.base_node.get_name(),
                   'node_type': 'photo',
                   }
         return json.dumps(result)
@@ -151,9 +151,9 @@ class KeywordEdge(object):
         self.target_node_type = node.node_type
 
     def serialize(self):
-        result = {'id': self.get_name(),
-                  'start_node': self.node_1.id,
-                  'end_node': self.node_2.id,
+        result = {'id': self.base_edge.get_name(),
+                  'start_node': self.base_edge.node_1,
+                  'end_node': self.base_edge.node_2,
                   }
         return json.dumps(result)
 

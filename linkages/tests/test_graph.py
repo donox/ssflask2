@@ -30,22 +30,41 @@ class GraphTests(BaseTestCase):
         full_graph.add_node('StoryNode', 'ks-1', 'book-buddies')
         full_graph.add_node('PhotoNode', 'kp-1', 10044)
         full_graph.add_edge('KeywordEdge', 'ke-1', 'kn-1', 'kp-1', directed=True)
-        foo = 3
+        self.assertEqual(3, len(full_graph.nodes), "Not produce all nodes")
 
-    def test_make_keyword_node(self):
-        kw_node = KeywordNode(self.graph, 'foobah')
-        kw_node.synonyms = ['farn', 'durn', 'blurd']
-        json_res = kw_node.serialize()
-        self.assertEqual('{"id": 31, "keyword": "foobah", "synonyms": ["farn", "durn", "blurd"]}', json_res,
-                         'Wrong Result')
+    def test_make_serialize_elements(self):
+        test_graph = MakeKeywordStoryPhotoGraph()
+        full_graph = Graph(self.db_exec, test_graph.persona)
+        full_graph.add_node('KeywordNode', 'kn-1', 'elephant', synonyms=['mouse', 'trunk'])
+        res = full_graph.nodes[1].node.serialize()
+        self.assertEqual(res, '{"id": "kn-1", "keyword": "kn-1", "synonyms": ["mouse", "trunk"]}', 'Bad serialization - node 1')
+        full_graph.add_node('StoryNode', 'ks-1', 'book-buddies')
+        res = full_graph.nodes[2].node.serialize()
+        full_graph.add_node('PhotoNode', 'kp-1', 10044)
+        res = full_graph.nodes[3].node.serialize()
+        full_graph.add_edge('KeywordEdge', 'ke-1', 'kn-1', 'kp-1', directed=True)
+        res = full_graph.edges[4].edge.serialize()
+        self.assertEqual(res, '{"id": "ke-1", "start_node": "kn-1", "end_node": "kp-1"}', 'Bad serialization - edge')
 
-    def test_deserialize_keyword_node(self):
-        graph = Graph(self.db_exec)
-        json_str = '{"id": 31, "keyword": "foobah", "synonyms": ["farn", "durn", "blurd"]}'
-        kw_node = KeywordNode(None, None, shell=True)
-        kw_node.deserialize(graph, json_str)
-        res = kw_node.serialize()
-        self.assertEqual(json_str, res, 'Failed to deserialize properly')
+
+    def test_make_deserialize_elements(self):
+        test_graph = MakeKeywordStoryPhotoGraph()
+        full_graph = Graph(self.db_exec, test_graph.persona)
+        full_graph.add_node('KeywordNode', 'kn-1', 'elephant', synonyms=['mouse', 'trunk'])
+        res = full_graph.nodes[1].node.serialize()
+        new_node = KeywordNode(full_graph.nodes[1].node,None)
+        res2 = new_node.deserialize(full_graph, res)
+        full_graph.add_node('StoryNode', 'ks-1', 'book-buddies')
+        res = full_graph.nodes[2].node.serialize()
+        res2 = full_graph.nodes[2].node.deserialize()
+        full_graph.add_node('PhotoNode', 'kp-1', 10044)
+        res = full_graph.nodes[3].node.serialize()
+        res2 = full_graph.nodes[3].node.deserialize()
+        full_graph.add_edge('KeywordEdge', 'ke-1', 'kn-1', 'kp-1', directed=True)
+        res = full_graph.edges[4].edge.serialize()
+
+        res2 = full_graph.nodes[4].node.deserialize()
+        self.assertEqual(res, '{"id": "ke-1", "start_node": "kn-1", "end_node": "kp-1"}', 'Bad serialization - edge')
 
     def test_make_keyword_element_node(self):
         page_mgr = self.db_exec.create_page_manager()

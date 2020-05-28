@@ -189,8 +189,9 @@ class Node(object):
         self.node_init(node_type, node_name, persona, *args, **kwargs)
 
     def node_init(self, node_type, node_name, persona, *args, **kwargs):
-        self.node = persona['node_makers'][node_type]
-        self.node(node_name, *args, **kwargs)
+        node_maker = persona['node_makers'][node_type]
+        self.node = node_maker(node_name, *args, **kwargs)
+        self.node.base_node = self
 
     def get_id(self):
         return self.id
