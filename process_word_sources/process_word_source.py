@@ -14,6 +14,7 @@ XHTML_NAMESPACE = 'http://www.w3.org/1999/xhtml'
 XHTML = "{%s}" % XHTML_NAMESPACE
 NSMAP = {None: XHTML_NAMESPACE}
 
+
 def verify(string_to_add):
     if string_to_add.find('OCTY') != -1:
         foo = 3
@@ -28,8 +29,9 @@ def remove_useless_html(in_source: str) -> str:
     re1 = re.compile(r'<a id="..DdeLink.+?"></a>')
     return re.sub(re1, '', in_source)
 
+
 # TODO: 'snippet_only' not yet implemented
-predefined_environments = ['snippet', 'snippet_only', 'layout']
+predefined_environments = ['snippet', 'layout', 'sign', 'table', 'container', 'element']
 
 
 class ParsedElement(object):
@@ -146,7 +148,7 @@ class ParsedElement(object):
                     if el == 'HSelf':
                         res += str(item)
                     else:
-                        res += '<UndrendredElement>' + verify(str(node)) + '</UndrendredElement>'
+                        res += '<UnrendredElement>' + verify(str(node)) + '</UnrendredElement>'
                 except Exception as e:
                     raise e
             else:
@@ -159,7 +161,7 @@ class ParsedElement(object):
             self.result = res
             return res
         else:
-            return '<UndrendredElement>' + verify(res) + '</UndrendredElement>'
+            return '<UnrendredElement>' + verify(res) + '</UnrendredElement>'
 
 
 class TopElement(ParsedElement):
@@ -239,6 +241,11 @@ class TopElement(ParsedElement):
         for env in env_list:
             if env_name in env:
                 env['args'].append(arg)
+
+    def get_environment_type(self):
+        env_name = self.environment_stack[-1]
+        env = self.environments_by_name[env_name]
+        return env['type']
 
     def close_environment(self, env_name):
         if self.environment_stack and self.environment_stack[-1] != env_name:
@@ -367,7 +374,7 @@ class TopElement(ParsedElement):
             if txt_positions:
                 self.text_segments = factor_string(txt.replace('\a', '\\'), txt_positions)
             else:
-                self.text_segments = [txt]        # This occurs in the case of a Word doc with no embedded LaTeX
+                self.text_segments = [txt]  # This occurs in the case of a Word doc with no embedded LaTeX
             for seg in self.dupe_para_segments:
                 self.text_segments[seg] = '<p></p>'
             return
@@ -402,7 +409,7 @@ class TopElement(ParsedElement):
         """Modify/generate html associated with environments and capture any features."""
         for env_name, env_list in self.environments.items():
             for env in env_list:
-                if 'type' in env:
+                if 'type' in env and 'text_list_start_pos' in env and 'text_list_end_pos' in env:
                     env_type = env['type']
                     snip_text_begin = env['text_list_start_pos']
                     snip_text_end = env['text_list_end_pos']
@@ -413,33 +420,96 @@ class TopElement(ParsedElement):
                         self.add_content_feature('snippet', 'snippet', snip_text)
                         # TODO: if snippet is not to be left alone, need to remove intermediate text
                     elif env_type == 'layout':
-                        self._process_layout_environment(env, snip_text_begin, snip_text_end)
+                        # Layout environments are discriminated by their "name" (first argument).  The actual
+                        # name of the specific environment is the second argument.  This avoid the issue of
+                        # requiring separate post process handlers for each kind (sub-type) of layout.
+                        if env_name not in predefined_environments:
+                            raise SystemError(f'Invalid type of layout environment: {env_name}')
+                        self._process_layout_environment(env, env_name, snip_text_begin, snip_text_end)
+                    elif env_type == 'user_environment':
+                        self._process_user_environment(env, env_name, snip_text_begin, snip_text_end)
                     else:
                         self.add_content_feature(env_type, env_name, snip_text)
                 else:
-                    raise SystemError(f'No Environment Type given for environment named: {env_name}')
+                    if 'type' not in env:
+                        self.db_exec.add_error_to_form('Missing Layout Parameter',
+                                                       f'{env_name} has no type specified')
+                    if 'text_list_start_pos' not in env:
+                        self.db_exec.add_error_to_form('Missing Layout Parameter',
+                                                       f'{env_name} start missing/broken\n   Note that this is often' +
+                                                       'caused by text on the same line following the closing brace')
+                    if 'text_list_end_pos' not in env:
+                        self.db_exec.add_error_to_form('Missing Layout Parameter',
+                                                       f'{env_name} end specifier missing\n   Note that this is often' +
+                                                       'caused by text on the same line following the closing brace')
+                    # raise SystemError(f'No Environment Type given for environment named: {env_name}')
+        return
 
-    def _process_layout_environment(self, env, snip_start, snip_stop):
+    def _process_user_environment(self, env, env_type, snip_start, snip_stop):
+        open_html = f''
+        close_html = f''
+        result_html = f''
+        self._process_text_snips(open_html, result_html, close_html, snip_start, snip_stop)
+
+    def _process_layout_environment(self, env, env_type, snip_start, snip_stop):
+        if env_type == 'snippet':
+            self._process_layout_snippet_environment(env, snip_start, snip_stop)
+        elif env_type == 'sign':
+            self._process_layout_sign_environment(env, snip_start, snip_stop)
+        elif env_type == 'table':
+            self._process_layout_table_environment(env, snip_start, snip_stop)
+        elif env_type == 'container':
+            self._process_layout_container_environment(env, snip_start, snip_stop)
+        elif env_type == 'element':
+            self._process_layout_element_environment(env, snip_start, snip_stop)
+        else:
+            raise SystemError(f'Fell off end of environment checks')
+
+    def _process_text_snips(self, open_html, result_html, close_html, snip_start, snip_stop):
+        self.text_segments[snip_start] = open_html
+        self.text_segments[snip_stop] = close_html
+        if snip_stop - snip_start > 2:
+            all_segments = self.text_segments[snip_start + 1]
+            for n in range(snip_start + 2, snip_stop):
+                all_segments += self.text_segments[n]
+                self.text_segments[n] = ''
+            self.text_segments[snip_start + 1] = all_segments
+        self.text_segments[snip_start + 1] = result_html + self.text_segments[snip_start + 1]
+
+    def _process_layout_snippet_environment(self, env, snip_start, snip_stop):
         # We need to identify the components of the layout and stitch them together properly
         open_html = f'<container class="container-fluid clearfix">'
         for arg in env['args']:
             open_html += f'<p>Layout Argument: {arg}</p>'
         close_html = f'</container><div class="clearfix"></div>'
         result_html = ''
-        self.text_segments[snip_start] = open_html
-        self.text_segments[snip_stop] = close_html
-        if snip_stop - snip_start > 2:
-            all = self.text_segments[snip_start+1]
-            for n in  range(snip_start+2, snip_stop):
-                all += self.text_segments[n]
-                self.text_segments[n] = ''
-            self.text_segments[snip_start+1] = all
-        for slideshow in env['figures']:
-            position = slideshow.get_position()
-            result_html += slideshow.get_html(float_dir=position)
-        self.text_segments[snip_start+1] = result_html + self.text_segments[snip_start+1]
+        self._process_text_snips(open_html, result_html, close_html, snip_start, snip_stop)
 
+    def _process_layout_sign_environment(self, env, snip_start, snip_stop):
+        open_html = f''
+        close_html = f''
+        result_html = f''
+        self._process_text_snips(open_html, result_html, close_html, snip_start, snip_stop)
 
+    def _process_layout_table_environment(self, env, snip_start, snip_stop):
+        open_html = f'<container class="container-fluid clearfix">'
+        for arg in env['args']:
+            open_html += f'<p>Layout Argument: {arg}</p>'
+        close_html = f'</container><div class="clearfix"></div>'
+        result_html = ''
+        self._process_text_snips(open_html, result_html, close_html, snip_start, snip_stop)
+
+    def _process_layout_container_environment(self, env, snip_start, snip_stop):
+        open_html = f''
+        close_html = f''
+        result_html = f''
+        self._process_text_snips(open_html, result_html, close_html, snip_start, snip_stop)
+
+    def _process_layout_element_environment(self, env, snip_start, snip_stop):
+        open_html = f''
+        close_html = f''
+        result_html = f''
+        self._process_text_snips(open_html, result_html, close_html, snip_start, snip_stop)
 
     def post_process(self):
         """Post process resultant HTML (as string) for cleanup and environment handling.
@@ -496,12 +566,13 @@ class LatexElement(ParsedElement):
         self.command_processors['begin'] = self._latex_begin_env
         self.command_processors['end'] = self._latex_end_env
         self.command_processors['layout'] = self._latex_begin_layout
-        self.command_processors['end_layout'] = self._latex_end_layout
+        self.command_processors['endlayout'] = self._latex_end_layout
         self.command_processors['figure'] = self._latex_begin_figure
         self.command_processors['endfigure'] = self._latex_end_figure
         self.command_processors['photoset'] = self._latex_photoset
         self.command_processors['photo'] = self._latex_photo
-        self.command_processors['phototitle'] = self._latex_photo_title
+        self.command_processors['photos'] = self._latex_photo
+        self.command_processors['phototitle'] = self._latex_photo_title  # note that just 'title' is different
         self.command_processors['photoposition'] = self._latex_photo_position
         self.command_processors['position'] = self._latex_photo_position  # duplicate reflecting actual source
         self.command_processors['photorotation'] = self._latex_photo_rotation
@@ -551,8 +622,8 @@ class LatexElement(ParsedElement):
                 tmp = cmd()
                 return tmp
             else:
-                el = 'LATEXElement_' + self.command + '>'
-                return '<' + el + ' El:' + el + 'Has: ' + str(len(self.args)) + ' args</ ' + el
+                el = 'LATEXElement_' + self.command
+                return '<' + el + ' El:' + el + 'Has: ' + str(len(self.args)) + ' args</ ' + el + '>'
         except Exception as e:
             self.top.db_exec.add_error_to_form('Render_from_Args', f'Exception: {e.args}')
             self.top.db_exec.add_error_to_form('Render_from_Args', f'Command: {self.command}')
@@ -623,7 +694,7 @@ class LatexElement(ParsedElement):
             else:
                 top_element.open_environment('user_environment', arg)
             for val in self.args[1:]:
-                top_element.add_environment_arg(arg, arg, val)          # TODO: this is conflating name and type
+                top_element.add_environment_arg('user_environment', arg, val)
         except Exception as e:
             raise SystemError(f'in _latex_begin_env: {e.args}')
         #  Use comment to support RE finding relevant text in post fixup.
@@ -639,24 +710,35 @@ class LatexElement(ParsedElement):
         return '<!--[[close_env,' + arg + ' ]]-->'
 
     def _latex_begin_layout(self):
-        # args[0] is layout name
-        # args[1:] are arguments to control environment
+        # args[0][0] is layout name
+        # args[1][0] is layout type
+        # args[2:] are arguments to specific layout environment
         top_element = super().get_top()
+        if len(self.args) < 2:
+            self.top.db_exec.add_error_to_form('Layout Args', f'Insufficient args to layout')
+            res = '<!--[[open_layout,  UNKNOWN   FAILED: Insufficient arguments ]]-->'
+            return res
         layout_name = self.args[0][0]
+        layout_type = self.args[1][0]
+        if layout_type not in predefined_environments:
+            self.top.db_exec.add_error_to_form('Layout Args', f'Unknown layout: {layout_type}')
+            res = f'<!--[[open_layout, {layout_name} FAILED: Unknown type {layout_type} ]]-->'
+            return res
         #  Use comment to support RE finding relevant text in post fixup.
-        top_element.open_environment('layout', layout_name)
-        res = '<!--[[open_layout,' + layout_name + ' ]]-->'
-        for val in self.args[1:]:
-            top_element.add_environment_arg('layout', layout_name, val)
+        top_element.open_environment(layout_type, layout_name)
+        res = f'<!--[[open_layout,{layout_name}]]-->'
+        for val in self.args[2:]:
+            top_element.add_environment_arg(layout_type, layout_name, val)
         return res
 
     def _latex_end_layout(self):
         if len(self.args) != 1:
-            raise WordLatexExpressionError(f'Latex end_layout called with wrong args: {self.args}')
+            raise WordLatexExpressionError(f'Latex endlayout called with wrong args: {self.args}')
         arg = self.args[0][0]
         top_element = super().get_top()
+        env_type = top_element.get_environment_type()
         top_element.close_environment(arg)
-        return '<!--[[close_layout,' + arg + ' ]]-->'
+        return f'<!--[[close_layout,{arg}]]-->'
 
     def _latex_begin_figure(self):
         if len(self.args) != 1:
@@ -757,7 +839,7 @@ class LatexElement(ParsedElement):
         try:
             arg_int = int(arg)
         except Exception as e:
-            raise WordLatexExpressionError(f'Latex invalid value for photo frame rotation speed: {int}')
+            raise WordLatexExpressionError(f'Latex invalid value for photo frame rotation speed: {arg_int}')
         top_element.current_photo_frame.set_rotation(arg_int)
         return ''
 

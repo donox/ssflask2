@@ -32,6 +32,11 @@ class ImportMSWordDocForm(FlaskForm):
         page_mgr = db_exec.create_page_manager()
         res = super().validate_on_submit()
         file_storage = self.file_name.data
+        page_name = self.page_name.data
+        if not page_name:
+            flash(u'You must  specify a page name')
+            self.errors['page_name'] = ['No page name specified.']
+            return False
         if not self.overwrite:
             res = page_mgr.get_page_if_exists(None, self.page_name)
             if res:
