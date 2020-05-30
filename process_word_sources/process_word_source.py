@@ -492,23 +492,27 @@ class TopElement(ParsedElement):
             self.text_segments[snip_start + 1] = all_segments
         self.text_segments[snip_start + 1] = result_html + self.text_segments[snip_start + 1]
 
-    def _process_layout_snippet_environment(self, env, snip_start, snip_stop):
-        # We need to identify the components of the layout and stitch them together properly
-        args ={"max_width": 600,
-               'alignment': 'left',
-               'min-width': 300,
-               'figure': None,
-               }
-        other_args = []
-        for arg in env['args']:
+    def _process_arg_list(self, args, arg_list):
+        list_args = []
+        for arg in arg_list:
             a_list = arg[0].split('=')
             if len(a_list) == 2:
                 key, val = a_list
                 args[key] = val
             else:
-                other_args.append(arg)
-        open_html = f'<container class="container clearfix" style="min-width:400px">'
-        open_html += f'<div style = "max-width:{args["max_width"]}px; float:{args["alignment"]}" >'
+                list_args.append(arg)
+        args['list_args'] = list_args
+
+    def _process_layout_snippet_environment(self, env, snip_start, snip_stop):
+        # We need to identify the components of the layout and stitch them together properly
+        args = {"max_width": 600,
+                'alignment': 'left',
+                'min-width': 300,
+                'figure': None,
+                }
+        self._process_arg_list(args, env['args'])
+        open_html = f'<container class="container clearfix" style="max-width:{args["max_width"]}px; display:inline-block">'
+        open_html += f'<div style = "float:{args["alignment"]}">'
         if args['figure']:
             open_html += self.place_figure(args['figure'])
         open_html += f'</div>'
@@ -518,8 +522,28 @@ class TopElement(ParsedElement):
         self._process_text_snips(open_html, result_html, close_html, snip_start, snip_stop)
 
     def _process_layout_sign_environment(self, env, snip_start, snip_stop):
-        open_html = f''
-        close_html = f''
+        args = {'sign_type': None,
+                'border_style': None,
+                'max_width': 600,
+                'alignment': 'center',
+                'author': None,
+                'author': None,
+                'author': None,
+                'author': None}
+        self._process_arg_list(args, env['args'])
+        open_html = f'<container class="container" style="max-width:{args["max_width"]}px; display:inline-block">'
+        open_html += f'<div class="'
+        if args['border_style']:
+            open_html += args['border_style'] + ' '
+        if args['text_style']:
+            open_html += args['text_style'] + ' '
+        open_html += f'" style = "float:{args["alignment"]}">'
+        close_html = f'</div></container><div class="clearfix"></div>'
+        sign_type = args['sign_type']
+        if sign_type == 'quote':
+            author = args['author']
+            if author:
+                close_html = f'<div class="author" style="padding: 10px;>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--{author}</div>' + close_html
         result_html = f''
         self._process_text_snips(open_html, result_html, close_html, snip_start, snip_stop)
 
