@@ -185,7 +185,11 @@ class PageBody(object):
 
     def update_cached_page(self):
         if self.page_in_db:
-            res = tostring(self.body, 'utf-8').decode('utf-8').replace('<html:', '<').replace('/html:', '/')
+            try:
+                res = tostring(self.body, 'utf-8').decode('utf-8').replace('<html:', '<').replace('/html:', '/')
+            except Exception as e:
+                self.db_exec.add_error_to_form('System Error', 'System encountered a problem trying to process content')
+                return
             self.page_manager.update_cached_page(self.page_in_db, res)
 
     def get_title_author_snippet(self):

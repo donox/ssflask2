@@ -15,6 +15,12 @@ class JSONStorageManager(object):
     descriptor_cell_layout = {"CELL": None, "node_name": "CELL", "element_type": None, "element": None,
                               "is_snippet": None,
                               "width": None, "height": None, "styles": None, "classes": None}
+    descriptor_graph_fields = {"GRAPH": None, "name": "GRAPH", "id": None, "name": None, "purpose": None, "nodes": [],
+                               "edges": []}
+    descriptor_graph_node_fields = {"NODE": None, "node_name": "NODE", "id": None, "facet": {}}
+    descriptor_graph_edge_fields = {"EDGE": None, "node_name": "EDGE", "id": None, "directed": None, "start": None,
+                                    "end": None}
+
     descriptor_button_fields = {"BUTTON": None, "node_name": "BUTTON", "id": None, "button_type": None, "target": None,
                                 "text_content": None}
 
@@ -33,6 +39,9 @@ class JSONStorageManager(object):
                                "date": None, "content": None, "snippet": "S_STORY_SNIPPET"}
     descriptor_index_fields = {"INDEX_LINKS": None, "node_name": "INDEX_LINKS", "title:": None, "title_class": None,
                                "buttons": ["S_BUTTON", "S_BUTTON", "S_BUTTON", "S_BUTTON"]}
+    descriptor_keyword_node_fields = {"KEYWORD_NODE": None, "node_name": "KEYWORD_NODE", "graph": "S_NODE", "keyword": None, "synonyms": []}
+    descriptor_keyword_facet_node_fields = {"KEYWORD_FACET": None, "node_name": "KEYWORD_FACET", "graph": "S_NODE",
+                                      "facet_type": None, "facet": {}}
 
     # Snippets
     descriptor_story_snippet_fields = {"STORY_SNIPPET": None, "node_name": "STORY_SNIPPET", "id": None, "title": None,
@@ -82,6 +91,11 @@ class JSONStorageManager(object):
                                          "descriptor": "QUICK_LINKS"}
 
     descriptor_test_fields = {"ONECELL": "REMOVE", "PAGE": "S_SINGLECELLROW", "descriptor": "PAGE", "node_name": "PAGE"}
+    descriptor_minimal_graph_fields = {"SIMPLEGRAPH": "REMOVE", "graph": {"id": None, "name": None, "purpose": None,
+                                        "nodes": [{"id": None, "facet": {}},
+                                                  {"id": None, "facet": {}}],
+                                        "edges": [{"id": None, "directed": None, "start": None, "end": None}]},
+                                        "descriptor": "SIMPLEGRAPH"}
 
     json_field_dictionary = dict()
     json_field_dictionary['PAGE'] = descriptor_page_layout
@@ -89,6 +103,9 @@ class JSONStorageManager(object):
     json_field_dictionary['COLUMN'] = descriptor_column_layout
     json_field_dictionary['CELL'] = descriptor_cell_layout
     json_field_dictionary['BUTTON'] = descriptor_button_fields
+    json_field_dictionary['GRAPH'] = descriptor_graph_fields
+    json_field_dictionary['NODE'] = descriptor_graph_node_fields
+    json_field_dictionary['EDGE'] = descriptor_graph_edge_fields
 
     json_field_dictionary['PICTURE'] = descriptor_picture_fields
     json_field_dictionary['SLIDESHOW'] = descriptor_slideshow_fields
@@ -105,11 +122,14 @@ class JSONStorageManager(object):
     json_field_dictionary['THREECELLROW'] = descriptor_three_cell_row_fields
     json_field_dictionary['FRONTPAGE'] = descriptor_front_page_fields
     json_field_dictionary['QUICK_LINKS'] = descriptor_quick_link_page_fields
+    json_field_dictionary['SIMPLEGRAPH'] = descriptor_minimal_graph_fields
+    json_field_dictionary['KEYWORD_NODE'] = descriptor_keyword_node_fields
+    json_field_dictionary['KEYWORD_ELEMENT'] = descriptor_keyword_facet_node_fields
 
     # json_field_dictionary[''] = cls.
     json_primary_templates = ['PAGE', 'ROW', 'COLUMN', 'CELL', 'BUTTON', 'PICTURE', 'SLIDESHOW', 'STORY',
                               'STORY_SNIPPET', 'CALENDAR_SNIPPET', 'EVENT_SNIPPET', 'SIGN_SNIPPET',
-                              'SLIDESHOW_SNIPPET', 'INDEX_LINKS']
+                              'SLIDESHOW_SNIPPET', 'INDEX_LINKS', 'GRAPH', 'EDGE', 'NODE']
 
     def __init__(self, db_exec):
         self.db_exec = db_exec

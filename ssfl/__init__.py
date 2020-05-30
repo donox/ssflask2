@@ -9,6 +9,7 @@ from flask_dropzone import Dropzone
 from flask_babelex import Babel
 from flask_mail import Mail
 from cache import cache
+from linkages.persistence import GraphPersistence
 
 
 from sqlalchemy.ext.declarative import declarative_base
@@ -16,11 +17,11 @@ import platform
 
 local_server = True
 if platform.node() == 'Descartes':
-    env_path = Path('.') / '.env'
     env_path = '/home/don/devel/ssflask2/.env'
     load_dotenv(dotenv_path=env_path)
 elif platform.node() == 'glatz':
     env_path = r'C:\Users\glatz\PycharmProjects\devel\ssflask2\.env_SP'
+    load_dotenv(dotenv_path=env_path)
 else:
     local_server = False
     env_path = '/home/doxley/ssflask2/.env_PA'
@@ -69,6 +70,9 @@ def create_app():
 
     # Init cache handling
     cache.init_app(app)
+
+    # Init graph persistence
+    graph_persistence = GraphPersistence(app)
 
     # Initialize DropZone photo/file uploading
     dropzone = Dropzone(app)

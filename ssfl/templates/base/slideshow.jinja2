@@ -4,10 +4,10 @@
         <div class="col">
             <div class="devBorder2" style="max-width: {{ slideshow.width }}px;
                     {% if slideshow.height %}
-                        min-height: {{ slideshow.height }}px;
+                        max-height: {{ slideshow.height }}px;
                     {% endif %}
                     {% if slideshow.background %}
-                        background-color: slideshow.background;
+                        background-color: {{ slideshow.background }};
                     {% endif %}">
                 {% if slideshow.title and slideshow.title != 'NO NAME' %}
                     <figcaption class="{{ slideshow.title_class }}">{{ slideshow.title }}</figcaption>

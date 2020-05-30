@@ -146,14 +146,17 @@ class SSTPhotoManager(BaseTableManager):
         return self._get_photo(sql)
 
     def _get_photo(self, sql):
-        res = self.db_session.execute(sql).first()
-        if res:
-            gv = self.get_photo_field_value(res)
-            photo = SSTPhoto(id=gv('id'), slug=gv('slug'), folder_name=gv('folder_name'), caption=gv('caption'),
-                             alt_text=gv('alt_text'), file_name=gv('file_name'), image_date=gv('image_date'),
-                             json_metadata=gv('json_metadata'))
-            return photo
-        else:
+        try:
+            res = self.db_session.execute(sql).first()
+            if res:
+                gv = self.get_photo_field_value(res)
+                photo = SSTPhoto(id=gv('id'), slug=gv('slug'), folder_name=gv('folder_name'), caption=gv('caption'),
+                                 alt_text=gv('alt_text'), file_name=gv('file_name'), image_date=gv('image_date'),
+                                 json_metadata=gv('json_metadata'))
+                return photo
+            else:
+                raise
+        except Exception as e:
             # Missing photo - return dummy
             photo = SSTPhoto(id=0, slug='no-slug', file_name='no_such_file', image_date=None, json_metadata=None)
             return photo
@@ -276,7 +279,10 @@ class SSTPhotoManager(BaseTableManager):
         the gallery."""
         sql = f'select id from sst_photos where old_id={old_id};'
         new_id = self.db_session.execute(sql).first()
-        return new_id[0]
+        if new_id:
+            return new_id[0]
+        else:
+            return None
         # sql = f'select photo_id from v_photo_picture where wp_picture_id={old_id};'
         # new_id = self.db_session.execute(sql).first()
         # if not new_id:
