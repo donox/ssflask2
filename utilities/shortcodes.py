@@ -4,6 +4,7 @@ from config import Config
 from db_mgt.sst_photo_tables import SlideShow
 from utilities.miscellaneous import run_jinja_template
 from utilities.sst_exceptions import ShortcodeError, ShortcodeParameterError, ShortcodeSystemError
+from ssfl import sst_syslog
 
 
 class Shortcode(object):
@@ -25,13 +26,17 @@ class Shortcode(object):
                                     'src_lists_membership': None,
                                     'src_lists_admin': None
                                     }
+        self.picture_processors = {'singlepic': self._process_findpic,
+                                    'src_singlepic': self._process_findpic,
+                                    'ngg_images': self._process_ngg_findpics,
+                                    }
         self.shortcode_string = string_to_match
         self.content_dict = None
         self.page_mgr = db_exec.create_page_manager()
         self.photo_mgr = db_exec.create_sst_photo_manager()
 
     def parse_shortcode(self):
-        # Need to verify/handle case where shortcode has contained string "[xx] yy [/xx]"
+        # Does not handle case where shortcode has contained string "[xx] yy [/xx]"
         if not self.shortcode_string:
             return None
         matches = re.search(Shortcode.sc_re, self.shortcode_string)
@@ -46,10 +51,12 @@ class Shortcode(object):
                     # print("n: {}, {}".format(n, match.title()))
                     if n > 0:
                         arg_list = match.title()
-                        while len(arg_list) > 0:
+                        loop_count = 50
+                        while len(arg_list) > 0 and loop_count:         # Use loop_count to defend against infinite loop
                             try:
                                 parm1, parm2, arg_list = self._get_next_arg(arg_list)
                                 res[parm1.lower()] = parm2
+                                loop_count -= 1
                             except:
                                 print("No match arg on {}".format(arg_list))
                 except:
@@ -62,6 +69,8 @@ class Shortcode(object):
         if work == '':
             return None
         eq_loc = str.find(work, '=')
+        if eq_loc == -1:
+            return None
         name = work[0:eq_loc]
         name = name.strip()
         st_arg_loc = str.find(work[eq_loc:], '"') + eq_loc + 1
@@ -80,14 +89,52 @@ class Shortcode(object):
                 raise ShortcodeParameterError('Conversion Failure: {} is not of type {}'.format(parm_list,
                                                                                                 str(expected_type)))
 
-    def process_shortcode(self):
+    def process_shortcode(self, pictures_only=False):
         if not self.content_dict:
             return None
         sc = self.content_dict['shortcode']
-        if sc in self.specific_processors.keys():
-            handler = self.specific_processors[sc]
-            if handler:
-                handler()
+        if not pictures_only:
+            if sc in self.specific_processors.keys():
+                handler = self.specific_processors[sc]
+                if handler:
+                    handler()
+        else:
+            if sc in self.picture_processors.keys():
+                handler = self.picture_processors[sc]
+                if handler:
+                    return handler()
+
+    def _process_findpic(self):
+        """Find photo id for relating photo to page"""
+        photo_id = self.content_dict['id']
+        if type(photo_id) is str:
+            photo_id = int(photo_id)
+        photo_id = self.photo_mgr.get_new_photo_id_from_old(photo_id)
+        return [photo_id]
+
+    def _process_ngg_findpics(self):
+        """Find photo id's for relating photo to page"""
+        keys = self.content_dict.keys()
+        photo_ids = None
+        if 'source' in keys:
+            source = self.content_dict['source']
+            if source.lower() == 'galleries':
+                ids = self._get_parm_list('container_ids', int)
+                photo_ids = set()
+                for p_id in ids:
+                    p_list = self._get_photo_list_by_gallery_id(p_id, old_id=True)
+                    photo_ids = photo_ids.union(set(p_list))
+            else:
+                raise ShortcodeParameterError("{} is an invalid source for ngg_images".format(source))
+        elif 'gallery_ids' in keys:
+            ids = self._get_parm_list('gallery_ids', int)
+            photo_ids = set()
+            for p_id in ids:
+                p_list = self._get_photo_list_by_gallery_id(p_id, old_id=True)
+                photo_ids = photo_ids.union(set(p_list))
+        elif 'image_ids' in keys:
+            photo_ids = self._get_parm_list('image_ids', int)
+        return list(photo_ids)
 
     def _process_maxbutton(self):
         try:
@@ -118,13 +165,16 @@ class Shortcode(object):
         res = run_jinja_template('base/button.jinja2', context=context).replace('\n', '')
         self.content_dict['result'] = res
 
-    def _get_photo_list_by_gallery_id(self, gallery_id):
-        photo_ids = [x.id for x in self.photo_mgr.get_photos_in_gallery_with_id(gallery_id)]
+    def _get_photo_list_by_gallery_id(self, gallery_id, old_id=False):
+        photo_ids = self.photo_mgr.get_photo_ids_in_gallery_with_id(gallery_id, old_id=old_id)
         return photo_ids
 
     def _process_singlepic(self):
         try:
             photo_id = self.content_dict['id']
+            if not photo_id:
+                sst_syslog.make_error_entry(f'No photo ID to _process_singlepic')
+                return None
             if type(photo_id) is str:
                 photo_id = int(photo_id)
             photo_id = self.photo_mgr.get_new_photo_id_from_old(photo_id)
@@ -139,13 +189,14 @@ class Shortcode(object):
             if 'align' in self.content_dict:
                 photo_position = self.content_dict['align']
                 if photo_position not in ['left', 'middle', 'right', 'top', 'bottom']:
-                    raise ValueError(
-                        'Unknown photo position: {}'.format(photo_position))  # TODO: return error to script
+                    sst_syslog.make_error_entry(f'Unknown photo position: {photo_position}')
+                    photo_position = 'middle'
                 photoframe.set_position(photo_position)
             res = photoframe.get_html()
             self.content_dict['result'] = res
         except Exception as e:
-            raise e
+            # Capture error, but don't raise exception to avoid returning exception to end user
+            sst_syslog.make_error_entry(f'Error occurred in _process_single_pic {e.args}')
 
     def _process_ngg_images(self):
         """Process Imagely shortcode ngg_images with relevant parameters."""

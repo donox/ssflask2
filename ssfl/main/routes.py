@@ -59,7 +59,7 @@ def sst_main_calendar():
 
 @main_bp.route('/', methods=['GET'])
 @roles_required('User')
-@cache.cached()
+# @cache.cached()
 def sst_main():
     """Main page route."""
     """
@@ -104,7 +104,7 @@ def sst_get_specific_page(page_ident):
 
 @main_bp.route('/menu/<string:page>', methods=['GET'])
 @roles_required('User')
-@cache.cached()
+# @cache.cached()
 def sst_get_menu_page(page):
     """Load index page by name."""
     """

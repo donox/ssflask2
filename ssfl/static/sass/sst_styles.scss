@@ -1,0 +1,52 @@
+@charset "utf-8";
+@import url('https://fonts.googleapis.com/css?family=Nunito:400,700');
+
+
+.imagecaption {             /* Make caption size fit figure (and figure css below) */
+    padding: 3px;
+    margin: 10px;
+    float: left;
+    border: 1px solid black;
+}
+
+.title {                /* prevent title overlapping nav bar */
+    margin-top: 0.5rem;
+}
+
+button {
+  padding: 4px;
+}
+
+.card-body {
+  display: flex;
+  overflow-wrap: break-word;
+}
+.card-title {
+  margin-left: auto;
+  //font-family: 'Helvetica', cursive;
+  font-weight: bold;
+  color: black;
+  overflow-wrap: break-word;
+}
+
+@media(min-width:768px) {
+  .card-title {
+    word-break: break-word;
+    text-align: center;
+  }
+}
+
+@media(max-width:767px) {
+  .card-title {
+    text-align: center;
+    word-break: break-word;
+  }
+}
+
+.col-10 {
+  height: 65px;
+}
+
+.col-2 {
+  height: 65px;
+}

@@ -11,7 +11,7 @@
 {% block content %}
     <div class="container-fluid font-weight-bolder">
         {% for row in PAGE.rows %} {# Each item corresponds to all stories horizontally across the page #}
-            <div class="row">
+            <div class="row pb-4">
                 {% for col in row.columns %}
                     <div class="col {{ col.classes }}">
                         <div class="container-fluid">

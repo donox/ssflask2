@@ -94,7 +94,7 @@ def create_app():
     app.register_blueprint(sys_admin_routes.sysadmin_bp)
 
     # Create Static Bundles
-    js_bundle = Bundle('js/*', 'dist/bundle.js', output='gen/packed.js')
+    js_bundle = Bundle('js/*',  'gen/packed.js', output='gen/packed.js')
     css_bundle = Bundle('css/*.css', output='gen/packed.css')
     assets.register('js_bundle', js_bundle)
     assets.register('css_bundle', css_bundle)

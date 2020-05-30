@@ -16,7 +16,7 @@ NSMAP = {None: XHTML_NAMESPACE}
 
 
 def verify(string_to_add):
-    if string_to_add.find('OCTY') != -1:
+    if string_to_add.find('<sup>') != -1:
         foo = 3
     return string_to_add
 

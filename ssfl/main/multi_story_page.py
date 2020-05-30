@@ -7,6 +7,7 @@ from config import Config
 from json import dumps
 from typing import Dict, AnyStr, Any
 from utilities.sst_exceptions import PhotoOrGalleryMissing
+from ssfl import sst_syslog
 
 
 class MultiStoryPage(object):
@@ -147,7 +148,7 @@ class MultiStoryPage(object):
                     cell_descriptor['element'] = calendar_snippet
                 else:
                     raise ValueError('Unrecognized Command: {}'.format(cmd))
-            raise ValueError('Fell off end of loop')
+            raise SystemError('Fell off end of loop')
         except Exception as e:
             print('Exception in _set_descriptor:{}'.format(e.args))
             raise e
@@ -179,8 +180,8 @@ class MultiStoryPage(object):
         page_id = None
         if 'name' in elem:
             page_name = elem['name']  # will use which ever is set
-        if 'id' in elem:  # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            page_id = elem['id']  # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        if 'id' in elem:
+            page_id = elem['id']
         story = Story(self.db_exec, width)
         story.create_story_from_db(page_id=page_id, page_name=page_name)
         elem['title'] = story.get_title()
@@ -196,22 +197,27 @@ class MultiStoryPage(object):
         #        loaded from the DB. This is equivalent to creating a Photo object and then calling
         #        the get_json_descriptor on it.
         photo_id = elem['id']
-        if not photo_id:
-            if 'slug' in elem:
-                photo_id = elem['slug']
+        try:
+            if not photo_id:
+                if 'slug' in elem:
+                    photo_id = elem['slug']
+                else:
+                    raise PhotoOrGalleryMissing(f'Photo missing both id and slug')
+            if type(photo_id) is str:
+                photo = self.photo_manager.get_photo_from_slug(photo_id)
+                photo_id = photo.id
             else:
-                raise PhotoOrGalleryMissing(f'Photo missing both id and slug')
-        if type(photo_id) is str:
-            photo = self.photo_manager.get_photo_from_slug(photo_id)
-            photo_id = photo.id
-        else:
-            photo = self.photo_manager.get_photo_from_id(photo_id)
-        if not photo:
-            raise ValueError(f'No photo with id: {photo_id}')
-        if not elem['caption']:
-            elem['caption'] = photo.caption
-        elem['url'] = self.photo_manager.get_photo_url(photo_id)
-        elem['alt_text'] = photo.alt_text
+                photo = self.photo_manager.get_photo_from_id(photo_id)
+            if not photo:
+                raise ValueError(f'No photo with id: {photo_id}')
+            if not elem['caption']:
+                elem['caption'] = photo.caption
+            elem['url'] = self.photo_manager.get_photo_url(photo_id)
+            elem['alt_text'] = photo.alt_text
+            elem['exists'] = True
+        except Exception as e:
+            # We'll just have the template put in a blank filler
+            elem['exists'] = False
 
     def _fill_story_snippet(self, elem):
         """Fill story snippet descriptor."""
@@ -251,7 +257,7 @@ class MultiStoryPage(object):
             (1) The snippet is already constructed in which case there is a 'slides' element.
             (2) The descriptor is for a SLIDESHOW in which case the snippet element needs to
                 be created and added.  In this case, there is a pictures element containing a
-                list of picture identifies that need to be added to create a slideshow.
+                list of picture identifiers that need to be added to create a slideshow.
         """
         # {"SLIDESHOW_SNIPPET": None, "id": None, "title": None, "text": None,
         # "slides": {"SLIDESHOW": None, "title": None, "title_class": None, "position": None,
@@ -290,11 +296,15 @@ class MultiStoryPage(object):
                     photo = self.photo_manager.get_photo_from_id(int(pid))
                 else:
                     photo = self.photo_manager.get_photo_from_slug(pid)
-                photo_json = self.storage_manager.make_json_descriptor('PICTURE')
-                photo_json['PICTURE']['id'] = photo.id
-                photo_json['PICTURE']['url'] = self.photo_manager.get_photo_url(photo.id)
-                photo_json['PICTURE']['caption'] = photo.caption
-                photo_json['PICTURE']['alt_text'] = photo.alt_text
+                if photo:
+                    photo_json = self.storage_manager.make_json_descriptor('PICTURE')
+                    photo_json['PICTURE']['id'] = photo.id
+                    photo_json['PICTURE']['url'] = self.photo_manager.get_photo_url(photo.id)
+                    photo_json['PICTURE']['caption'] = photo.caption
+                    photo_json['PICTURE']['alt_text'] = photo.alt_text
+                    photo_json['PICTURE']['exists'] = True
+                else:
+                    photo_json['PICTURE']['exists'] = False
                 res.append(photo_json['PICTURE'])
             elem_show['pictures'] = res
         else:
