@@ -85,7 +85,7 @@ def sst_main():
 
 @main_bp.route('/main/page/<string:page_ident>', methods=['GET'])
 @roles_required('User')
-@cache.cached()
+# @cache.cached()
 def sst_get_specific_page(page_ident):
     """Get specific page by id or name."""
     db_exec = DBExec()

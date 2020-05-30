@@ -17,11 +17,11 @@ import platform
 
 local_server = True
 if platform.node() == 'Descartes':
-    env_path = Path('.') / '.env'
     env_path = '/home/don/devel/ssflask2/.env'
     load_dotenv(dotenv_path=env_path)
 elif platform.node() == 'glatz':
     env_path = r'C:\Users\glatz\PycharmProjects\devel\ssflask2\.env_SP'
+    load_dotenv(dotenv_path=env_path)
 else:
     local_server = False
     env_path = '/home/doxley/ssflask2/.env_PA'

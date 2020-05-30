@@ -239,7 +239,7 @@ class TopElement(ParsedElement):
             raise WordInputError(f'Environment: {env_type} does not exist.')
         env_list = self.environments[env_type]
         for env in env_list:
-            if env_name in env:
+            if env_name == env['__name__']:
                 env['args'].append(arg)
 
     def get_environment_type(self):
@@ -271,6 +271,10 @@ class TopElement(ParsedElement):
             return self.photo_frames[name]
         else:
             raise WordLatexExpressionError(f'Photo Frame {name} does not exist.')
+
+    def place_figure(self, name):
+        frame = self.get_photo_frame(name)
+        return frame.get_html()
 
     # Content features are intended to provide a mechanism for accumulating information
     # while processing a document that may be useful at a higher level such as placing the
@@ -465,7 +469,19 @@ class TopElement(ParsedElement):
         else:
             raise SystemError(f'Fell off end of environment checks')
 
-    def _process_text_snips(self, open_html, result_html, close_html, snip_start, snip_stop):
+    def _process_text_snips(self, open_html, result_html, close_html, snip_start: int, snip_stop: int):
+        """Combine/collapse all segments into a single processed segment and set others to null.
+
+        Args:
+            open_html: Replaces opening snip
+            result_html: Result of processing the environment which is inserted before concatenating interior snips
+            close_html: Replaces closing ship
+            snip_start:  identifies the snip corresponding to open in self.text_segments
+            snip_stop:
+
+        Returns: None - all results are side effects on self.text_segments
+
+        """
         self.text_segments[snip_start] = open_html
         self.text_segments[snip_stop] = close_html
         if snip_stop - snip_start > 2:
@@ -478,10 +494,26 @@ class TopElement(ParsedElement):
 
     def _process_layout_snippet_environment(self, env, snip_start, snip_stop):
         # We need to identify the components of the layout and stitch them together properly
-        open_html = f'<container class="container-fluid clearfix">'
+        args ={"max_width": 600,
+               'alignment': 'left',
+               'min-width': 300,
+               'figure': None,
+               }
+        other_args = []
         for arg in env['args']:
-            open_html += f'<p>Layout Argument: {arg}</p>'
-        close_html = f'</container><div class="clearfix"></div>'
+            a_list = arg[0].split('=')
+            if len(a_list) == 2:
+                key, val = a_list
+                args[key] = val
+            else:
+                other_args.append(arg)
+        open_html = f'<container class="container clearfix" style="min-width:400px">'
+        open_html += f'<div style = "max-width:{args["max_width"]}px; float:{args["alignment"]}" >'
+        if args['figure']:
+            open_html += self.place_figure(args['figure'])
+        open_html += f'</div>'
+        open_html += f'<div class ="message-body text-wrap">'
+        close_html = f'</div></container><div class="clearfix"></div>'
         result_html = ''
         self._process_text_snips(open_html, result_html, close_html, snip_start, snip_stop)
 
@@ -511,6 +543,18 @@ class TopElement(ParsedElement):
         result_html = f''
         self._process_text_snips(open_html, result_html, close_html, snip_start, snip_stop)
 
+    def _fix_h_element(self, h_string):
+        header_re = r'<h(?P<open>\d)>(?P<rest>.*?</h\d>)'
+        matches = re.search(header_re, h_string.group(0))
+        hlevel = matches['open']
+        return f'<h{hlevel} class="h{hlevel}">' + matches['rest']
+
+    def _adjust_html(self, html_string):
+        """Modify html to adjust result to support Bootstrap."""
+        find_headers = re.compile(r'<h\d.*?>.*?</h\d>')
+        res = re.sub(find_headers, self._fix_h_element, html_string)
+        return res
+
     def post_process(self):
         """Post process resultant HTML (as string) for cleanup and environment handling.
 
@@ -519,10 +563,12 @@ class TopElement(ParsedElement):
         Environments:
             (1) Find snippet and create feature to be returned.
             (2) Find layouts and surround with proper div element and class.
+            (3) Modify constructs (such as <hx> to conform to Bootstrap practice.
         """
         self._create_delimited_strings(self.result)
         self._process_environments()
-        self.result = ''.join(self.text_segments)
+        res = ''.join(self.text_segments)
+        self.result = self._adjust_html(res)
 
 
 class FreeElement(ParsedElement):
@@ -846,6 +892,7 @@ class LatexElement(ParsedElement):
     def _latex_place_figure(self):
         # if this occurs inside a Layout - then we attach the figure to the layout and let it be expanded
         # when environments are processed after parsing
+        # Using specific figure allows environment processing code to get html for a figure set as an argument
         top_element = super().get_top()
         arg = self.args[0][0]
         frame = top_element.get_photo_frame(arg)
