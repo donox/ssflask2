@@ -67,7 +67,7 @@ class PageBody(object):
         """Convert page to a standard form etree.
 
             A normalized page has:
-                (1) line breaks either removed or converted to <br/> elements.
+                (1) line breaks either removed or converted to <br> elements.
                 (2) Any node containing both text and children to one with no text
                     where the text is embedded in a <span> element as first child. (this
                     facilitates shortcode handling).

@@ -97,7 +97,8 @@ def sst_get_specific_page(page_ident):
         context['story']['body'] = context['story']['content']
         context['APP_ROOT'] = request.base_url
         log_request('page_ident', 'page_ident: ' + str(page_ident), context)
-        return render_template('main/specific_page.jinja2', **context)
+        res = render_template('main/specific_page.jinja2', **context)
+        return res
     finally:
         db_exec.terminate()
 
