@@ -119,15 +119,16 @@ class Story(object):
             if el.text is not '':
                 elem.append(el)
 
-        # if False:                       # Force no caching - if needed
-        self.pb.update_cached_page()
+        if False:                       # Force no caching - if needed
+            self.pb.update_cached_page()
         story = self.pb.get_story_body()
         self.story['title'], author, snippet = self.pb.get_title_author_snippet()
         self.story['tab_title'] = self.story['title']
         self.story['read_more'] = self._create_read_more()      # TODO: Not incorporated properly
         try:
             body = lxml.html.tostring(story, method='html').decode('utf-8')
-        except Exception as e:
+            body = body.replace('<br></br>', '<br>')            # Conversion is closing br elements which causes browser
+        except Exception as e:                                  #    to duplicate them
             print(e.args)
             raise e
         self.story['body'] = body

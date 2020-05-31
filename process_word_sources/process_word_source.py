@@ -584,6 +584,7 @@ class TopElement(ParsedElement):
 
         Cleanup:
             (1) Remove '<p></p>' elements.
+            (2) Convert '<br></br>' to '<br>'  (these are loading as duplicate '<br>' elements)
         Environments:
             (1) Find snippet and create feature to be returned.
             (2) Find layouts and surround with proper div element and class.
@@ -629,6 +630,7 @@ class LatexElement(ParsedElement):
         self.command_processors['textbf'] = self._latex_textbf
         self.command_processors['italics'] = self._latex_textif
         self.command_processors['underline'] = self._latex_underline
+        self.command_processors['blank_lines'] = self._latex_blank_lines
         self.command_processors['textif'] = self._latex_textif
         self.command_processors['title'] = self._latex_title
         self.command_processors['subtitle'] = self._latex_subtitle
@@ -714,6 +716,17 @@ class LatexElement(ParsedElement):
         arg = self.args[0][0]
         res += str(arg)
         return verify(res + '</em>')
+
+    def _latex_blank_lines(self):
+        res = '<br>'
+        if len(self.args[0]) == 0:
+            return res
+        arg = self.args[0][0]
+        if arg.isdigit():
+            res = res * int(arg)
+            return res
+        else:
+            super().get_top().db_exec.add_error_to_form('blank_lines', f'Argument {arg} is not an integer')
 
     def _latex_underline(self):
         res = '<span style="text-decoration:underline">'
