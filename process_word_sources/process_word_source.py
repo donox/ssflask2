@@ -697,7 +697,8 @@ class LatexElement(ParsedElement):
         self.command_processors['textbf'] = self._latex_textbf
         self.command_processors['italics'] = self._latex_textif
         self.command_processors['underline'] = self._latex_underline
-        self.command_processors['blank_lines'] = self._latex_blank_lines
+        self.command_processors['blank_lines'] = self._latex_blank_or_hr_lines
+        self.command_processors['rule_lines'] = self._latex_blank_or_hr_lines
         self.command_processors['textif'] = self._latex_textif
         self.command_processors['title'] = self._latex_title
         self.command_processors['subtitle'] = self._latex_subtitle
@@ -768,6 +769,17 @@ class LatexElement(ParsedElement):
             self.top.db_exec.add_error_to_form('Render_from_Args', f'Command: {self.command}')
             raise e
 
+    def _process_arg_list(self, dict_args):
+        list_args = []
+        for arg in self.args:
+            a_list = arg[0].split('=')
+            if len(a_list) == 2:
+                key, val = a_list
+                dict_args[key] = val
+            else:
+                list_args.append(arg)
+        return list_args, dict_args
+
     def _latex_textbf(self):
         res = '<strong>'
         if len(self.args) != 1:
@@ -784,16 +796,29 @@ class LatexElement(ParsedElement):
         res += str(arg)
         return verify(res + '</em>')
 
-    def _latex_blank_lines(self):
+    def _latex_blank_or_hr_lines(self):
         res = '<br>'
         if len(self.args[0]) == 0:
             return res
-        arg = self.args[0][0]
-        if arg.isdigit():
-            res = res * int(arg)
-            return res
+        repeat_count = self.args[0][0]
+        if not repeat_count:
+            repeat_count = 1
+        elif repeat_count.isdigit():
+            repeat_count = int(repeat_count)
         else:
-            super().get_top().db_exec.add_error_to_form('blank_lines', f'Argument {arg} is not an integer')
+            super().get_top().db_exec.add_error_to_form('blank_lines', f'Argument {repeat_count} is not an integer')
+            return res
+        if len(self.args) > 1:
+            default_args = {'width': '2px',
+                            'color': 'darkbrown',
+                            'style': 'solid',
+                            'radius': '5px'}
+            _, dict_args = self._process_arg_list(default_args)
+            res = f'<hr style="border: {default_args["width"]} {default_args["style"]} {default_args["color"]}; '
+            res += 'border-radius: {{default_args["radius"]}}  "/>'
+        return res * repeat_count
+
+
 
     def _latex_underline(self):
         res = '<span style="text-decoration:underline">'
