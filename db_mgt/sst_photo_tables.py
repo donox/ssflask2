@@ -376,6 +376,10 @@ class SlideShow(object):
             if 'caption' in self.show_desc and self.show_desc['caption']:
                 desc['caption'] = self.show_desc['caption']
                 self.show_desc['caption'] = None
+            if desc['url']:                             # Pic may be proven to exist at this point??
+                desc['exists'] = True                   # Will display alt-text in event pic not loadable
+            else:
+                desc['exists'] = False
             self.show_desc['pictures'].append(desc)
         else:
             self.db_exec.add_error_to_form('Missing Photo', f'Slideshow is missing photo {photo_id}')

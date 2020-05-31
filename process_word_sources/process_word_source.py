@@ -26,9 +26,8 @@ def remove_useless_html(in_source: str) -> str:
 
     (1) <a id="__DdeLink..."/>  inserted after '{' of (some) Latex expressions.
     """
-    re1 = re.compile(r'<a id="..DdeLink.+?"></a>')
+    re1 = re.compile(r'<a id="..DdeLink.+?"></a>|<a id="hs.*?/>')
     return re.sub(re1, '', in_source)
-
 
 # TODO: 'snippet_only' not yet implemented
 predefined_environments = ['snippet', 'layout', 'sign', 'table', 'container', 'element']
@@ -187,10 +186,24 @@ class TopElement(ParsedElement):
     def get_environment_types(self):
         return self.environment_types
 
+    def get_environment_by_name(self, env_name):
+        if env_name in self.environments_by_name:
+            return self.environments_by_name[env_name]
+        else:
+            return None
+
     def get_type_of_current_environment(self):
         if self.environment_stack:
             env_name = self.environment_stack[-1]
             return self.environments_by_name[env_name]['type']
+        else:
+            return None
+
+    def get_type_of_containing_environment(self):
+        """Determine type of environment above current environment"""
+        if self.environment_stack:
+            env_name = self.environment_stack[-1]
+            return self.environments_by_name[env_name]['parent']
         else:
             return None
 
@@ -202,14 +215,14 @@ class TopElement(ParsedElement):
             return None
 
     def open_environment(self, env_type_name: str, env_name: str) -> dict:
-        """Open a new or existing environment.
+        """Open a new environment.
 
         An environment is a named dictionary that may be used to provide information or control operation of
         the system.  Environments may be created during the parsing of a document (or created externally). Any
         specific environment may not be nested.  A specific type of environment (env name) may occur multiple times
         that do not overlap. The name of each environment is an entry in the environment with the name '__name__'.
 
-        The system maintains a dictionary of environments each know by an environment type (such as snippet).  For each
+        The system maintains a dictionary of environments each known by an environment type (such as snippet).  For each
         such type, the system maintains a list of environments of that type.  Each of which has it's own name.
 
         Args:
@@ -226,6 +239,10 @@ class TopElement(ParsedElement):
             new_env['__name__'] = env_name
             new_env['type'] = env_type_name
             new_env['args'] = []
+            if self.environment_stack:
+                new_env['parent'] = self.environment_stack[-1]
+            else:
+                new_env['parent'] = None
             self.environment_stack.append(env_name)
             self.environments_by_name[env_name] = new_env
             if env_type_name in self.environments:
@@ -254,6 +271,7 @@ class TopElement(ParsedElement):
             self.environment_stack.pop()
 
     def add_photo_frame(self, name):
+        # TODO: !!THERE IS CONFUSION BETWEEN TYPES OF ROTATION (slide change vs rotate photo)
         if name in self.photo_frames.keys():
             raise WordLatexExpressionError(f'Photo Frame {name} exists.')
         new_frame = self.photo_mgr.get_slideshow(self.db_exec, name)
@@ -401,6 +419,7 @@ class TopElement(ParsedElement):
         match_text, match_type, match_name, match_start, match_end, nxt_position = match_details
         env = self.environments_by_name[match_name]
         env['text_list_start_pos'] = nxt_position
+        env['subtype'] = env['type']
         env['type'] = 'layout'
         env['layout_name'] = match_name
 
@@ -455,17 +474,24 @@ class TopElement(ParsedElement):
         result_html = f''
         self._process_text_snips(open_html, result_html, close_html, snip_start, snip_stop)
 
-    def _process_layout_environment(self, env, env_type, snip_start, snip_stop):
-        if env_type == 'snippet':
-            self._process_layout_snippet_environment(env, snip_start, snip_stop)
-        elif env_type == 'sign':
-            self._process_layout_sign_environment(env, snip_start, snip_stop)
-        elif env_type == 'table':
-            self._process_layout_table_environment(env, snip_start, snip_stop)
-        elif env_type == 'container':
-            self._process_layout_container_environment(env, snip_start, snip_stop)
-        elif env_type == 'element':
-            self._process_layout_element_environment(env, snip_start, snip_stop)
+    def _process_layout_environment(self, env, env_subtype, snip_start, snip_stop):
+        # if the parent (containing) environment is of type 'container', then this environment
+        # is considered to be a column element in that environment and is placed beside it.
+        is_column = False
+        env = self.get_environment_by_name(env['__name__'])
+        if env['parent'] and self.get_environment_by_name(env['parent'])['type'] == 'layout'\
+                and self.get_environment_by_name(env['parent'])['subtype'] == 'container':
+            is_column = True
+        if env_subtype == 'snippet':
+            self._process_layout_snippet_environment(env, is_column, snip_start, snip_stop)
+        elif env_subtype == 'sign':
+            self._process_layout_sign_environment(env, is_column, snip_start, snip_stop)
+        elif env_subtype == 'table':
+            self._process_layout_table_environment(env, is_column, snip_start, snip_stop)
+        elif env_subtype == 'container':
+            self._process_layout_container_environment(env, is_column, snip_start, snip_stop)
+        elif env_subtype == 'element':
+            self._process_layout_element_environment(env, is_column, snip_start, snip_stop)
         else:
             raise SystemError(f'Fell off end of environment checks')
 
@@ -503,65 +529,106 @@ class TopElement(ParsedElement):
                 list_args.append(arg)
         args['list_args'] = list_args
 
-    def _process_layout_snippet_environment(self, env, snip_start, snip_stop):
+    def _process_layout_snippet_environment(self, env, is_column, snip_start, snip_stop):
         # We need to identify the components of the layout and stitch them together properly
         args = {"max_width": 600,
+                "col_width": None,
                 'alignment': 'left',
                 'min-width': 300,
                 'figure': None,
                 }
         self._process_arg_list(args, env['args'])
-        open_html = f'<container class="container clearfix" style="max-width:{args["max_width"]}px; display:inline-block">'
-        open_html += f'<div style = "float:{args["alignment"]}">'
+        open_html = f'<div class="container clearfix" style="max-width:{args["max_width"]}px; display:inline-block">'
+        open_html += f'<div class="'
+        if is_column:
+            col_class = 'col'
+            if args['col_width']:
+                col_class += '-' + args['col_width']
+            open_html += f'{col_class} '
+        open_html += f'" style = "float:{args["alignment"]}">'
         if args['figure']:
             open_html += self.place_figure(args['figure'])
         open_html += f'</div>'
         open_html += f'<div class ="message-body text-wrap">'
-        close_html = f'</div></container><div class="clearfix"></div>'
+        close_html = f'</div></div>'
         result_html = ''
         self._process_text_snips(open_html, result_html, close_html, snip_start, snip_stop)
 
-    def _process_layout_sign_environment(self, env, snip_start, snip_stop):
+    def _process_layout_sign_environment(self, env, is_column, snip_start, snip_stop):
         args = {'sign_type': None,
                 'border_style': None,
                 'max_width': 600,
+                "col_width": None,
                 'alignment': 'center',
                 'author': None,
                 'author': None,
                 'author': None,
                 'author': None}
         self._process_arg_list(args, env['args'])
-        open_html = f'<container class="container" style="max-width:{args["max_width"]}px; display:inline-block">'
-        open_html += f'<div class="'
-        if args['border_style']:
-            open_html += args['border_style'] + ' '
-        if args['text_style']:
-            open_html += args['text_style'] + ' '
-        open_html += f'" style = "float:{args["alignment"]}">'
-        close_html = f'</div></container><div class="clearfix"></div>'
+        if not is_column:
+            open_html = f'<div class="container" style="max-width:{args["max_width"]}px; display:inline-block;">'
+            open_html += f'<div class="'
+            if args['border_style']:
+                open_html += args['border_style'] + ' '
+            if args['text_style']:
+                open_html += args['text_style'] + ' '
+            open_html += f'" style = "float:{args["alignment"]}">'
+            close_html = f'</div></div>'
+        else:
+            open_html = f'<div class="'
+            if args['border_style']:
+                open_html += args['border_style'] + ' '
+            if args['text_style']:
+                open_html += args['text_style'] + ' '
+            if is_column:
+                col_class = 'col'
+                if args['col_width']:
+                    col_class += '-' + args['col_width']
+                open_html += f'{col_class} '
+            open_html += f'" style = "float:{args["alignment"]}">'
+            close_html = f'</div>'
         sign_type = args['sign_type']
         if sign_type == 'quote':
             author = args['author']
             if author:
-                close_html = f'<div class="author" style="padding: 10px;>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--{author}</div>' + close_html
+                close_html = f'<div class="author" style="padding: 10px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--{author}</div>' + close_html
         result_html = f''
         self._process_text_snips(open_html, result_html, close_html, snip_start, snip_stop)
 
-    def _process_layout_table_environment(self, env, snip_start, snip_stop):
-        open_html = f'<container class="container-fluid clearfix">'
+    def _process_layout_table_environment(self, env, is_column, snip_start, snip_stop):
+        args = {"max_width": 600,
+                "col_width": None,
+                'alignment': 'left',
+                'min-width': 300,
+                }
+        self._process_arg_list(args, env['args'])
+        open_html = f'<div class="container-fluid clearfix">'
         for arg in env['args']:
             open_html += f'<p>Layout Argument: {arg}</p>'
-        close_html = f'</container><div class="clearfix"></div>'
+        close_html = f'</div><div class="clearfix"></div>'
         result_html = ''
         self._process_text_snips(open_html, result_html, close_html, snip_start, snip_stop)
 
-    def _process_layout_container_environment(self, env, snip_start, snip_stop):
-        open_html = f''
-        close_html = f''
+    def _process_layout_container_environment(self, env, is_column, snip_start, snip_stop):
+        args = {"max_width": 600,
+                "col_width": None,
+                'alignment': 'left',
+                'min-width': 300,
+                }
+        self._process_arg_list(args, env['args'])
+        open_html = f'<div class="container-fluid clearfix"><div class="row">'
+        close_html = f'</div></div>'
         result_html = f''
         self._process_text_snips(open_html, result_html, close_html, snip_start, snip_stop)
 
-    def _process_layout_element_environment(self, env, snip_start, snip_stop):
+    def _process_layout_element_environment(self, env, is_column, snip_start, snip_stop):
+        # NOT DEFINED OR USED
+        args = {"max_width": 600,
+                "col_width": None,
+                'alignment': 'left',
+                'min-width': 300,
+                }
+        self._process_arg_list(args, env['args'])
         open_html = f''
         close_html = f''
         result_html = f''
