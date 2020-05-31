@@ -9,7 +9,7 @@ import exifread
 from flask import url_for, render_template
 from sqlalchemy import UnicodeText, text
 
-from config import Config
+from config import Config, DevConfig
 from ssfl import db
 from utilities.miscellaneous import run_jinja_template, make_db_search_string
 from utilities.sst_exceptions import PhotoHandlingError
@@ -533,7 +533,7 @@ class PhotoExif(object):
         else:
             self.filepath = self.photo_mgr.get_photo_file_path(photo_id)
         with open(self.filepath, 'rb') as fl:
-            self.tags = exifread.process_file(fl, details=False, debug=Config.DEBUG)
+            self.tags = exifread.process_file(fl, details=False, debug=DevConfig.DEBUG)
 
     def print_tags(self):
         for key, val in self.tags.items():
