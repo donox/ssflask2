@@ -9,8 +9,8 @@
 
 {% block content %}
     <section class="container">
-        <div class="">
-            <h3>Manage Creation of Index Pages and Index Items</h3>
+        <div class="columns">
+            <h3 class="h3 text-center">Manage Creation of Index Pages and Index Items</h3>
             <form action="{{ url_for('admin_bp.manage_index_page') }}" method="post">
                 {% with %}
                     {% set el_name=form.work_function %}

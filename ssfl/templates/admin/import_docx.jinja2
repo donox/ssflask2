@@ -8,8 +8,8 @@
 
 {% block content %}
     <section class="container">
-        <div class="">
-            <h3>Import MS Word Page to Database</h3>
+        <div class="columns">
+            <h3 class="h3 text-center">Import MS Word Page to Database</h3>
             <form action="{{ url_for('admin_bp.sst_import_page') }}" method="post"
                   enctype="multipart/form-data">
                 {% with %}
