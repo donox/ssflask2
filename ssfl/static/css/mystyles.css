@@ -1,0 +1,14 @@
+/* Styles for use in signs */
+.sst_border_quote {
+  border: saddlebrown solid 10px;
+  border-style: ridge;
+  border-radius: 5px; }
+
+.author {
+  font-weight: bold;
+  font-size: small; }
+
+.sst_sign_text {
+  font-size: large;
+  font-weight: bolder;
+  font-style: oblique; }

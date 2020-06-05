@@ -9,7 +9,7 @@ import exifread
 from flask import url_for, render_template
 from sqlalchemy import UnicodeText, text
 
-from config import Config
+from config import Config, DevConfig
 from ssfl import db
 from utilities.miscellaneous import run_jinja_template, make_db_search_string
 from utilities.sst_exceptions import PhotoHandlingError
@@ -146,14 +146,17 @@ class SSTPhotoManager(BaseTableManager):
         return self._get_photo(sql)
 
     def _get_photo(self, sql):
-        res = self.db_session.execute(sql).first()
-        if res:
-            gv = self.get_photo_field_value(res)
-            photo = SSTPhoto(id=gv('id'), slug=gv('slug'), folder_name=gv('folder_name'), caption=gv('caption'),
-                             alt_text=gv('alt_text'), file_name=gv('file_name'), image_date=gv('image_date'),
-                             json_metadata=gv('json_metadata'))
-            return photo
-        else:
+        try:
+            res = self.db_session.execute(sql).first()
+            if res:
+                gv = self.get_photo_field_value(res)
+                photo = SSTPhoto(id=gv('id'), slug=gv('slug'), folder_name=gv('folder_name'), caption=gv('caption'),
+                                 alt_text=gv('alt_text'), file_name=gv('file_name'), image_date=gv('image_date'),
+                                 json_metadata=gv('json_metadata'))
+                return photo
+            else:
+                raise
+        except Exception as e:
             # Missing photo - return dummy
             photo = SSTPhoto(id=0, slug='no-slug', file_name='no_such_file', image_date=None, json_metadata=None)
             return photo
@@ -276,7 +279,10 @@ class SSTPhotoManager(BaseTableManager):
         the gallery."""
         sql = f'select id from sst_photos where old_id={old_id};'
         new_id = self.db_session.execute(sql).first()
-        return new_id[0]
+        if new_id:
+            return new_id[0]
+        else:
+            return None
         # sql = f'select photo_id from v_photo_picture where wp_picture_id={old_id};'
         # new_id = self.db_session.execute(sql).first()
         # if not new_id:
@@ -370,6 +376,10 @@ class SlideShow(object):
             if 'caption' in self.show_desc and self.show_desc['caption']:
                 desc['caption'] = self.show_desc['caption']
                 self.show_desc['caption'] = None
+            if desc['url']:                             # Pic may be proven to exist at this point??
+                desc['exists'] = True                   # Will display alt-text in event pic not loadable
+            else:
+                desc['exists'] = False
             self.show_desc['pictures'].append(desc)
         else:
             self.db_exec.add_error_to_form('Missing Photo', f'Slideshow is missing photo {photo_id}')
@@ -523,7 +533,7 @@ class PhotoExif(object):
         else:
             self.filepath = self.photo_mgr.get_photo_file_path(photo_id)
         with open(self.filepath, 'rb') as fl:
-            self.tags = exifread.process_file(fl, details=False, debug=Config.DEBUG)
+            self.tags = exifread.process_file(fl, details=False, debug=DevConfig.DEBUG)
 
     def print_tags(self):
         for key, val in self.tags.items():

@@ -10,9 +10,9 @@
 
 {% block content %}
     <section class="container">
-        <div class="XXX">
+        <div class="columns">
             {% if function == 'mpd_recent' %}
-                <h3 class="h3">Recent Pages</h3>
+                <h3 class="h3 text-center">Recent Pages</h3>
             {% endif %}
             {% if function == 'mpd_search' %}
                 <h3 class="h3">Recent Pages in "{{ search_field }}" Searched with "{{ search_string }}"</h3>

@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <!--
-     Route: '/sysadmin/manage_users' => manage_users
-     Template: manage_users.jinja2
-     Display: display_users.jinja2
-     Form: manage_users_form.py
-     Processor: manage_users.py
+     Route: '/sysadmin/manage_graphs' => manage_graph_commands
+     Template: manage_graphs.jinja2
+     Form: manage_graphs_form.py
+     Processor: graph_commands.py
 -->
 {% extends 'base/layout.jinja2' %}
 
@@ -13,7 +12,7 @@
         <div class="XXX">
             <h3 class="h3">Log In</h3>
 {#                                    Set route to handle this form immediately below here               #}
-            <form action="{{ url_for('sysadmin_bp.sst_login') }}" method="post">
+            <form action="{{ url_for('sysadmin_bp.manage_graphs') }}" method="post">
                 {% with %}
                     {% set el_name=form.work_function %}
                     {% set el_class="input" %}
@@ -22,9 +21,9 @@
                 {% endwith %}
 {#              Add field set for each field on the form.  Set name in the el_name variable #}
                 {% with %}
-                    {% set el_name=form.user_name %}
+                    {% set el_name=form.template_name %}
                     {% set el_class="input" %}
-                    {% set el_placeholder="ind*ley" %}
+                    {% set el_placeholder="template slug" %}
                     {% include 'base/form_entry.jinja2' %}
                 {% endwith %}
 
@@ -54,10 +53,9 @@
             // Set command groups to cause showing/hiding of fields by function
             // Name a local storage variable in localStorage below.
             // Make a file name for the sourceURL to enable browser to see this code at runtime
-            // BE CAREFUL to set a val in line '..option:selected..' below
             $ = jQuery;
             $('#js1').change(function () {
-                $('.usr_sr').parent().hide();
+                $('.gph_load').parent().hide();
                 $('.usr_del').parent().hide();
                 $('.usr_add').parent().hide();
                 $('.usr_mod').parent().hide();
@@ -66,12 +64,12 @@
             localStorage.setItem('manage_users', opt);
         });
         $(document).ready(function(){
-        let opt_val = localStorage.getItem('manage_users');
+        let opt_val = localStorage.getItem('manage_graphs');
         $('#js1').trigger('change');
         if (opt_val) {$('#js1 option:selected').val(opt_val);}
-        else {$('#js1 option:selected').val('usr_sr');}
+        else {$('#js1 option:selected').val('gph_load');}
         });
-            //# sourceURL=manage_users.js
+            //# sourceURL=manage_graphs.js
         </script>
     </section>
 {% endblock %}

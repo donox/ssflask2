@@ -10,8 +10,8 @@
 
 {% block content %}
     <section class="container">
-        <div class="XXX">
-            <h3 class="h3">Display Data About Pages</h3>
+        <div class="columns">
+            <h3 class="h3 text-center">Display Data About Pages</h3>
             <form action="{{ url_for('admin_bp.manage_page_data') }}" method="post">
                 {% with %}
                     {% set el_name=form.work_function %}

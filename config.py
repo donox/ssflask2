@@ -79,11 +79,11 @@ class Config:
     # NEEDED FOR FLASK-MAIL
     MAIL_SERVER = 'smtp.ionos.com'
     MAIL_PORT = 587
-    MAIL_USERNAME = 'info@sunnyside-times.com'
-    MAIL_PASSWORD = 'MSb6BC8usPwT%H&hBBS#dkQKF4te'
+    MAIL_USERNAME = 'getinfo@sunnyside-times.com'
+    MAIL_PASSWORD = '4Fj09v%08f^!U6&qBhVQGNs&FQ4o1*S&*CXCU#xU'
     MAIL_USE_TLS = False
     MAIL_USE_SSL = False
-    MAIL_DEFAULT_SENDER = 'info@Sunnyside-Times.com'
+    MAIL_DEFAULT_SENDER = 'getinfo@sunnyside-times.com'
     MAIL_MAX_EMAILS = 20
     MAIL_ASCII_ATTACHMENTS = False
 

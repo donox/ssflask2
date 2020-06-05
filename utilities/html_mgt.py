@@ -67,7 +67,7 @@ class PageBody(object):
         """Convert page to a standard form etree.
 
             A normalized page has:
-                (1) line breaks either removed or converted to <br/> elements.
+                (1) line breaks either removed or converted to <br> elements.
                 (2) Any node containing both text and children to one with no text
                     where the text is embedded in a <span> element as first child. (this
                     facilitates shortcode handling).
@@ -185,7 +185,11 @@ class PageBody(object):
 
     def update_cached_page(self):
         if self.page_in_db:
-            res = tostring(self.body, 'utf-8').decode('utf-8').replace('<html:', '<').replace('/html:', '/')
+            try:
+                res = tostring(self.body, 'utf-8').decode('utf-8').replace('<html:', '<').replace('/html:', '/')
+            except Exception as e:
+                self.db_exec.add_error_to_form('System Error', 'System encountered a problem trying to process content')
+                return
             self.page_manager.update_cached_page(self.page_in_db, res)
 
     def get_title_author_snippet(self):
