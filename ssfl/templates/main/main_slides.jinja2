@@ -1,0 +1,7 @@
+{#<div style="max-width:{{ story.photo.width }}px; float:{{ story.photo.alignment }}">#}
+<div>
+    {% with %}
+        {% set slideshow = main_slides.slides %}
+        {% include 'base/slideshow.jinja2' %}
+    {% endwith %}
+</div>

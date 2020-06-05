@@ -12,7 +12,7 @@
                 {% if slideshow.title and slideshow.title != 'NO NAME' %}
                     <figcaption class="{{ slideshow.title_class }}">{{ slideshow.title }}</figcaption>
                 {% endif %}
-                <div class="slideshow" interval="{{ slideshow.rotation }}">
+                <div class="slideshow" interval="{{ slideshow.rotation }}" style="overflow: scroll">
                     {% for photo in slideshow.pictures %}
                         {% include 'base/picture.jinja2' %}
                     {% endfor %}

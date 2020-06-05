@@ -1,0 +1,68 @@
+<nav class="navbar navbar-expand-md navbar-dark bg-dark mb-3 navbar-fixed-top" role="navigation"
+     aria-label="main navigation"
+     style="position: sticky">
+    <div class="container">
+        <div class="navbar-brand mr-3">
+            <a class="navbar-item" href="https://sunnyside.cc">
+                <img src="{{ url_for('static', filename='images/NoEvil.jpg') }}" width="50px" height="50px">
+            </a>
+        </div>
+
+        <div id="navbarUpper" class="navbar-menu">
+            <div class="navbar-start">
+                <a class="navbar-item has-text-white" href="{{ url_for('main.sst_main') }}">
+                    Home
+                </a>
+
+                <a class="navbar-item has-text-white" href="{{ url_for('main.sst_main_calendar') }}">
+                    News
+                </a>
+
+                <a class="navbar-item has-text-white"
+                   href="{{ url_for('main.sst_get_menu_page', page='activities-index') }}">
+                    Maps
+                </a>
+
+                <a class="navbar-item has-text-white"
+                   href="{{ url_for('main.sst_get_menu_page', page='cool-stories-index') }}">
+                    Weather
+                </a>
+            </div>
+        </div>
+        <div id="navbarLower" class="navbar-menu">
+            <div class="navbar-start">
+                <a class="navbar-item has-text-white" href="{{ url_for('main.sst_main') }}">
+                    Calendar
+                </a>
+
+                <a class="navbar-item has-text-white" href="{{ url_for('main.sst_main_calendar') }}">
+                    Join the Fun
+                </a>
+
+                <a class="navbar-item has-text-white"
+                   href="{{ url_for('main.sst_get_menu_page', page='activities-index') }}">
+                    Reading Nook
+                </a>
+
+                <a class="navbar-item has-text-white"
+                   href="{{ url_for('main.sst_get_menu_page', page='cool-stories-index') }}">
+                    Campus Departments
+                </a>
+            </div>
+        </div>
+    </div>
+
+
+{#    <div class="navbar-end">#}
+{#        <div class="navbar-item">#}
+{#            <div class="buttons">#}
+                {# <a class="button is-primary">#}
+                {# <strong>Sign up</strong>#}
+                {# </a>#}
+                {# <a class="button is-light">#}
+                {# Log in#}
+                {# </a>#}
+{#            </div>#}
+{#        </div>#}
+{#    </div>#}
+</nav>

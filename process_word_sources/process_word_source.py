@@ -533,7 +533,7 @@ class TopElement(ParsedElement):
         # We need to identify the components of the layout and stitch them together properly
         args = {"max_width": 600,
                 "col_width": None,
-                'alignment': 'left',
+                'align': 'left',
                 'min-width': 300,
                 'figure': None,
                 }
@@ -545,7 +545,7 @@ class TopElement(ParsedElement):
             if args['col_width']:
                 col_class += '-' + args['col_width']
             open_html += f'{col_class} '
-        open_html += f'" style = "float:{args["alignment"]}">'
+        open_html += f'" style = "float:{args["align"]}">'
         if args['figure']:
             open_html += self.place_figure(args['figure'])
         open_html += f'</div>'
