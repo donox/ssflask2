@@ -22,7 +22,7 @@ def db_manage_pages(db_exec: DBExec, form):
     search_field = form.search_field.data
     folder_search = form.folder_search.data
     verify_element = form.verify_element.data
-    nbr_pages = 10
+    nbr_pages = 200
     page_fields = ['view', 'delete', 'id', 'page_title', 'page_name', 'page_author', 'page_date']
     photo_fields = ['delete', 'id', 'slug', 'file_name', 'folder_name', 'caption', 'image_date']
     result_template = 'admin/db_display_database_data.jinja2'
@@ -54,6 +54,7 @@ def db_manage_pages(db_exec: DBExec, form):
                 context['function'] = 'mpd_recent'
                 context['fields'] = page_fields
                 context['values'] = res
+                context['add_data_table'] = True       # cause layout to include CDN for DataTables
             result = render_template(result_template, **context)
             return result
 
@@ -68,6 +69,7 @@ def db_manage_pages(db_exec: DBExec, form):
                 context['search_string'] = search_string
                 context['fields'] = page_fields
                 context['values'] = res
+                context['add_data_table'] = True  # cause layout to include CDN for DataTables
             result = render_template(result_template, **context)
             return result
 
@@ -87,6 +89,7 @@ def db_manage_pages(db_exec: DBExec, form):
                 context['folder_search'] = folder_search
                 context['fields'] = photo_fields
                 context['values'] = res
+                context['add_data_table'] = True  # cause layout to include CDN for DataTables
             result = render_template(result_template, **context)
             return result
 
