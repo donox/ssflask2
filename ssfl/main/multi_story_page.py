@@ -8,6 +8,7 @@ from json import dumps
 from typing import Dict, AnyStr, Any
 from utilities.sst_exceptions import PhotoOrGalleryMissing
 from ssfl import sst_syslog
+from db_mgt.db_exec import DBExec
 
 
 class MultiStoryPage(object):
@@ -19,7 +20,7 @@ class MultiStoryPage(object):
      Processor: multi_story_page.py
     """
 
-    def __init__(self, db_exec):
+    def __init__(self, db_exec: DBExec):
         self.db_exec = db_exec
         self.descriptor = None
         self.context = dict()
@@ -78,7 +79,7 @@ class MultiStoryPage(object):
         """
         self.descriptor = self.storage_manager.make_json_descriptor(self.storage_manager.get_json_from_name(name))
 
-    def _set_descriptor_from_csv(self, layout):
+    def _xxxxx_set_descriptor_from_csv(self, layout):
         """Read descriptor for front page from csv file and build layout.
 
         Args:
@@ -409,3 +410,70 @@ class MultiStoryPage(object):
         self.descriptor = {'PAGE': {'rows': [partial_descriptor]}}
         self.make_multi_element_page_context()
         return self.descriptor
+
+    def make_snippet_context(self, snippet_type: str, snippet_identifier: str) -> str:
+        """Make context element from specific snippet.
+
+       !!!This is done by creating a full page with a single cell and extracting the cell.  We should instead
+       create page snippets separately (and separately cacheable) and then piece them into the displayable page.
+
+        Args:
+            snippet_type:     Snippet type such as SLIDESHOW as identified in StorageManager
+            snippet_identifier:  id or slug of snippet in json_store db table.
+
+        Returns:   json formatted string descriptor for snippet suitable for adding to jinja2 context
+
+        """
+        raise SystemError('THIS DOES NOT WORK.  Partial descriptor not properly integrated')
+        s_snip = 'S_' + snippet_type.upper() + '_SNIPPET'
+        mgr = self.storage_manager
+        res = mgr.make_json_descriptor(mgr.get_json_from_name('P_SINGLECELLROW'))
+        res['ROW']['columns'][0]['cells'][0]['element'] = snippet_identifier
+        res['ROW']['columns'][0]['cells'][0]['element_type'] = s_snip[2:]
+        res['ROW']['columns'][0]['cells'][0]['is-snippet'] = True
+        partial_descriptor = mgr.make_json_descriptor(res)
+        if snippet_identifier.isdigit():
+            partial_descriptor['ROW']['columns'][0]['cells'][0]['element']['id'] = snippet_identifier
+        else:
+            partial_descriptor['ROW']['columns'][0]['cells'][0]['element']['name'] = snippet_identifier
+        self.descriptor = {'PAGE': {'rows': [partial_descriptor]}}
+        self.make_multi_element_page_context()
+        result_snippet = self.descriptor['PAGE']['rows'][0]['ROW']['columns'][0]['cells'][0]
+        return result_snippet
+
+    def expand_slideshow_descriptor(self, desc_name):
+        mgr = self.storage_manager
+        res = mgr.get_json_from_name(desc_name)
+        if not res:
+            self.db_exec.add_error_to_form('Missing Descriptor', f'Descriptor: {desc_name} not in database')
+            return
+        height = width = None
+        if 'height' in res:
+            height = res['height']
+        if 'width' in res:
+            width = res['width']
+        photo_list = res['pictures'].split(',')
+        res['pictures'] = []
+        for photo_ident in photo_list:
+            pid = photo_ident.strip()
+            if pid.isdigit():
+                photo = self.photo_manager.get_photo_from_id(int(pid))
+            else:
+                photo = self.photo_manager.get_photo_from_slug(pid)
+            if photo:
+                photo_json = self.storage_manager.make_json_descriptor('PICTURE')
+                photo_json['PICTURE']['id'] = photo.id
+                photo_json['PICTURE']['url'] = self.photo_manager.get_photo_url(photo.id)
+                photo_json['PICTURE']['caption'] = photo.caption
+                photo_json['PICTURE']['alt_text'] = photo.alt_text
+                photo_json['PICTURE']['exists'] = True
+                if height:
+                    photo_json['PICTURE']['height'] = height
+                if width:
+                    photo_json['PICTURE']['width'] = width
+            else:
+                photo_json['PICTURE']['exists'] = False
+            res['pictures'].append(photo_json['PICTURE'])
+        return res
+
+

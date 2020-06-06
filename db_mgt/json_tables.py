@@ -144,7 +144,9 @@ class JSONTableManager(BaseTableManager):
                 elif isinstance(val, dict):
                     self.make_json_descriptor(val, result_processor=rlt.add_value_to_result)
                 else:
-                    raise ValueError(f'Dictionary value type not recognized: {val}')
+                    raise SystemError(f'Dictionary value type not recognized: {val}')
+        else:
+            raise SystemError(f'Descriptor is neither string nor dict: {descriptor}')
         result = rlt.get_result()
         if result_processor:
             result_processor(result)
@@ -288,6 +290,9 @@ def get_name_type(name: str) -> int:
 class _KeepResult(object):
     """Internal object to accumulate the result of a descriptor expansion
 
+    Building a descriptor is a recursive process and processing needs easy access
+    to building top level structure.  This class is simply a convenient means to
+    maintain state needed during the recursion
     """
 
     def __init__(self):
@@ -334,9 +339,6 @@ class _KeepResult(object):
         if self.res_key != 'UNUSED':
             return {self.res_key: None}
         raise SystemError(f'Request for result, but nothing has been specified.')
-
-
-
 
 
 class JSONStore(db.Model):
