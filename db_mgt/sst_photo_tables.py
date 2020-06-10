@@ -426,7 +426,10 @@ class SlideShow(object):
             context['float_dir'] = f'style="float:{float_dir}"'
         else:
             context['float_dir'] = ''
-        self.html = render_template('base/slideshow.jinja2', **context)
+        try:
+            self.html = render_template('base/slideshow.jinja2', **context)
+        except Exception as e:
+            foo = 3
         return self.html
 
 

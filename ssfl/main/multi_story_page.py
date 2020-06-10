@@ -290,7 +290,10 @@ class MultiStoryPage(object):
                 elem_show['background'] = existing['background']
 
             res = list()
-            photo_list = existing['pictures'].split(',')
+            if type(existing['pictures']) is int:
+                photo_list = [str(existing['pictures'])]
+            else:
+                photo_list = existing['pictures'].split(',')
             for photo_ident in photo_list:
                 pid = photo_ident.strip()
                 if pid.isdigit():

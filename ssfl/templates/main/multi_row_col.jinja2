@@ -7,7 +7,7 @@
     {% for item1 in snips %} {# Each item corresponds to all stories horizontally across the page #}
         <div class="row">
             {% for item in item1 %} {# Each item corresponds to all stories vertically in a cell #}
-                <div class="col col-md-6 col-lg-4 col-xl-3">
+                <div class="MULTI_row_col col col-md-6 col-lg-4 col-xl-3">
                     {% include '/base/snippet' %}
                 </div>
             {% endfor %}

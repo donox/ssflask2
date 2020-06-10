@@ -12,3 +12,8 @@
   font-size: large;
   font-weight: bolder;
   font-style: oblique; }
+
+/* increase paragraph separation */
+p {
+  margin-bottom: 1.5rem;
+}

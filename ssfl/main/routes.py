@@ -80,7 +80,7 @@ def sst_main2():
         main_slides = msp2.expand_slideshow_descriptor('header_slides')
         context['main_slides'] = {'slides': main_slides}
         log_request('main', 'main2', context)
-        res = render_template('main/main2.jinja2', **context)
+        res = render_template('main/main.jinja2', **context)
         return res
     finally:
         db_exec.terminate()

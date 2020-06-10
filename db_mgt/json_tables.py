@@ -304,7 +304,7 @@ class _KeepResult(object):
         self.result[key] = val
 
     def add_key_value_pair_to_result(self, name, val):
-        self.result['descriptor'] = name
+        # self.result['descriptor'] = name
         self.result[name] = val
 
     def add_key_to_result(self, key):

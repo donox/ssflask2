@@ -9,7 +9,7 @@
     {% assets "css_bundle" %}
         <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}"></link>
     {% endassets %}
-<link rel="stylesheet" type="text/css" href="/static/css/mystyles.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/mystyles.css">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
           integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
           crossorigin="anonymous">
@@ -19,30 +19,51 @@
             integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
             crossorigin="anonymous"></script>
 
-{% assets "js_bundle" %}
+    {% assets "js_bundle" %}
         <script type="text/javascript" src="{{ ASSET_URL }}"></script>
     {% endassets %}
-{# <script type="text/javascript" src="/static/gen/packed.js"></script>#}
+    {# <script type="text/javascript" src="/static/gen/packed.js"></script>#}
 
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.7.0/dropzone.min.js"></script>
     <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+<style>
+    /* Move this to /sass/sst_styles.sass when webpack is fixed */
+    p {
+        margin-bottom: 0.75rem;
+    }
+</style>
 </head>
 <body>
 
-<div class="main container-fluid text-dark">
-{% include 'base/nav.jinja2' %}
-    {% set flash_message_type = 'error' %}
-    {% include 'base/flashed_messages.jinja2' %}
-    {% block content %}{% endblock %}
-    {% set flash_message_type = 'success' %}
-    {% include 'base/flashed_messages.jinja2' %}
-    {% include 'base/footer.jinja2' %}
-</div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
-        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
-        crossorigin="anonymous"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
-        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
-        crossorigin="anonymous"></script>
+<div class="container-fluid text-dark" style="position: sticky; top:0px; z-index: 9999">
+    <div class="row" style="position: sticky; top:0px; z-index: 10000">
+        {% if main_slides %}
+            <div class="col-4">
+                {% include 'main/main_slides.jinja2' %}
+            </div>
+            <div class=" col-8" style="position: sticky; top:0px">
+        {% else %}
+            <div class=" col-12" style="position: sticky; top:0px">
+        {% endif %}
+        {% include 'base/nav.jinja2' %}
+        </div>
+        </div>
+    </div>
+    <div class="main container-fluid text-dark">
+        <div class="row">
+            {% set flash_message_type = 'error' %}
+            {% include 'base/flashed_messages.jinja2' %}
+            {% block content %}{% endblock %}
+            {% set flash_message_type = 'success' %}
+            {% include 'base/flashed_messages.jinja2' %}
+            {% include 'base/footer.jinja2' %}
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+            integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+            crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+            integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+            crossorigin="anonymous"></script>
 </body>
 </html>
