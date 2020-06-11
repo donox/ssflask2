@@ -1,161 +1,129 @@
-<nav class="navbar navbar-expand-md navbar-dark bg-dark mb-3 navbar-fixed-top" role="navigation"
-     aria-label="main navigation"
-     style="position: sticky; margin-top:20px">
-    <div class="container">
-        <div class="navbar-brand mr-3">
-            <a class="navbar-item" href="https://sunnyside.cc">
-                <img src="{{ url_for('static', filename='images/NoEvil.jpg') }}" width="50px" height="50px">
-            </a>
+<div class="nav-bg-img" style="background-image: url({{ url_for('static', filename='images/NoEvil.jpg') }});
+        max-height: 50px; background-repeat: repeat-x;">
 
-            <a role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false"
-               data-target="navbarBasicExample">
-                <span aria-hidden="true"></span>
-                <span aria-hidden="true"></span>
-                <span aria-hidden="true"></span>
-            </a>
-        </div>
+    <div class="nav-contain container">
+        <nav class="navbar navbar-expand-lg  navbar-light bg-light" style="opacity: 100%">
+            <a class="navbar-brand" href="#">Sunnyside Times</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+                    aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
 
-        <div id="navbarSST" class="navbar-menu">
-            <div class="navbar-start">
-                <a class="navbar-item has-text-white" href="{{ url_for('main.sst_main') }}">
-                    Home
-                </a>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav mr-auto">
+                      <li class="nav-item">
+                        <a class="navbar-item has-text-black" href="{{ url_for('main.sst_main') }}">
+                            Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="navbar-item has-text-black" href="{{ url_for('main.sst_main_calendar') }}">
+                            Calendar
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="navbar-item has-text-black"
+                           href="{{ url_for('main.sst_get_menu_page', page='activities-index') }}">
+                            Activities
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="navbar-item has-text-black"
+                           href="{{ url_for('main.sst_get_menu_page', page='resources-index') }}">
+                            Resources
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="navbar-item has-text-black"
+                           href="{{ url_for('main.sst_get_menu_page', page='administration-index') }}">
+                            Admin
+                        </a>
+                    </li>
 
-                <a class="navbar-item has-text-white" href="{{ url_for('main.sst_main_calendar') }}">
-                    Calendar
-                </a>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle has-text-black" href="#" id="navbarDropdown" role="button"
+                           data-toggle="dropdown"
+                           aria-haspopup="true" aria-expanded="false">
+                            Site Admin
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <a class="dropdown-item" href="{{ url_for('admin_bp.make_admin_report') }}">
+                                Report an Issue
+                            </a>
+                            <hr class="dropdown-divider">
+                            <a class="dropdown-item" href="{{ url_for('admin_bp.manage_page_data') }}">
+                                Review Recent Pages
+                            </a>
+                            <a class="dropdown-item" href="{{ url_for('admin_bp.sst_import_page') }}">
+                                Import MS Word Page
+                            </a>
+                            <a class="dropdown-item" href="{{ url_for('photo_bp.upload_photos') }}">
+                                Upload New Photos
+                            </a>
+                            <a class="dropdown-item" href="{{ url_for('photo_bp.manage_photos') }}">
+                                Manage Existing Photos
+                            </a>
+                            <hr class="dropdown-divider">
 
-                <a class="navbar-item has-text-white"
-                   href="{{ url_for('main.sst_get_menu_page', page='activities-index') }}">
-                    Activities
-                </a>
-
-                <a class="navbar-item has-text-white"
-                   href="{{ url_for('main.sst_get_menu_page', page='cool-stories-index') }}">
-                    Cool Stories
-                </a>
-
-                <a class="navbar-item has-text-white"
-                   href="{{ url_for('main.sst_get_menu_page', page='resources-index') }}">
-                    Resources
-                </a>
-
-                <a class="navbar-item has-text-white"
-                   href="{{ url_for('main.sst_get_menu_page', page='administration-index') }}">
-                    Admin
-                </a>
-
-                <div class="navbar-item has-dropdown is-hoverable has-text-white">
-                    <a class="navbar-link">
-                        More
-                    </a>
-
-                    <div class="navbar-dropdown has-text-white">
-                        <a class="navbar-item" href="{{ url_for('main.sst_get_quick_links', page='quick-access') }}">
-                            Quick Links
+                            <a class="dropdown-item" href="{{ url_for('admin_bp.sst_admin_calendar') }}">
+                                Manage Calendar
+                            </a>
+                            <a class="dropdown-item" href="{{ url_for('admin_bp.make_story_json_template') }}">
+                                Manage Templates (in TOML or JSON format)
+                            </a>
+                            <hr class="dropdown-divider">
+                            <a class="dropdown-item" href="{{ url_for('admin_bp.manage_index_page') }}">
+                                Manage Index Page
+                            </a>
+                            <a class="dropdown-item" href="{{ url_for('admin_bp.sst_admin_edit') }}">
+                                Edit DB Page
+                            </a>
+                            <hr class="dropdown-divider">
+                            <a class="dropdown-item" href="{{ url_for('admin_bp.sst_import_database') }}">
+                                Manage Import from Existing SsT Wordpress Database
+                            </a>
+                            <a class="dropdown-item" href="{{ url_for('admin_bp.sst_miscellaneous') }}">
+                                Miscellaneous Functions
+                            </a>
+                            <a class="dropdown-item" href="#">Action</a>
+                            <a class="dropdown-item" href="#">Another action</a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="#">Something else here</a>
+                        </div>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle has-text-black" href="#" id="navbarDropdown" role="button"
+                           data-toggle="dropdown"
+                           aria-haspopup="true" aria-expanded="false">
+                            System Admin
                         </a>
-                        <a class="navbar-item" href="{{ url_for('main.sst_get_menu_page', page='news-index') }}">
-                            News
-                        </a>
-                        <a class="navbar-item"
-                           href="{{ url_for('main.sst_get_menu_page', page='sunnyside-resident-maps') }}">
-                            Maps
-                        </a>
-                        <hr class="navbar-divider">
-                        <a class="navbar-item">
-                            Report an issue
-                        </a>
-                    </div>
-                </div>
-
-                <div class="navbar-item has-dropdown is-hoverable has-text-white">
-                    <a class="navbar-link">
-                        Site Admin
-                    </a>
-
-                    <div class="navbar-dropdown">
-                        <a class="navbar-item" href="{{ url_for('admin_bp.make_admin_report') }}">
-                            Report an Issue
-                        </a>
-                        <hr class="navbar-divider">
-                        <a class="navbar-item" href="{{ url_for('admin_bp.manage_page_data') }}">
-                            Review Recent Pages
-                        </a>
-                        <a class="navbar-item" href="{{ url_for('admin_bp.sst_import_page') }}">
-                            Import MS Word Page
-                        </a>
-                        <a class="navbar-item" href="{{ url_for('photo_bp.upload_photos') }}">
-                            Upload New Photos
-                        </a>
-                        <a class="navbar-item" href="{{ url_for('photo_bp.manage_photos') }}">
-                            Manage Existing Photos
-                        </a>
-                        <hr class="navbar-divider">
-
-                        <a class="navbar-item" href="{{ url_for('admin_bp.sst_admin_calendar') }}">
-                            Manage Calendar
-                        </a>
-                        <a class="navbar-item" href="{{ url_for('admin_bp.make_story_json_template') }}">
-                            Manage Templates (in TOML or JSON format)
-                        </a>
-                        <hr class="navbar-divider">
-                        <a class="navbar-item" href="{{ url_for('admin_bp.manage_index_page') }}">
-                            Manage Index Page
-                        </a>
-                        <a class="navbar-item" href="{{ url_for('admin_bp.sst_admin_edit') }}">
-                            Edit DB Page
-                        </a>
-                        <hr class="navbar-divider">
-                        <a class="navbar-item" href="{{ url_for('admin_bp.sst_import_database') }}">
-                            Manage Import from Existing SsT Wordpress Database
-                        </a>
-                        <a class="navbar-item" href="{{ url_for('admin_bp.sst_miscellaneous') }}">
-                            Miscellaneous Functions
-                        </a>
-                    </div>
-                </div>
-
-                <div class="navbar-item has-dropdown is-hoverable has-text-white">
-                    <a class="navbar-link">
-                        Site SysAdmin
-                    </a>
-
-                    <div class="navbar-dropdown">
-                        <a class="navbar-item" href="{{ url_for('sysadmin_bp.manage_groups') }}">
-                            Manage Groups
-                        </a>
-                        <a class="navbar-item" href="{{ url_for('admin_bp.sst_admin_calendar') }}">
-                            Manage Calendar
-                        </a>
-                        <a class="navbar-item" href="{{ url_for('sysadmin_bp.manage_users') }}">
-                            Manage Users
-                        </a>
-                        <a class="navbar-item" href="{{ url_for('sysadmin_bp.sst_login') }}">
-                            SsT Login
-                        </a>
-                        <a class="navbar-item" href="{{ url_for('sysadmin_bp.manage_files') }}">
-                            Manage Files
-                        </a>
-                        <a class="navbar-item" href="{{ url_for('sysadmin_bp.manage_graphs') }}">
-                            Manage Graphs
-                        </a>
-                    </div>
-                </div>
+                        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <a class="navbar-item" href="{{ url_for('sysadmin_bp.manage_groups') }}">
+                                Manage Groups
+                            </a>
+                            <a class="navbar-item" href="{{ url_for('admin_bp.sst_admin_calendar') }}">
+                                Manage Calendar
+                            </a>
+                            <a class="navbar-item" href="{{ url_for('sysadmin_bp.manage_users') }}">
+                                Manage Users
+                            </a>
+                            <a class="navbar-item" href="{{ url_for('sysadmin_bp.sst_login') }}">
+                                SsT Login
+                            </a>
+                            <a class="navbar-item" href="{{ url_for('sysadmin_bp.manage_files') }}">
+                                Manage Files
+                            </a>
+                            <a class="navbar-item" href="{{ url_for('sysadmin_bp.manage_graphs') }}">
+                                Manage Graphs
+                            </a>
+                        </div>
+                    </li>
+                </ul>
+                <form class="form-inline my-2 my-lg-0">
+                    <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
+                    <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+                </form>
             </div>
-        </div>
-
-        <div class="navbar-end">
-            <div class="navbar-item">
-                <div class="buttons">
-                    {# <a class="button is-primary">#}
-                    {# <strong>Sign up</strong>#}
-                    {# </a>#}
-                    {# <a class="button is-light">#}
-                    {# Log in#}
-                    {# </a>#}
-                </div>
-            </div>
-        </div>
+        </nav>
     </div>
-    </div>
-</nav>
+</div>

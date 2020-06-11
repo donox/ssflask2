@@ -9,11 +9,18 @@ class JSONStorageManager(object):
     #     and the remainder are processed to form a dictionary/context.  This implies that 'str' entries that are not
     #     expanded are names whose value will be 'None' (json 'null').  Lists are in Prototype form and dictionaries
     #     are merged with the parent dictionary.
-    descriptor_page_layout = {"PAGE": None, "node_name": "PAGE", "name": None, "rows": []}
+    descriptor_page_layout = {"PAGE": None, "node_name": "PAGE", "name": None, "is_container": True, "rows": []}
+    # Pages, rows, and columns are elements of layout and correspond generally to Bootstrap container(-fluid), rows,
+    # and columns in a Bootstrap Grid.
     descriptor_row_layout = {"ROW": None, "node_name": "ROW", "columns": []}
     descriptor_column_layout = {"COLUMN": None, "node_name": "COLUMN", "cells": [], "column_width": None}
+    # Cells are structural elements designed as the primary holder of content.  Cells are often "snippets" which
+    # define kinds of items found on the site such as calendar snippets, story snippets, etc.  Snippets are intended
+    # to be small, units of content that provide flexible pieces used in constructing more complex pages.  Cells are
+    # generally Bootstrap "containers" and gain additional personality through the use of Bootstrap classes such
+    # as "cards", "carousels", etc.
     descriptor_cell_layout = {"CELL": None, "node_name": "CELL", "element_type": None, "element": None,
-                              "is_snippet": None,
+                              "is_snippet": None, "is_container": True,
                               "width": None, "height": None, "styles": None, "classes": None}
     descriptor_graph_fields = {"GRAPH": None, "name": "GRAPH", "id": None, "name": None, "purpose": None, "nodes": [],
                                "edges": []}

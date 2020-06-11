@@ -66,6 +66,20 @@ class JSONTableManager(BaseTableManager):
             raise e
 
     def make_json_descriptor(self, descriptor: Any, result_processor: object = None):
+        """Expand/elaborate (recursively if needed) a descriptor to produce structure to drive processing.
+
+        Produce a descriptor with notations (types) such as PREAMBLE (a.k.a., prototype) replaced with their
+        expansions.  An expanded descriptor will most often result in a structure that which all parameters
+        are specified can be used as a jinja2 context for template layout.  An infrequently used result_process
+        may be called with the result of the expansion to perform additional work.
+
+        Args:
+            descriptor: JSON structure defined in JSONStorageManager
+            result_processor: function to be called on result of expansion
+
+        Returns:  dict result of expansion
+
+        """
         rlt = _KeepResult()
 
         if isinstance(descriptor, str):
