@@ -189,43 +189,54 @@ class CalendarEvent(object):
         sql += 'event_cost as cost, event_sign_up as sign_up, event_EC_pickup as ec_pickup, '
         sql += 'event_HL_pick_up as hl_pickup from event '
         sql += 'where '
-        sql += 'event_name = \'{}\' and event_cost = \'{}\' '
-        sql += 'and event_sign_up = \'{}\' and event_EC_pickup = \'{}\' '
-        sql += 'and event_HL_pick_up = \'{}\' ;'
+        sql += 'event_name = :name and event_cost = :cost '
+        sql += 'and event_sign_up = :sign and event_EC_pickup = :ed '
+        sql += 'and event_HL_pick_up = :hl ;'
 
         sql_meta = 'select id from event_meta as em '
         sql_meta += 'join event_meta_tbl as emt where '
         sql_meta += 'em.id = emt.meta_id and em.id = emt.event_id '
-        sql_meta += 'and em.meta_key = \'location\' '
-        sql_meta += 'and em.meta_value = \'{}\';'
+        sql_meta += 'and em.meta_key = "location" '
+        sql_meta += 'and em.meta_value = :meta_val;'
 
         sql_time = 'select id, all_day_event, start, end from event_time '
-        sql_time += 'where event_id = {} '
-        sql_time2 = 'and start = \'{}\' and end = \'{}\'; '
+        sql_time += 'where event_id = :id '
+        sql_time2 = 'and start = :start and end = :end; '
 
         elements_found = {}
-        name = self.name.replace("'", "''")  # MySQL escape single quote chars
-        full_sql = sql.format(name, self.cost, self.sign_up, self.ec_depart, self.hl_depart)
-        res = db_session.execute(full_sql).first()
+        # name = self.name.replace("'", "''")  # MySQL escape single quote chars
+        sql_dict = {'name': self.name, 'cost': self.cost, 'sign': self.sign_up, 'ed': self.ec_depart, 'hl': self.hl_depart}
+        try:
+            res = db_session.execute(sql, sql_dict).first()
+        except Exception as e:
+            foo = 3
         if not res:
             return elements_found
         e_id = res[0]
         elements_found['event'] = e_id
         if check_location:
             if self.venue != '':
-                meta_sql = sql_meta.format(self.venue)
-                res = db_session.execute(meta_sql).first()
+                sql_meta_dict = {'meta_val': self.venue}
+                # meta_sql = sql_meta.format(self.venue)
+                try:
+                    res = db_session.execute(sql_meta, sql_meta_dict).first()
+                except Exception as e:
+                    foo = 3
                 if res:
                     elements_found['location'] = res.first()
         if check_time:
             # TODO: Handle ALL DAY event
             first_time = True
             for ev_start, ev_end, ev_date in self.occurs:
-                time_sql_base = sql_time.format(e_id)
+                # time_sql_base = sql_time.format(e_id)
                 st = CalendarEvent.combine_date_time_to_str(ev_start, ev_date)
                 nd = CalendarEvent.combine_date_time_to_str(ev_end, ev_date)
-                time_sql = time_sql_base + sql_time2.format(st, nd)
-                res = db_session.execute(time_sql).first()
+                # time_sql = time_sql_base + sql_time2.format(st, nd)
+                sql_time_dict = {'id': e_id, 'start': st, 'end': nd}
+                try:
+                    res = db_session.execute(sql_time, sql_time_dict).first()
+                except Exception as e:
+                    foo = 3
                 if res:
                     if first_time:
                         elements_found['time'] = [res]

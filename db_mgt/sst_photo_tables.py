@@ -17,6 +17,7 @@ from utilities.sst_exceptions import PhotoOrGalleryMissing
 from .base_table_manager import BaseTableManager
 from .json_tables import JSONStorageManager as jsm
 from db_mgt.pa_db_connect_problems import TestPADB
+from random import randint
 
 json_metadata_descriptor = {"title": None, "photographer": None, "people": [],
                             "keywords": None, "xxx": None}
@@ -421,13 +422,14 @@ class SlideShow(object):
         for photo in self.show_desc['pictures']:
             photo['width'] = wt
             photo['height'] = ht
-        context = {'slideshow': self.show_desc}
+        context = {'carousel': self.show_desc}
         if float_dir:
             context['float_dir'] = f'style="float:{float_dir}"'
         else:
             context['float_dir'] = ''
+        context['unique_id_base'] = 'X' + str(randint(1, 10000))   # This must be unique for slideshows in a single page
         try:
-            self.html = render_template('base/slideshow.jinja2', **context)
+            self.html = render_template('base/carousel.jinja2', **context)
         except Exception as e:
             foo = 3
         return self.html

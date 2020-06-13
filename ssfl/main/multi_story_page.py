@@ -79,6 +79,31 @@ class MultiStoryPage(object):
         elem['title'] = story.get_title()
         elem['content'] = story.get_body()
 
+    def _fill_photo_base_descriptor(self, elem, photo):
+        """Set classes used by photo_base.jinja2.
+
+        css_class, photo_title_class, image_class, caption_class, do_rotation, title, caption, alignment
+
+        Args:
+            elem:  dict - JSON element describing photo
+            photo: sst_photo object
+
+        Returns:  None
+        """
+        if not elem['caption']:
+            elem['caption'] = photo.caption
+        if not 'caption_class' in elem:
+            elem['caption_class'] = 'text-left font-weight-bold '
+        if not 'image_class' in elem:
+            elem['image_class'] = 'img-fluid rounded image-wrapper'
+        if not 'photo_title_class' in elem:
+            elem['photo_title_class'] = 'h4'
+        if 'alignment' in elem:
+            al = elem['alignment']
+            if al:
+                elem['alignment'] = 'float-' + al
+
+
     def _fill_photo_descriptor(self, elem):
         """Build picture descriptor from single photo in DB"""
         # descriptor_photo_fields = ["id", "url", "title", "caption", "width", "height", "alignment",
@@ -101,110 +126,15 @@ class MultiStoryPage(object):
             else:
                 photo = self.photo_manager.get_photo_from_id(photo_id)
             if not photo:
-                raise ValueError(f'No photo with id: {photo_id}')
-            if not elem['caption']:
-                elem['caption'] = photo.caption
-            elem['url'] = self.photo_manager.get_photo_url(photo_id)
-            elem['alt_text'] = photo.alt_text
-            elem['exists'] = True
-        except Exception as e:
-            # We'll just have the template put in a blank filler
-            elem['exists'] = False
-
-    def _fill_story_snippet(self, elem):
-        """Fill story snippet descriptor."""
-        # descriptor_story_snippet_fields = ["id", "title", "name", "author", "date", "snippet",
-        # "photo", "story_url", "content", "read_more"]
-        width = 6  # TODO: determine correct input
-        id_val = page_name = None
-        if 'id' in elem:
-            id_val = elem['id']
-        if 'name' in elem:
-            page_name = elem['name']
-        story = Story(self.db_exec, width)
-        if id_val:
-            story.create_story_from_db(page_id=id_val)
-        else:
-            story.create_story_from_db(page_name=page_name)
-        elem['title'] = story.get_title()
-        elem['snippet'] = story.create_snippet()
-        elem['content'] = story.get_body()
-        self._fill_photo_descriptor(elem['photo'])
-        elem['read_more'] = story.get_read_more()
-
-    def _fill_calendar_snippet(self, elem):
-        """Fill calendar event snippet."""
-        # {"CALENDAR_SNIPPET": None, "events": [], "event_count": None, "width": None,
-        #  "audience": [], "categories": []}
-        ev_count = elem['event_count']
-        calendar = Calendar(self.db_exec)
-        calendar.create_daily_plugin(elem['event_count'])
-        content = calendar.get_calendar_snippet_data()
-        elem['events'] = content['events']
-
-    def _fill_slideshow_snippet(self, elem):
-        """Fill slideshow snippet.
-
-        There are 2 cases:
-            (1) The snippet is already constructed in which case there is a 'slides' element.
-            (2) The descriptor is for a SLIDESHOW in which case the snippet element needs to
-                be created and added.  In this case, there is a pictures element containing a
-                list of picture identifiers that need to be added to create a slideshow.
-        """
-        # {"SLIDESHOW_SNIPPET": None, "id": None, "title": None, "text": None,
-        # "slides": {"SLIDESHOW": None, "title": None, "title_class": None, "position": None,
-        #                                    "width": None, "height": None, "rotation": None,
-        #                                    "frame_title": None, "pictures": []}}
-        if elem['descriptor'] == 'SLIDESHOW_SNIPPET':
-            pass
-            # photo_list = elem['slides']['pictures']
-        elif elem['descriptor'] == 'SLIDESHOW':
-            # Need to convert this element to be a proper 'SLIDESHOW_SNIPPET'
-            existing = elem.copy()
-            snip = self.storage_manager.get_json_from_name('P_SLIDESHOW_SNIPPET')
-            keys = [x for x in elem.keys()]  # this avoids the runtime error of dictionary size change during iterate
-            for key in keys:
-                del elem[key]
-            for key, val in snip.items():
-                elem[key] = val
-            # Should have properly formatted snippet - now fill it in
-            elem['title'] = existing['title']
-            elem_show = elem['slides']
-            # elem_show['title'] = existing['title']      # Displays as duplicate - are there reasons to have separate?
-            elem_show['title_class'] = existing['title_class']
-            elem_show['frame_title'] = existing['frame_title']  # Unneeded ??
-            elem_show['position'] = existing['position']
-            elem_show['width'] = existing['width']
-            elem_show['height'] = existing['height']
-            elem_show['rotation'] = existing['rotation']
-            if 'background' in existing:            # Can remove if all descriptors have this
-                elem_show['background'] = existing['background']
-
-            res = list()
-            if type(existing['pictures']) is int:
-                photo_list = [str(existing['pictures'])]
+                elem['url'] = ''
+                elem['alt_text'] = 'Photo Not Found'
             else:
-                photo_list = existing['pictures'].split(',')
-            for photo_ident in photo_list:
-                pid = photo_ident.strip()
-                if pid.isdigit():
-                    photo = self.photo_manager.get_photo_from_id(int(pid))
-                else:
-                    photo = self.photo_manager.get_photo_from_slug(pid)
-                if photo:
-                    photo_json = self.storage_manager.make_json_descriptor('PICTURE')
-                    photo_json['PICTURE']['id'] = photo.id
-                    photo_json['PICTURE']['url'] = self.photo_manager.get_photo_url(photo.id)
-                    photo_json['PICTURE']['caption'] = photo.caption
-                    photo_json['PICTURE']['alt_text'] = photo.alt_text
-                    photo_json['PICTURE']['exists'] = True
-                else:
-                    photo_json['PICTURE']['exists'] = False
-                res.append(photo_json['PICTURE'])
-            elem_show['pictures'] = res
-        else:
-            raise SystemError(f'Unrecognized descriptor {elem["descriptor"]} when expecting a slideshow element')
-        foo = 3
+                elem['url'] = self.photo_manager.get_photo_url(photo_id)
+                elem['alt_text'] = photo.alt_text
+            self._fill_photo_base_descriptor(elem, photo)
+        except Exception as e:
+            elem['url'] = ''
+            elem['alt_text'] = 'Photo Not Found'
 
     def _fill_carousel_snippet(self, elem):
         """Fill carousel snippet.
@@ -224,10 +154,10 @@ class MultiStoryPage(object):
         #  "position": None,
         #  "width": None, "height": None, "rotation": None,
         #  "frame_title": None, "pictures": []}
-        if elem['descriptor'] == 'CAROUSEL_SNIPPET':
+        if elem['descriptor'] == 'CAROUSEL_SNIPPET' or elem['descriptor'] == 'SLIDESHOW_SNIPPET':
             pass
             # photo_list = elem['slides']['pictures']
-        elif elem['descriptor'] == 'CAROUSEL':
+        elif elem['descriptor'] == 'CAROUSEL' or elem['descriptor'] == 'SLIDESHOW':
             # Need to convert this element to be a proper 'CAROUSEL_SNIPPET'
             existing = elem.copy()
             snip = self.storage_manager.get_json_from_name('P_CAROUSEL_SNIPPET')
@@ -238,7 +168,8 @@ class MultiStoryPage(object):
                 elem[key] = val
             # Should have properly formatted snippet - now fill it in
             elem_show = elem['slides']
-            items_to_copy = ['title', 'title_class', 'frame_title', 'position', 'width', 'height', 'rotation', 'background']
+            items_to_copy = ['title', 'title_class', 'frame_title', 'position', 'width', 'height', 'rotation',
+                             'background']
             for item in items_to_copy:
                 if item in existing:
                     elem_show[item] = existing[item]
@@ -272,6 +203,37 @@ class MultiStoryPage(object):
         else:
             raise SystemError(f'Unrecognized descriptor {elem["descriptor"]} when expecting a slideshow element')
         foo = 3
+    
+    def _fill_story_snippet(self, elem):
+        """Fill story snippet descriptor."""
+        # descriptor_story_snippet_fields = ["id", "title", "name", "author", "date", "snippet",
+        # "photo", "story_url", "content", "read_more"]
+        width = 6  # TODO: determine correct input
+        id_val = page_name = None
+        if 'id' in elem:
+            id_val = elem['id']
+        if 'name' in elem:
+            page_name = elem['name']
+        story = Story(self.db_exec, width)
+        if id_val:
+            story.create_story_from_db(page_id=id_val)
+        else:
+            story.create_story_from_db(page_name=page_name)
+        elem['title'] = story.get_title()
+        elem['snippet'] = story.create_snippet()
+        elem['content'] = story.get_body()
+        self._fill_photo_descriptor(elem['photo'])
+        elem['read_more'] = story.get_read_more()
+
+    def _fill_calendar_snippet(self, elem):
+        """Fill calendar event snippet."""
+        # {"CALENDAR_SNIPPET": None, "events": [], "event_count": None, "width": None,
+        #  "audience": [], "categories": []}
+        ev_count = elem['event_count']
+        calendar = Calendar(self.db_exec)
+        calendar.create_daily_plugin(elem['event_count'])
+        content = calendar.get_calendar_snippet_data()
+        elem['events'] = content['events']
 
     def _fill_sign_snippet(self, elem):
         sign = Sign(self.db_exec)
@@ -350,14 +312,14 @@ class MultiStoryPage(object):
                         elif 'CALENDAR_SNIPPET' in elem:
                             self._fill_calendar_snippet(elem)
                         elif 'SLIDESHOW_SNIPPET' in elem:
-                            self._fill_slideshow_snippet(elem)
+                            self._fill_carousel_snippet(elem)
                         elif 'SIGN_SNIPPET' in elem:
                             self._fill_sign_snippet(elem)
                         elif 'CAROUSEL_SNIPPET' in elem:
                             self._fill_carousel_snippet(elem)
                         elif 'SLIDESHOW' in elem:       # This is converted to a Snippet in processing
-                            self._fill_slideshow_snippet(elem)
-                            cell['element_type'] = 'SLIDESHOW_SNIPPET'
+                            self._fill_carousel_snippet(elem)
+                            cell['element_type'] = 'CAROUSEL_SNIPPET'
                     else:
                         if 'STORY' in elem:
                             self._fill_full_story(elem)
@@ -417,42 +379,7 @@ class MultiStoryPage(object):
         result_snippet = self.descriptor['PAGE']['rows'][0]['ROW']['columns'][0]['cells'][0]
         return result_snippet
 
-    def expand_slideshow_descriptor(self, desc_name):
-        mgr = self.storage_manager
-        res = mgr.get_json_from_name(desc_name)
-        if not res:
-            self.db_exec.add_error_to_form('Missing Descriptor', f'Descriptor: {desc_name} not in database')
-            return
-        height = width = None
-        if 'height' in res:
-            height = res['height']
-        if 'width' in res:
-            width = res['width']
-        photo_list = res['pictures'].split(',')
-        res['pictures'] = []
-        for photo_ident in photo_list:
-            pid = photo_ident.strip()
-            if pid.isdigit():
-                photo = self.photo_manager.get_photo_from_id(int(pid))
-            else:
-                photo = self.photo_manager.get_photo_from_slug(pid)
-            if photo:
-                photo_json = self.storage_manager.make_json_descriptor('PICTURE')
-                photo_json['PICTURE']['id'] = photo.id
-                photo_json['PICTURE']['url'] = self.photo_manager.get_photo_url(photo.id)
-                photo_json['PICTURE']['caption'] = photo.caption
-                photo_json['PICTURE']['alt_text'] = photo.alt_text
-                photo_json['PICTURE']['exists'] = True
-                if height:
-                    photo_json['PICTURE']['height'] = height
-                if width:
-                    photo_json['PICTURE']['width'] = width
-            else:
-                photo_json['PICTURE']['exists'] = False
-            res['pictures'].append(photo_json['PICTURE'])
-        return res
-
-    def make_descriptor_from_csv_file(self, file):
+    def _xxxx_make_descriptor_from_csv_file(self, file):
         """Create a descriptor corresponding to a formatted spreadsheet.
 
         See otherfiles/FrontPageLayout.ods for sample page layout.

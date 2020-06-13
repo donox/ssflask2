@@ -1,6 +1,7 @@
 from ssfl import db
 from .base_table_manager import BaseTableManager
 import datetime as dt
+from utilities.sst_exceptions import log_sst_error
 
 calendar_categories = ['Religion', 'Wellness', 'Resident Clubs', 'Event']
 
@@ -53,12 +54,13 @@ class Event(db.Model):
     event_occurs = db.relationship('EventTime', backref=db.backref('events', lazy=True))
 
     def add_to_db(self, session, commit=False):
-        session.add(self)
-        if commit:
-            try:
+        try:
+            session.add(self)
+            if commit:
                 session.commit()
-            except Exception as e:
-                foo = 3
+        except Exception as e:
+            log_sst_error(e.args)
+            raise e
         return self
 
 
@@ -71,12 +73,13 @@ class EventTime(db.Model):
     end = db.Column(db.DateTime(), default='2001-01-01 01:01:01')
 
     def add_to_db(self, session, commit=False):
-        session.add(self)
-        if commit:
-            try:
+        try:
+            session.add(self)
+            if commit:
                 session.commit()
-            except Exception as e:
-                foo = 3
+        except Exception as e:
+            log_sst_error(e.args)
+            raise e
         return self
 
 
@@ -92,10 +95,11 @@ class EventMeta(db.Model):
     events = db.relationship(Event, secondary='event_meta_tbl', backref='event_to_metas')
 
     def add_to_db(self, session, commit=False):
-        session.add(self)
-        if commit:
-            try:
+        try:
+            session.add(self)
+            if commit:
                 session.commit()
-            except Exception as e:
-                foo = 3
+        except Exception as e:
+            log_sst_error(e.args)
+            raise e
         return self

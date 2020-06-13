@@ -41,20 +41,25 @@ def manage_calendar(db_exec: DBExec, form: ManageCalendarForm):
 
         elif work_function.data == 'c_csv':
             # Upload calendar from csv file
-            if not('.' in input_file.filename and input_file.filename.rsplit('.', 1)[1].lower() == 'csv'):
-                form.errors['file_name'].append(f'Input file: {input_file} not a valid calendar file.')
+            if not ('.' in input_file.filename and input_file.filename.rsplit('.', 1)[1].lower() == 'csv'):
+                db_exec.add_error_to_form('Filename', 'Input file: {input_file} not a valid calendar file.')
                 return False
             else:
                 secure_filename(input_file.filename)
                 with tempfile.TemporaryFile(mode='w+b') as file_path:
                     # file_path = tempfile.TemporaryFile()
-                    input_file.save(file_path)
-                    file_path.seek(0)
-                    file_content = file_path.read().decode(encoding='latin-1')
-                    build_calendar = CsvToDb(db_exec,  file_content)
-                    build_calendar.add_events()
-                    for evt in build_calendar.get_event_list():
-                        calendar_mgr.add_event_to_database(evt, commit=True)
+                    try:
+                        input_file.save(file_path)
+                        file_path.seek(0)
+                        file_content = file_path.read().decode(encoding='latin-1')
+                        build_calendar = CsvToDb(db_exec, file_content)
+                        build_calendar.add_events()
+                        for evt in build_calendar.get_event_list():
+                            calendar_mgr.add_event_to_database(evt, commit=True)
+                    except Exception as e:
+                        db_exec.add_error_to_form('Event Processing',
+                                                  f'Exception during event processing.  Args: {e.args}')
+                        return False
             return True
 
         elif work_function.data == 'c_json':
@@ -111,7 +116,7 @@ def manage_calendar(db_exec: DBExec, form: ManageCalendarForm):
                     s += f'{event.id} :    : {p_cost} : {p_ec_pickup} : {p_hl_pickup}\n\n'
                     fl.write(s.encode('utf-8'))
                 fl.seek(0)
-                return send_file(BytesIO(fl.read()),  mimetype="text/plain", as_attachment=True,
+                return send_file(BytesIO(fl.read()), mimetype="text/plain", as_attachment=True,
                                  attachment_filename=out_file + '.txt')
 
         elif work_function.data == 'c_new':
@@ -135,11 +140,10 @@ def manage_calendar(db_exec: DBExec, form: ManageCalendarForm):
                     calendar_mgr.delete_specific_event(event, cal_start.data, cal_end.data)
             except Exception as e:
                 log_sst_error(sys.exc_info(), get_traceback=True)
-                form.errors['Exception'] = [f'Error deleting event: {e.args}']
+                db_exec.add_error_to_form('Delete Exception', f'Error deleting event: {e.args}')
                 return False
             return True
     except Exception as e:
         log_sst_error(sys.exc_info(), get_traceback=True)
-        form.errors['Exception'] = ['Exception occurred processing page']
+        db_exec.add_error_to_form('Work Function', 'Exception occurred processing page')
         return False
-

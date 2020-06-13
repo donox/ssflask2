@@ -95,4 +95,11 @@ p {
   background-color: red; !important;'
 }
 
+/* default image wrapper class to center an image in its container */
+.image-wrapper {
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
 

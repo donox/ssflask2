@@ -1,8 +1,4 @@
-{% if photo.exists %}
-    <div class="PICTURE"
-         style="max-width: {{ photo.width }}px; max-height: {{ photo.height }}px;">
+<div class="PICTURE"
+     style="max-width: {{ photo.width }}px; max-height: {{ photo.height }}px;">
     {% include 'base/picture_base.jinja2' %}
-    </div>
-{% else %}
-    <div class="h3">Photo Not Found</div>
-{% endif %}
+</div>
