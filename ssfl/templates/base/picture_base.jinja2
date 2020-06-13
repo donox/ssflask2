@@ -1,0 +1,14 @@
+{% if photo.exists %}
+    <div class="figure {{ photo.css_class }} float-{{ photo.alignment }} px-3 {{ do_rotation }}">
+        {% if photo.title %}
+            <figcaption class="figure-caption has-text-black {{ photo.title_class }}">{{ photo.title }}</figcaption>
+        {% endif %}
+        <img class="{{ photo.image_class }} figure-img img-fluid rounded image-wrapper"
+             src="{{ photo.url }}" style="max-height: {{ photo.height }}px; max-width:{{ photo.width }}px;
+                height:auto; width:auto; object-fit: cover; width:600px; height:300px;
+             alt: {{ photo.alt_text }}"/>
+        <figcaption class="figure-caption has-text-black {{ photo.caption_class }}">{{ photo.caption }}</figcaption>
+    </div>
+{% else %}
+    <div class="h3">Photo Not Found</div>
+{% endif %}

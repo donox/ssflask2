@@ -780,6 +780,60 @@ p {
   color: black;
 }
 
+/* Set colors for Bootstrap Carousel glyphicons */
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+  height: 100px;
+  width: 100px;
+  outline: black;
+  background-size: 100%, 100%;
+  border-radius: 50%;
+  /*border: 1px solid black;*/
+  background-image: none;
+}
+
+.carousel-control-next-icon:after
+{
+  content: '>';
+  font-size: 55px;
+  color: black;
+}
+
+.carousel-control-prev-icon:after {
+  content: '<';
+  font-size: 55px;
+  color: black;
+}
+
+.carousel-indicators {
+  /* required to override bootstrap */
+  /*right: unset !important;*/
+  /*left: unset !important;*/
+  /*padding-left: unset !important;*/
+  /*margin-right: unset !important;*/
+  /*margin-left: unset !important;*/
+  /* your css styles */
+  /*width: auto;*/
+  background-color: unset; !important;
+  color: unset; !important;
+  padding: 18px 18px;
+  /*background-color: rgba(96, 107, 114, .8);*/
+  border-radius: 18px;
+  line-height: 0;
+}
+
+.carousel-indicators li {
+  z-index: 9999;
+  width: 10px;
+  height: 10px;
+  border-radius: 100%;
+  align-items: center;
+  color: red;!important;
+  background-color: red; !important;'
+}
+
+
+
 @import url("https://fonts.googleapis.com/css?family=Nunito:400,700");
 
 @keyframes spinAround {

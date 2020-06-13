@@ -59,8 +59,7 @@ class TestJSONStorageManager(BaseTestCase):
             new_res['rows'][0]['columns'][0]['cells'][0]['STORY']['name'] = 'Gravity-always-wins'
             mgr.add_json('test_story', new_res)
             new_page = msp.MultiStoryPage(db_session)
-            new_page.load_descriptor_from_database('test_story')
-            new_res = new_page.make_multi_element_page_context()
+            new_res = new_page.make_multi_element_page_context(descriptor_name='test_story')
             self.assertEqual(len(new_res['rows'][0]['columns'][0]['cells'][0]['STORY']['content']), 5780,
                              "Story Expansion was wrong length")
         finally:

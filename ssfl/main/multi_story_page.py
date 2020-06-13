@@ -9,6 +9,7 @@ from typing import Dict, AnyStr, Any
 from utilities.sst_exceptions import PhotoOrGalleryMissing
 from ssfl import sst_syslog
 from db_mgt.db_exec import DBExec
+from desc_mgt.build_descriptors import Descriptors
 
 
 class MultiStoryPage(object):
@@ -26,22 +27,7 @@ class MultiStoryPage(object):
         self.context = dict()
         self.storage_manager = db_exec.create_json_manager()
         self.photo_manager = db_exec.create_sst_photo_manager()
-
-    def make_descriptor_from_csv_file(self, file):
-        """Create a descriptor corresponding to a formatted spreadsheet.
-
-        See otherfiles/FrontPageLayout.ods for sample page layout.
-
-        Args:
-            file: File in csv format with layout as specified above.
-
-        Returns:    None (saves descriptor in self).
-
-        """
-        self.descriptor = jsm.make_json_descriptor('Page', jsm.descriptor_page_layout)
-        with open(Config.USER_DEFINITION_FILES + 'front_page_layout.csv', 'r') as fl:
-            layout = csv.reader(fl)
-            self._set_descriptor_from_csv(layout)
+        self.desc_mgr = Descriptors()
 
     def make_descriptor_from_story_id(self, page_id: int, width: int) -> Dict[AnyStr, Any]:
         """Make descriptor for a single (specific) story.
@@ -68,104 +54,9 @@ class MultiStoryPage(object):
         story_descriptor['id'] = page_id  # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         return story_descriptor
 
-    def load_descriptor_from_database(self, name: str) -> Dict[AnyStr, Any]:
-        """Get descriptor of specific name from database
-
-        Args:
-            name: str - descriptor name
-
-        Returns:    JSON descriptor
-
-        """
-        self.descriptor = self.storage_manager.make_json_descriptor(self.storage_manager.get_json_from_name(name))
-
-    def _xxxxx_set_descriptor_from_csv(self, layout):
-        """Read descriptor for front page from csv file and build layout.
-
-        Args:
-            layout: csv file:   Description of content of front page.
-
-        Returns:
-            None
-        """
-        # descriptor_photo_fields = ['id', 'url', 'title', 'caption', 'width', 'height', 'alignment', 'alt_text',
-        #                            'css_style',
-        #                            'css_class', 'title_class', 'caption_class', 'image_class']
-        # descriptor_story_fields = ['id', 'title', 'name', 'author', 'date', 'content', 'snippet']
-        # descriptor_page_layout = ['name', 'row_count', 'column_count', 'rows', 'cells']
-        # descriptor_row_layout = ['columns']
-        # descriptor_column_layout = ['cells']
-        # descriptor_cell_layout = ['element_type', 'element', 'width']
-        # descriptor_story_snippet_fields = ['id', 'title', 'name', 'author', 'date', 'snippet', 'photo', 'story_url']
-        # descriptor_calendar_snippet_fields = ['events', 'event_count']
-        # descriptor_event_snippet_fields = ['name', 'date', 'time', 'venue']
-        try:
-            self.descriptor['rows'] = []
-            self.descriptor['cells'] = []
-            for row in layout:
-                cmd = row[0].lower()
-                if cmd == 'end':
-                    return
-                elif cmd == 'roworg':
-                    widths = [int(x) for x in row[2].split(',')]
-                    this_row_descriptor = jsm.make_json_descriptor('Row', jsm.descriptor_row_layout)
-                    this_row_descriptor['columns'] = []
-                    self.descriptor['rows'].append(this_row_descriptor)
-                    for i, width in enumerate(widths):
-                        # here only 1 cell in a column
-                        this_column_descriptor = jsm.make_json_descriptor('Column', jsm.descriptor_column_layout)
-                        this_row_descriptor['columns'].append(this_column_descriptor)
-                        this_cell_descriptor = jsm.make_json_descriptor('Cell', jsm.descriptor_cell_layout)
-                        this_column_descriptor['cells'] = [this_cell_descriptor]
-                        self.descriptor['cells'].append(this_cell_descriptor)
-                        this_cell_descriptor['width'] = width
-                elif cmd == 'story':
-                    # Select row and column in row - this is the dictionary for a specific cell
-                    photo_descriptor = jsm.make_json_descriptor('Photo', jsm.descriptor_picture_fields)
-                    snippet_descriptor = jsm.make_json_descriptor('StorySnippet', jsm.descriptor_story_snippet_fields)
-                    snippet_descriptor['photo'] = photo_descriptor
-                    rw = int(row[1]) - 1
-                    cl = int(row[2]) - 1
-                    cell_descriptor = self.descriptor['rows'][rw]['columns'][cl]['cells'][0]
-                    cell_descriptor['element_type'] = 'StorySnippet'
-                    cell_descriptor['element'] = snippet_descriptor
-                    snippet_descriptor['name'] = row[3]
-                    # Note:  The photo_descriptor does not create the actual photo - that is created when the browser
-                    #        requests the photo, so this provides the proper url, etc.
-                    photo_descriptor['id'] = row[4]
-                    photo_descriptor['caption'] = row[7]
-                    photo_descriptor['alignment'] = row[6]
-                    pic_shape = [int(x) for x in row[5].split(',')]
-                    photo_descriptor['width'] = pic_shape[0]
-                    photo_descriptor['height'] = pic_shape[1]
-                elif cmd == 'calendar':
-                    calendar_snippet = jsm.make_json_descriptor('Calendar', jsm.descriptor_calendar_snippet_fields)
-                    calendar_snippet['events'] = []
-                    calendar_snippet['event_count'] = 6  # TODO:  move to config or user spec
-                    rw = int(row[1]) - 1
-                    cl = int(row[2]) - 1
-                    cell_descriptor = self.descriptor['rows'][rw]['columns'][cl]['cells'][0]
-                    cell_descriptor['element_type'] = 'CalendarSnippet'
-                    cell_descriptor['element'] = calendar_snippet
-                else:
-                    raise ValueError('Unrecognized Command: {}'.format(cmd))
-            raise SystemError('Fell off end of loop')
-        except Exception as e:
-            print('Exception in _set_descriptor:{}'.format(e.args))
-            raise e
-
     def get_page_context(self):
         self.context['snips'] = self.descriptor
         return self.context
-
-    def get_descriptor_as_string(self) -> str:
-        """Returns current descriptor (in this object) as a string suitable for storing in DB.
-
-        Returns: str - JSON dump of descriptor
-
-        """
-        res = dumps(self.descriptor)
-        return res
 
     # descriptor_photo_fields = ["id", "url", "title", "caption", "width", "height", "alignment", "alt_text",
     #                            "css_style", "css_class", "title_class", "caption_class", "image_class"]
@@ -315,17 +206,90 @@ class MultiStoryPage(object):
             raise SystemError(f'Unrecognized descriptor {elem["descriptor"]} when expecting a slideshow element')
         foo = 3
 
+    def _fill_carousel_snippet(self, elem):
+        """Fill carousel snippet.
+
+        There are 2 cases:
+            (1) The snippet is already constructed in which case there is a 'slides' element.
+            (2) The descriptor is for a CAROUSEL in which case the snippet element needs to
+                be created and added.  In this case, there is a pictures element containing a
+                list of picture identifiers that need to be added to create a carousel.
+        """
+        # {"CAROUSEL_SNIPPET": None, "node_name": "CAROUSEL_SNIPPET", "id": None,
+        #  "title": None, "text": None, "slides": "S_CAROUSEL",
+        #  "classes": ["carousel", "carousel-indicators", "carousel-caption"],
+        #  "descriptor": "CAROUSEL_SNIPPET"}
+        #
+        # {"CAROUSEL": None, "node_name": "CAROUSEL", "title": None, "title_class": None,
+        #  "position": None,
+        #  "width": None, "height": None, "rotation": None,
+        #  "frame_title": None, "pictures": []}
+        if elem['descriptor'] == 'CAROUSEL_SNIPPET':
+            pass
+            # photo_list = elem['slides']['pictures']
+        elif elem['descriptor'] == 'CAROUSEL':
+            # Need to convert this element to be a proper 'CAROUSEL_SNIPPET'
+            existing = elem.copy()
+            snip = self.storage_manager.get_json_from_name('P_CAROUSEL_SNIPPET')
+            keys = [x for x in elem.keys()]  # this avoids the runtime error of dictionary size change during iterate
+            for key in keys:
+                del elem[key]
+            for key, val in snip.items():    # Any values are defaults, override if provided
+                elem[key] = val
+            # Should have properly formatted snippet - now fill it in
+            elem_show = elem['slides']
+            items_to_copy = ['title', 'title_class', 'frame_title', 'position', 'width', 'height', 'rotation', 'background']
+            for item in items_to_copy:
+                if item in existing:
+                    elem_show[item] = existing[item]
+                else:
+                    elem_show[item] = None
+            # Rotation is in tenths of seconds - needs to be ms
+            if 'rotation' in elem_show:
+                elem_show['rotation'] *= 100
+            res = list()
+            if type(existing['pictures']) is int:
+                photo_list = [str(existing['pictures'])]
+            else:
+                photo_list = existing['pictures'].split(',')
+            for photo_ident in photo_list:
+                pid = photo_ident.strip()
+                if pid.isdigit():
+                    photo = self.photo_manager.get_photo_from_id(int(pid))
+                else:
+                    photo = self.photo_manager.get_photo_from_slug(pid)
+                if photo:
+                    photo_json = self.storage_manager.make_json_descriptor('PICTURE')
+                    photo_json['PICTURE']['id'] = photo.id
+                    photo_json['PICTURE']['url'] = self.photo_manager.get_photo_url(photo.id)
+                    photo_json['PICTURE']['caption'] = photo.caption
+                    photo_json['PICTURE']['alt_text'] = photo.alt_text
+                    photo_json['PICTURE']['exists'] = True
+                else:
+                    photo_json['PICTURE']['exists'] = False
+                res.append(photo_json['PICTURE'])
+            elem_show['pictures'] = res
+        else:
+            raise SystemError(f'Unrecognized descriptor {elem["descriptor"]} when expecting a slideshow element')
+        foo = 3
+
     def _fill_sign_snippet(self, elem):
         sign = Sign(self.db_exec)
         res = sign.create_notice(elem)
         elem['sign_snippet'] = res
 
-    def make_multi_element_page_context(self) -> Dict[AnyStr, Any]:
+    def make_multi_element_page_context(self, descriptor=None, descriptor_name=None) -> Dict[AnyStr, Any]:
         """Create context for a page based on current descriptor.
 
         Returns:    JSON descriptor suitable for rendering templates.
 
         """
+        if descriptor:
+            self.descriptor = descriptor
+        elif descriptor_name:
+            self.descriptor = self.desc_mgr.load_descriptor_from_database(descriptor_name)
+        else:
+            raise SystemError(f'Failed to provide either a descriptor or descriptor_name')
         # descriptor_row_layout = ['columns']
         # descriptor_column_layout = ['cells', 'column_width']
         # descriptor_cell_layout = ['element_type', 'element', 'width', 'height']
@@ -361,7 +325,13 @@ class MultiStoryPage(object):
                     if height:
                         styles += f'max-height:{height}px;'
                     cell['styles'] = styles
-                    classes = ""
+                    classes = ''
+                    class_content = cell.get('classes', None)
+                    if class_content:
+                        if type(class_content) is list:
+                            classes = ' '.join(class_content)
+                        else:
+                            classes = class_content
                     overflow = cell.get('overflow', None)        # overflow causes scrollbars if needed
                     if overflow:
                         classes += f' overflow-{overflow} '
@@ -383,6 +353,8 @@ class MultiStoryPage(object):
                             self._fill_slideshow_snippet(elem)
                         elif 'SIGN_SNIPPET' in elem:
                             self._fill_sign_snippet(elem)
+                        elif 'CAROUSEL_SNIPPET' in elem:
+                            self._fill_carousel_snippet(elem)
                         elif 'SLIDESHOW' in elem:       # This is converted to a Snippet in processing
                             self._fill_slideshow_snippet(elem)
                             cell['element_type'] = 'SLIDESHOW_SNIPPET'
@@ -400,18 +372,19 @@ class MultiStoryPage(object):
         return self.descriptor
 
     def make_single_page_context(self, story: str) -> Dict[AnyStr, Any]:
-        mgr = self.storage_manager
-        res = mgr.make_json_descriptor(mgr.get_json_from_name('P_SINGLECELLROW'))
-        res['ROW']['columns'][0]['cells'][0]['element'] = "S_STORY"
-        res['ROW']['columns'][0]['cells'][0]['element_type'] = "STORY"
-        res['ROW']['columns'][0]['cells'][0]['is-snippet'] = False
-        partial_descriptor = mgr.make_json_descriptor(res)
-        if story.isdigit():
-            partial_descriptor['ROW']['columns'][0]['cells'][0]['element']['id'] = story
-        else:
-            partial_descriptor['ROW']['columns'][0]['cells'][0]['element']['name'] = story
-        self.descriptor = {'PAGE': {'rows': [partial_descriptor]}}
-        self.make_multi_element_page_context()
+        # mgr = self.storage_manager
+        # res = mgr.make_json_descriptor(mgr.get_json_from_name('P_SINGLECELLROW'))
+        # res['ROW']['columns'][0]['cells'][0]['element'] = "S_STORY"
+        # res['ROW']['columns'][0]['cells'][0]['element_type'] = "STORY"
+        # res['ROW']['columns'][0]['cells'][0]['is-snippet'] = False
+        # partial_descriptor = mgr.make_json_descriptor(res)
+        # if story.isdigit():
+        #     partial_descriptor['ROW']['columns'][0]['cells'][0]['element']['id'] = story
+        # else:
+        #     partial_descriptor['ROW']['columns'][0]['cells'][0]['element']['name'] = story
+        # self.descriptor = {'PAGE': {'rows': [partial_descriptor]}}
+        self.descriptor = self.desc_mgr.make_single_page_story_descriptor(story)
+        self.make_multi_element_page_context(descriptor=self.descriptor)
         return self.descriptor
 
     def make_snippet_context(self, snippet_type: str, snippet_identifier: str) -> str:
@@ -479,4 +452,118 @@ class MultiStoryPage(object):
             res['pictures'].append(photo_json['PICTURE'])
         return res
 
+    def make_descriptor_from_csv_file(self, file):
+        """Create a descriptor corresponding to a formatted spreadsheet.
+
+        See otherfiles/FrontPageLayout.ods for sample page layout.
+
+        Args:
+            file: File in csv format with layout as specified above.
+
+        Returns:    None (saves descriptor in self).
+
+        """
+        self.descriptor = jsm.make_json_descriptor('Page', jsm.descriptor_page_layout)
+        with open(Config.USER_DEFINITION_FILES + 'front_page_layout.csv', 'r') as fl:
+            layout = csv.reader(fl)
+            self._set_descriptor_from_csv(layout)
+
+    def _xxxxx_set_descriptor_from_csv(self, layout):
+        """Read descriptor for front page from csv file and build layout.
+
+        Args:
+            layout: csv file:   Description of content of front page.
+
+        Returns:
+            None
+        """
+        # descriptor_photo_fields = ['id', 'url', 'title', 'caption', 'width', 'height', 'alignment', 'alt_text',
+        #                            'css_style',
+        #                            'css_class', 'title_class', 'caption_class', 'image_class']
+        # descriptor_story_fields = ['id', 'title', 'name', 'author', 'date', 'content', 'snippet']
+        # descriptor_page_layout = ['name', 'row_count', 'column_count', 'rows', 'cells']
+        # descriptor_row_layout = ['columns']
+        # descriptor_column_layout = ['cells']
+        # descriptor_cell_layout = ['element_type', 'element', 'width']
+        # descriptor_story_snippet_fields = ['id', 'title', 'name', 'author', 'date', 'snippet', 'photo', 'story_url']
+        # descriptor_calendar_snippet_fields = ['events', 'event_count']
+        # descriptor_event_snippet_fields = ['name', 'date', 'time', 'venue']
+        try:
+            self.descriptor['rows'] = []
+            self.descriptor['cells'] = []
+            for row in layout:
+                cmd = row[0].lower()
+                if cmd == 'end':
+                    return
+                elif cmd == 'roworg':
+                    widths = [int(x) for x in row[2].split(',')]
+                    this_row_descriptor = jsm.make_json_descriptor('Row', jsm.descriptor_row_layout)
+                    this_row_descriptor['columns'] = []
+                    self.descriptor['rows'].append(this_row_descriptor)
+                    for i, width in enumerate(widths):
+                        # here only 1 cell in a column
+                        this_column_descriptor = jsm.make_json_descriptor('Column', jsm.descriptor_column_layout)
+                        this_row_descriptor['columns'].append(this_column_descriptor)
+                        this_cell_descriptor = jsm.make_json_descriptor('Cell', jsm.descriptor_cell_layout)
+                        this_column_descriptor['cells'] = [this_cell_descriptor]
+                        self.descriptor['cells'].append(this_cell_descriptor)
+                        this_cell_descriptor['width'] = width
+                elif cmd == 'story':
+                    # Select row and column in row - this is the dictionary for a specific cell
+                    photo_descriptor = jsm.make_json_descriptor('Photo', jsm.descriptor_picture_fields)
+                    snippet_descriptor = jsm.make_json_descriptor('StorySnippet', jsm.descriptor_story_snippet_fields)
+                    snippet_descriptor['photo'] = photo_descriptor
+                    rw = int(row[1]) - 1
+                    cl = int(row[2]) - 1
+                    cell_descriptor = self.descriptor['rows'][rw]['columns'][cl]['cells'][0]
+                    cell_descriptor['element_type'] = 'StorySnippet'
+                    cell_descriptor['element'] = snippet_descriptor
+                    snippet_descriptor['name'] = row[3]
+                    # Note:  The photo_descriptor does not create the actual photo - that is created when the browser
+                    #        requests the photo, so this provides the proper url, etc.
+                    photo_descriptor['id'] = row[4]
+                    photo_descriptor['caption'] = row[7]
+                    photo_descriptor['alignment'] = row[6]
+                    pic_shape = [int(x) for x in row[5].split(',')]
+                    photo_descriptor['width'] = pic_shape[0]
+                    photo_descriptor['height'] = pic_shape[1]
+                elif cmd == 'calendar':
+                    calendar_snippet = jsm.make_json_descriptor('Calendar', jsm.descriptor_calendar_snippet_fields)
+                    calendar_snippet['events'] = []
+                    calendar_snippet['event_count'] = 6  # TODO:  move to config or user spec
+                    rw = int(row[1]) - 1
+                    cl = int(row[2]) - 1
+                    cell_descriptor = self.descriptor['rows'][rw]['columns'][cl]['cells'][0]
+                    cell_descriptor['element_type'] = 'CalendarSnippet'
+                    cell_descriptor['element'] = calendar_snippet
+                else:
+                    raise ValueError('Unrecognized Command: {}'.format(cmd))
+            raise SystemError('Fell off end of loop')
+        except Exception as e:
+            print('Exception in _set_descriptor:{}'.format(e.args))
+            raise e
+
+    def xxxx_load_descriptor_from_database(self, name: str) -> Dict[AnyStr, Any]:
+        """Get descriptor of specific name from database
+
+        Args:
+            name: str - descriptor name
+
+        Returns:    JSON descriptor
+
+        """
+        # TODO: Remove this intermediate call and use Descriptors directly
+        self.descriptor = self.desc_mgr.load_descriptor_from_database(name)
+        # self.descriptor = self.storage_manager.make_json_descriptor(self.storage_manager.get_json_from_name(name))
+
+    def xxxx_get_descriptor_as_string(self) -> str:
+        """Returns current descriptor (in this object) as a string suitable for storing in DB.
+
+        Returns: str - JSON dump of descriptor
+
+        """
+        # TODO: Remove this intermediate call and use Descriptors directly
+        # res = dumps(self.descriptor)
+        # return res
+        return self.desc_mgr.get_descriptor_as_string(self.descriptor)
 

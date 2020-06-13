@@ -1,0 +1,14 @@
+<div class="carousel-item {{ slide_active }} ">
+    {% if photo.title %}
+        <figcaption class="carousel-caption has-text-black {{ photo.title_class }}">{{ photo.title }}</figcaption>
+    {% endif %}
+{% include 'base/picture_base.jinja2' %}
+{#    <img class="figure-img img-fluid rounded image-wrapper" #}
+{#         src="{{ photo.url }}" style="height:auto; width:auto"#}
+{#         alt="{{ photo.alt_text }}"/>#}
+{#    <figcaption class="carousel-caption has-text-black d-none d-md-block">#}
+{#        <p>{{ photo.caption }}</p>#}
+{#    </figcaption>#}
+{#    {% include 'base/picture.jinja2' %}#}
+</div>
+

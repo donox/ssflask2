@@ -48,16 +48,14 @@
         </div>
     </div>
 </div>
-<div class="main container-fluid text-dark">
-    <div class="row">
+
         {% set flash_message_type = 'error' %}
         {% include 'base/flashed_messages.jinja2' %}
         {% block content %}{% endblock %}
         {% set flash_message_type = 'success' %}
         {% include 'base/flashed_messages.jinja2' %}
         {% include 'base/footer.jinja2' %}
-    </div>
-</div>
+
 
 </body>
 </html>

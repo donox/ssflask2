@@ -37,7 +37,12 @@ class JSONStorageManager(object):
                                  "width": None, "height": None, "alignment": None, "alt_text": None,
                                  "css_style": None, "css_class": None, "title_class": None,
                                  "caption_class": None, "image_class": None}
+    # The slideshow predates the Bootstrap Carousel and should be considered deprecated
     descriptor_slideshow_fields = {"SLIDESHOW": None, "node_name": "SLIDESHOW", "title": None, "title_class": None,
+                                   "position": None,
+                                   "width": None, "height": None, "rotation": None,
+                                   "frame_title": None, "pictures": []}
+    descriptor_carousel_fields = {"CAROUSEL": None, "node_name": "CAROUSEL", "title": None, "title_class": None,
                                    "position": None,
                                    "width": None, "height": None, "rotation": None,
                                    "frame_title": None, "pictures": []}
@@ -46,26 +51,35 @@ class JSONStorageManager(object):
                                "date": None, "content": None, "snippet": "S_STORY_SNIPPET"}
     descriptor_index_fields = {"INDEX_LINKS": None, "node_name": "INDEX_LINKS", "title:": None, "title_class": None,
                                "buttons": ["S_BUTTON", "S_BUTTON", "S_BUTTON", "S_BUTTON"]}
-    descriptor_keyword_node_fields = {"KEYWORD_NODE": None, "node_name": "KEYWORD_NODE", "graph": "S_NODE", "keyword": None, "synonyms": []}
+    descriptor_keyword_node_fields = {"KEYWORD_NODE": None, "node_name": "KEYWORD_NODE", "graph": "S_NODE",
+                                      "keyword": None, "synonyms": []}
     descriptor_keyword_facet_node_fields = {"KEYWORD_FACET": None, "node_name": "KEYWORD_FACET", "graph": "S_NODE",
-                                      "facet_type": None, "facet": {}}
+                                            "facet_type": None, "facet": {}}
 
     # Snippets
+    # The cell is a unit of structure an is generally a Bootstrap container with the intent of associating
+    # Bootstrap classes with a template that corresponds to the cell.  A cell has an element field which is the
+    # Snippet.  The element_type field of the cell is the type of Snippet such as STORY_SNIPPET.
     descriptor_story_snippet_fields = {"STORY_SNIPPET": None, "node_name": "STORY_SNIPPET", "id": None, "title": None,
                                        "name": None, "author": None,
                                        "date": None, "snippet": None, "photo": "S_PICTURE",
-                                       "content": None, "story_url": None, "read_more": "S_BUTTON"}
+                                       "content": None, "story_url": None, "read_more": "S_BUTTON",
+                                       "descriptor": "STORY_SNIPPET"}
     descriptor_calendar_snippet_fields = {"CALENDAR_SNIPPET": None, "node_name": "CALENDAR_SNIPPET", "events": [],
                                           "event_count": None, "width": None,
-                                          "audience": [], "categories": []}
-    descriptor_slideshow_snippet_fields = {"SLIDESHOW_SNIPPET": None, "node_name": "SLIDESHOW_SNIPPET", "id": None,
-                                           "title": None, "text": None,
-                                           "slides": "S_SLIDESHOW"}
+                                          "audience": [], "categories": [], "descriptor": "CALENDAR_SNIPPET"}
     descriptor_event_snippet_fields = {"EVENT_SNIPPET": None, "node_name": "EVENT_SNIPPET", "name": None, "date": None,
-                                       "time": None, "venue": None}
+                                       "time": None, "venue": None, "descriptor": "EVENT_SNIPPET"}
     descriptor_sign_snippet_fields = {"SIGN_SNIPPET": None, "node_name": "SIGN_SNIPPET", "name": None, "width": None,
                                       "height": None, "sign_type": None, "sign_background": None, "sign_border": None,
-                                      "content": None, "styling": None}
+                                      "content": None, "styling": None, "descriptor": "SIGN_SNIPPET"}
+    descriptor_carousel_snippet_fields = {"CAROUSEL_SNIPPET": None, "node_name": "CAROUSEL_SNIPPET", "id": None,
+                                          "title": None, "text": None, "slides": "S_CAROUSEL",
+                                          "classes": ["carousel", "carousel-indicators", "carousel-caption"],
+                                          "descriptor": "CAROUSEL_SNIPPET"}
+    descriptor_slideshow_snippet_fields = {"SLIDESHOW_SNIPPET": None, "node_name": "SLIDESHOW_SNIPPET", "id": None,
+                                           "title": None, "text": None,
+                                           "slides": "S_SLIDESHOW", "descriptor": "SLIDESHOW_SNIPPET"}
 
     # Complex/predefined types
     descriptor_row_with_single_cell_fields = {"SINGLECELLROW": "REMOVE",
@@ -99,10 +113,11 @@ class JSONStorageManager(object):
 
     descriptor_test_fields = {"ONECELL": "REMOVE", "PAGE": "S_SINGLECELLROW", "descriptor": "PAGE", "node_name": "PAGE"}
     descriptor_minimal_graph_fields = {"SIMPLEGRAPH": "REMOVE", "graph": {"id": None, "name": None, "purpose": None,
-                                        "nodes": [{"id": None, "facet": {}},
-                                                  {"id": None, "facet": {}}],
-                                        "edges": [{"id": None, "directed": None, "start": None, "end": None}]},
-                                        "descriptor": "SIMPLEGRAPH"}
+                                                                          "nodes": [{"id": None, "facet": {}},
+                                                                                    {"id": None, "facet": {}}],
+                                                                          "edges": [{"id": None, "directed": None,
+                                                                                     "start": None, "end": None}]},
+                                       "descriptor": "SIMPLEGRAPH"}
 
     json_field_dictionary = dict()
     json_field_dictionary['PAGE'] = descriptor_page_layout
@@ -116,6 +131,7 @@ class JSONStorageManager(object):
 
     json_field_dictionary['PICTURE'] = descriptor_picture_fields
     json_field_dictionary['SLIDESHOW'] = descriptor_slideshow_fields
+    json_field_dictionary['CAROUSEL'] = descriptor_carousel_fields
     json_field_dictionary['STORY'] = descriptor_story_fields
 
     json_field_dictionary['STORY_SNIPPET'] = descriptor_story_snippet_fields
@@ -132,11 +148,13 @@ class JSONStorageManager(object):
     json_field_dictionary['SIMPLEGRAPH'] = descriptor_minimal_graph_fields
     json_field_dictionary['KEYWORD_NODE'] = descriptor_keyword_node_fields
     json_field_dictionary['KEYWORD_ELEMENT'] = descriptor_keyword_facet_node_fields
+    json_field_dictionary['CAROUSEL_SNIPPET'] = descriptor_carousel_snippet_fields
 
     # json_field_dictionary[''] = cls.
     json_primary_templates = ['PAGE', 'ROW', 'COLUMN', 'CELL', 'BUTTON', 'PICTURE', 'SLIDESHOW', 'STORY',
                               'STORY_SNIPPET', 'CALENDAR_SNIPPET', 'EVENT_SNIPPET', 'SIGN_SNIPPET',
-                              'SLIDESHOW_SNIPPET', 'INDEX_LINKS', 'GRAPH', 'EDGE', 'NODE']
+                              'SLIDESHOW_SNIPPET', 'INDEX_LINKS', 'GRAPH', 'EDGE', 'NODE', 'CAROUSEL',
+                              'CAROUSEL_SNIPPET']
 
     def __init__(self, db_exec):
         self.db_exec = db_exec
