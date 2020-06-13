@@ -18,7 +18,7 @@
                 <h3 class="h3">Recent Pages in "{{ search_field }}" Searched with "{{ search_string }}"</h3>
             {% endif %}
             {% if function == 'mpd_recent' or function == 'mpd_search' %}
-                <table class="table table-bordered table-sm">
+                <table id="dd_datatable" class="table table-bordered table-sm">
                     <thead class="thead-dark">
                     {% for field in fields %}
                         <th>{{ field }}</th>
@@ -45,7 +45,7 @@
             {% if function == 'mpd_photo' %}
                 <h3 class="h3">Recent Photos in folder: "{{ folder_search }}", Field: "{{ search_field }}", with:
                     "{{ search_string }}"</h3>
-                <table class="table table-bordered table-sm">
+                <table id="dd_datatable" class="table table-bordered table-sm">
                     <thead class="thead-dark">
                     {% for field in fields %}
                         <th>{{ field }}</th>
@@ -70,6 +70,7 @@
 
         <script>
             $ = jQuery;
+            $('#dd_datatable').DataTable();
             $('#js1').change(function () {
                 $('.dpdb').parent().hide();
                 $('.dp').parent().hide();
