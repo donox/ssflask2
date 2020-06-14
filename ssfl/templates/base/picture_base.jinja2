@@ -1,10 +1,10 @@
-<div class="figure {{ photo.css_class }} {{ photo.alignment }} px-3 {{ do_rotation }}">
+<div class="BASE figure {{ photo.css_class }} {{ photo.alignment }} {{ do_rotation }}">
     {% if photo.title %}
         <figcaption class="figure-caption has-text-black {{ photo.photo_title_class }}">{{ photo.title }}</figcaption>
     {% endif %}
     <img class="{{ photo.image_class }} figure-img img-fluid rounded image-wrapper"
-         src="{{ photo.url }}" style="max-height: {{ photo.height }}px; max-width:{{ photo.width }}px;
-            height:auto; width:auto; object-fit: cover; width:600px; height:300px;
-            alt: {{ photo.alt_text }}"/>
+         src="{{ photo.url }}" style="height:auto; width:auto;
+         object-fit: cover; overflow:hidden; object-position: 50% 50%; "
+         alt=" {{ photo.alt_text }}"/>
     <figcaption class="figure-caption has-text-black {{ photo.caption_class }}">{{ photo.caption }}</figcaption>
 </div>

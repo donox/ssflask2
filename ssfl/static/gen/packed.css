@@ -769,15 +769,9 @@ p {
 }
 
 /* Position the navbar container inside the image */
-.nav-contain {
-  position: absolute;
-  margin: 20px;
-  width: auto;
-}
-.navbar-item {
+.navbar-item nav-item {
   font-size: larger;
   font-width: bold;
-  color: black;
 }
 
 /* Set colors for Bootstrap Carousel glyphicons */
