@@ -8,6 +8,7 @@ from .base_table_manager import BaseTableManager
 from .json_storage_manager import JSONStorageManager
 from sqlalchemy.exc import IntegrityError
 from typing import List, Any, Dict, Text, NoReturn
+from ssfl import sst_syslog
 from collections import OrderedDict
 from utilities.template_support import merge_json_descriptors, build_descriptors_from_prototypes
 
@@ -66,6 +67,20 @@ class JSONTableManager(BaseTableManager):
             raise e
 
     def make_json_descriptor(self, descriptor: Any, result_processor: object = None):
+        """Expand/elaborate (recursively if needed) a descriptor to produce structure to drive processing.
+
+        Produce a descriptor with notations (types) such as PREAMBLE (a.k.a., prototype) replaced with their
+        expansions.  An expanded descriptor will most often result in a structure in which all parameters
+        are specified (with default values) can be used as a jinja2 context for template layout.  An infrequently
+        used result_process may be called with the result of the expansion to perform additional work.
+
+        Args:
+            descriptor: JSON structure defined in JSONStorageManager
+            result_processor: function to be called on result of expansion
+
+        Returns:  dict result of expansion
+
+        """
         rlt = _KeepResult()
 
         if isinstance(descriptor, str):
@@ -92,11 +107,15 @@ class JSONTableManager(BaseTableManager):
                     raise ValueError(f'Invalid value of type "UPPER" for descriptor: {descriptor}')
             elif tmp == 'NORMAL':
                 result = self.get_json_from_name(descriptor)
-                if not isinstance(result, dict):
-                    foo = 3
-                rlt.add_key_value_pair_to_result(result['descriptor'], result)
+                if result:
+                    rlt.add_key_value_pair_to_result(result['descriptor'], result)
+                else:
+                    # descriptor is a name that is it's own value
+                    rlt.add_value_to_result(descriptor)
             else:
-                raise ValueError(f'Invalid descriptor string type: {tmp}')
+                # A string that does not match the above criteria is defined to be a descriptor
+                # whose representation is its name
+                return descriptor
         # elif isinstance(descriptor, list):
         #     pass
         elif isinstance(descriptor, dict):
@@ -246,14 +265,19 @@ class JSONTableManager(BaseTableManager):
 
     def update_db_with_descriptor_prototype(self):
         """Update the definitions of each descriptor in the database as a prototype."""
-        json_object = JSONStorageManager.json_field_dictionary
-        for key, val in json_object.items():
-            db_name = 'P_' + key
-            if self.get_json_from_name(db_name):
-                self.delete_descriptor(db_name)
-            desc = self.make_json_descriptor(val)
-            desc['descriptor'] = key
-            self.add_json(db_name, desc)
+        try:
+            json_object = JSONStorageManager.json_field_dictionary
+            for key, val in json_object.items():
+                db_name = 'P_' + key
+                if self.get_json_from_name(db_name):
+                    self.delete_descriptor(db_name)
+                desc = self.make_json_descriptor(val)
+                if type(desc) is dict:              # can this be pushed into the maker??
+                    desc['descriptor'] = key
+                self.add_json(db_name, desc)
+        except Exception as e:
+            sst_syslog.make_error_entry(f'Error updating database prototype descriptors: {e.args}')
+            raise e
 
     def delete_descriptor(self, name):
         exists = self.get_json_from_name(name)
@@ -304,7 +328,7 @@ class _KeepResult(object):
         self.result[key] = val
 
     def add_key_value_pair_to_result(self, name, val):
-        self.result['descriptor'] = name
+        # self.result['descriptor'] = name
         self.result[name] = val
 
     def add_key_to_result(self, key):
@@ -355,7 +379,8 @@ class JSONStore(db.Model):
         if commit:
             try:
                 session.commit()
-            except IntegrityError as e:  # TODO: log error and report
+            except IntegrityError as e:
+                sst_syslog(f'JSON table Integrity Error: {e.args}')
                 raise e
             except Exception as e:
                 foo = 3

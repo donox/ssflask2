@@ -1,0 +1,7 @@
+<div class="carousel-item {{ slide_active }} ">
+    {% if photo.title %}
+        <figcaption class="carousel-caption has-text-black {{ photo.title_class }}">{{ photo.title }}</figcaption>
+    {% endif %}
+{% include 'base/picture_base.jinja2' %}
+</div>
+

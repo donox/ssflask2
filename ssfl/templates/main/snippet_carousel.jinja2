@@ -2,9 +2,9 @@
     <div class="title text-wrap">{{ story.title | safe }}</div>
 {% endif %}
 {#<div style="max-width:{{ story.photo.width }}px; float:{{ story.photo.alignment }}">#}
-<div>
+<div class="SNIPPET_carousel ">
     {% with %}
-        {% set slideshow = story.slides %}
-        {% include 'base/slideshow.jinja2' %}
+        {% set carousel = story.slides %}
+        {% include 'base/carousel.jinja2' %}
     {% endwith %}
 </div>

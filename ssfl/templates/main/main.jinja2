@@ -13,10 +13,13 @@
         {% for row in PAGE.rows %} {# Each item corresponds to all stories horizontally across the page #}
             <div class="row pb-4">
                 {% for col in row.columns %}
+                    {% set row_index = loop.index | string %}
                     <div class="col {{ col.classes }}">
                         <div class="container-fluid">
                             {% for cell in col.cells %}
+                                 {% set col_index = loop.index |string %}
                                 <div class="{{ cell.classes }} overflow-auto" style="{{ cell.styles }}">
+                                {% set unique_id_base = 'R' + row_index + 'C' + col_index %}
                                     {% if cell.element_type == 'CALENDAR_SNIPPET' %}
                                         {% set calendar = cell.element %}
                                         {% include 'main/snippet_calendar.jinja2' %}
@@ -40,6 +43,14 @@
                                     {% if cell.element_type == 'SLIDESHOW' %}
                                         {% set story = cell.element %}
                                         {% include 'main/snippet_slideshow.jinja2' %}
+                                    {% endif %}
+                                    {% if cell.element_type == 'CAROUSEL_SNIPPET' %}
+                                        {% set story = cell.element %}
+                                        {% include 'main/snippet_carousel.jinja2' %}
+                                    {% endif %}
+                                    {% if cell.element_type == 'CAROUSEL' %}
+                                        {% set story = cell.element %}
+                                        {% include 'main/snippet_carousel.jinja2' %}
                                     {% endif %}
                                     {% if cell.element_type == 'SIGN_SNIPPET' %}
                                         {% set story = cell.element %}

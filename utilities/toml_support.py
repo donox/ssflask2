@@ -26,7 +26,12 @@ def dict_to_toml(pydict: dict) -> dict:
         elif type(value) is list:
             res_list = []
             for val in value:
-                res_list.append(dict_to_toml(val))
+                if type(val) is dict:
+                    res_list.append(dict_to_toml(val))
+                elif type(val) is list:
+                    raise SystemError(f'TOML conversion of list not yet implemented')
+                else:
+                    res_list.append(val)
             result[key] = res_list
         else:
             result[key] = value
@@ -51,7 +56,12 @@ def toml_to_dict(toml_dict: dict) -> dict:
         elif type(value) is list:
             res_list = []
             for val in value:
-                res_list.append(toml_to_dict(val))
+                if type(val) is dict:
+                    res_list.append(toml_to_dict(val))
+                elif type(val) is list:
+                    raise SystemError(f'TOML conversion of list not yet implemented')
+                else:
+                    res_list.append(val)
             result[key] = res_list
         else:
             result[key] = value

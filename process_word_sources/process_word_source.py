@@ -538,7 +538,7 @@ class TopElement(ParsedElement):
                 'figure': None,
                 }
         self._process_arg_list(args, env['args'])
-        open_html = f'<div class="container clearfix" style="max-width:{args["max_width"]}px; display:inline-block">'
+        open_html = f'<div class="SNIPPET_541 container clearfix" style="max-width:{args["max_width"]}px; display:inline-block">'
         open_html += f'<div class="'
         if is_column:
             col_class = 'col'
@@ -549,7 +549,7 @@ class TopElement(ParsedElement):
         if args['figure']:
             open_html += self.place_figure(args['figure'])
         open_html += f'</div>'
-        open_html += f'<div class ="message-body text-wrap">'
+        open_html += f'<div class ="SNIPPET2 message-body text-wrap">'
         close_html = f'</div></div>'
         result_html = ''
         self._process_text_snips(open_html, result_html, close_html, snip_start, snip_stop)
@@ -616,12 +616,13 @@ class TopElement(ParsedElement):
                 'min-width': 300,
                 }
         self._process_arg_list(args, env['args'])
-        open_html = f'<div class="container-fluid clearfix"><div class="row">'
+        open_html = f'<div class="CONTAINER_619 container-fluid clearfix"><div class="CONTAINER2 row">'
         close_html = f'</div></div>'
         result_html = f''
-        self._process_text_snips(open_html, result_html, close_html, snip_start, snip_stop)
+        # The interior of a container should have no text snips, so we don't collapse them.
+        # self._process_text_snips(open_html, result_html, close_html, snip_start, snip_stop)
 
-    def _process_layout_element_environment(self, env, is_column, snip_start, snip_stop):
+    def _XXXprocess_layout_element_environment(self, env, is_column, snip_start, snip_stop):
         # NOT DEFINED OR USED
         args = {"max_width": 600,
                 "col_width": None,
@@ -713,6 +714,7 @@ class LatexElement(ParsedElement):
         self.command_processors['photo'] = self._latex_photo
         self.command_processors['photos'] = self._latex_photo
         self.command_processors['phototitle'] = self._latex_photo_title  # note that just 'title' is different
+        self.command_processors['photocaption'] = self._latex_photo_caption
         self.command_processors['photoposition'] = self._latex_photo_position
         self.command_processors['position'] = self._latex_photo_position  # duplicate reflecting actual source
         self.command_processors['photorotation'] = self._latex_photo_rotation
@@ -979,6 +981,14 @@ class LatexElement(ParsedElement):
             raise WordLatexExpressionError(f'Latex end figure called with wrong args: {self.args}')
         arg = self.args[0][0]
         top_element.current_photo_frame.add_title(arg)
+        return ''
+
+    def _latex_photo_caption(self):
+        top_element = super().get_top()
+        if len(self.args) != 1:
+            raise WordLatexExpressionError(f'Latex end figure called with wrong args: {self.args}')
+        arg = self.args[0][0]
+        top_element.current_photo_frame.add_caption(arg)
         return ''
 
     def _latex_photo_position(self):

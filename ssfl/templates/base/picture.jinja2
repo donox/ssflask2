@@ -1,17 +1,4 @@
-{% if photo.exists %}
-    <div class="{{ photo.css_class }} float-{{ photo.alignment }} px-3 {{ do_rotation }}" style="max-width: {{ photo.width }}px;">
-    <figure class="figure">
-        {%  if photo.title %}
-            <figcaption class="figure-caption has-text-black {{ photo.title_class }}">{{ photo.title }}</figcaption>
-        {% endif %}
-        <img class="{{ photo.image_class }} figure-img img-fluid rounded image-wrapper "
-             src="{{ photo.url }}?h={{ photo.height }}&w={{ photo.width }}"
-             height="{{ photo.height }}"
-             width="{{ photo.width }}"
-             alt="{{ photo.alt_text }}"/>
-        <figcaption class="figure-caption has-text-black {{ photo.caption_class }}">{{ photo.caption }}</figcaption>
-    </figure>
+<div class="PICTURE"
+     style="max-width: {{ photo.width }}px; max-height: {{ photo.height }}px;">
+    {% include 'base/picture_base.jinja2' %}
 </div>
-    {% else %}
-    <div class="h3">Photo Not Found</div>
-{% endif %}

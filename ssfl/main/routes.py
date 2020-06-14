@@ -6,6 +6,7 @@ import mimetypes
 from db_mgt.index_page_tables import IndexPage
 from db_mgt.setup import get_engine, create_session, close_session
 from db_mgt.db_exec import DBExec
+from desc_mgt.build_descriptors import Descriptors
 from ssfl.admin.manage_index_pages import build_index_page_context
 from ssfl.main.build_page import BuildPage
 from ssfl.main.multi_story_page import MultiStoryPage
@@ -57,34 +58,6 @@ def sst_main_calendar():
     return render_template('main/calendar.jinja2', **context)
 
 
-@main_bp.route('/main2', methods=['GET'])
-@roles_required('User')
-# @cache.cached()
-def sst_main2():
-    """Main page route."""
-    """
-     Route: '/main2/main' => multi_story_page
-     Template: main2.jinja2
-     Form: 
-     Processor: multi_story_page.py
-    """
-    db_exec = DBExec()
-    try:
-        json_mgr = db_exec.create_json_manager()
-        usr_config = json_mgr.get_json_from_name('user_config')
-        msp = MultiStoryPage(db_exec)
-        msp.load_descriptor_from_database(usr_config['main2_page'])
-        context = msp.make_multi_element_page_context()
-        context['APP_ROOT'] = request.base_url
-        msp2 = MultiStoryPage(db_exec)
-        main_slides = msp2.expand_slideshow_descriptor('header_slides')
-        context['main_slides'] = {'slides': main_slides}
-        log_request('main', 'main2', context)
-        res = render_template('main/main2.jinja2', **context)
-        return res
-    finally:
-        db_exec.terminate()
-
 @main_bp.route('/', methods=['GET'])
 @roles_required('User')
 # @cache.cached()
@@ -101,8 +74,7 @@ def sst_main():
         json_mgr = db_exec.create_json_manager()
         usr_config = json_mgr.get_json_from_name('user_config')
         msp = MultiStoryPage(db_exec)
-        msp.load_descriptor_from_database(usr_config['main_page'])
-        context = msp.make_multi_element_page_context()
+        context = msp.make_multi_element_page_context(descriptor_name=usr_config['main2_page'])
         context['APP_ROOT'] = request.base_url
         log_request('main', 'main', context)
         res = render_template('main/main.jinja2', **context)

@@ -750,6 +750,91 @@ table.fc-header{
   font-weight: bolder;
   font-style: oblique; }
 
+/* increase paragraph separation */
+p {
+  margin-bottom: 1.5rem;
+}
+
+/* set photo behind navbar */
+.nav-bg-img {
+  max-height: 50px;
+
+  /* Center and scale the image nicely */
+  background-position: left;
+  background-repeat: repeat-x;
+  background-size: cover;
+
+  /* Needed to position the navbar */
+  position: relative;
+}
+
+/* Position the navbar container inside the image */
+.navbar-item nav-item {
+  font-size: larger;
+  font-width: bold;
+}
+
+/* Set colors for Bootstrap Carousel glyphicons */
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+  height: 100px;
+  width: 100px;
+  outline: black;
+  background-size: 100%, 100%;
+  border-radius: 50%;
+  /*border: 1px solid black;*/
+  background-image: none;
+}
+
+.carousel-control-next-icon:after
+{
+  content: '>';
+  font-size: 55px;
+  color: black;
+}
+
+.carousel-control-prev-icon:after {
+  content: '<';
+  font-size: 55px;
+  color: black;
+}
+
+.carousel-indicators {
+  /* required to override bootstrap */
+  /*right: unset !important;*/
+  /*left: unset !important;*/
+  /*padding-left: unset !important;*/
+  /*margin-right: unset !important;*/
+  /*margin-left: unset !important;*/
+  /* your css styles */
+  /*width: auto;*/
+  background-color: unset; !important;
+  color: unset; !important;
+  padding: 18px 18px;
+  /*background-color: rgba(96, 107, 114, .8);*/
+  border-radius: 18px;
+  line-height: 0;
+}
+
+.carousel-indicators li {
+  z-index: 9999;
+  width: 10px;
+  height: 10px;
+  border-radius: 100%;
+  align-items: center;
+  color: red;!important;
+  background-color: red; !important;'
+}
+
+/* default image wrapper class to center an image in its container */
+.image-wrapper {
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+
 @import url("https://fonts.googleapis.com/css?family=Nunito:400,700");
 
 @keyframes spinAround {
