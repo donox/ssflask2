@@ -10,6 +10,10 @@ page_author, page-date for pages or image_slug, filename, caption or alt_text fo
 """
 entry['search_field'] = [x]
 
+x = """Select whether to search fields in a specific page or specific photo.
+"""
+entry['select_type'] = [x]
+
 x = """This is the text string to be searched for.  It can be any portion (or all) of the selected field.  A '*' can 
 be substituted for any sequence of characters.  The search is case insensitive
 """

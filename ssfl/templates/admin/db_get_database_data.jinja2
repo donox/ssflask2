@@ -21,9 +21,16 @@
                 {% endwith %}
 
                 {% with %}
+                    {% set el_name=form.search_object %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
+                {% with %}
                     {% set el_name=form.search_field %}
                     {% set el_class="input" %}
-                    {% set el_placeholder="ind*ley" %}
+                    {% set el_placeholder="" %}
                     {% include 'base/form_entry.jinja2' %}
                 {% endwith %}
 
@@ -71,11 +78,24 @@
         <script>
             $ = jQuery;
             $('#js1').change(function () {
-                $('.dpdb').parent().hide();
-                $('.dp').parent().hide();
-                $('.df').parent().hide();
+                $('.mpd_page').parent().hide();
+                $('.mpd_photo').parent().hide();
+                $('.mpd_search').parent().hide();
+                $('.mpd_folder').parent().hide();
+                $('.mpd_photo_csv').parent().hide();
+                $('.mpd_page_csv').parent().hide();
                 let opt = $('#js1 option:selected').val();
                 $('.' + opt).parent().show();
+                localStorage.setItem('get_database_data', opt);
+            });
+            $(document).ready(function () {
+                let opt_val = localStorage.getItem('get_database_data');
+                $('#js1').trigger('change');
+                if (opt_val) {
+                    $('#js1 option:selected').val(opt_val);
+                } else {
+                    $('#js1 option:selected').val('mpd_page');
+                }
             });
             //# sourceURL=json_make_template.js
 
