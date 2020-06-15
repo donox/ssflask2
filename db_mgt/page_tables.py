@@ -95,7 +95,7 @@ class PageManager(BaseTableManager):
 
     def get_records_by_field_search(self, field, search_string, nbr_to_get):
         search = make_db_search_string(search_string)
-        sql = f'select id from page where {field} like "{search}" collate utf8_general_ci '
+        sql = f'select id from page where {field} like "{search}"'    # ' collate utf8_general_ci '
         sql += f'order by page_date desc limit {nbr_to_get}'
         res = self.db_session.execute(sql)
         pages = []

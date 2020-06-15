@@ -184,14 +184,14 @@ class SSTPhotoManager(BaseTableManager):
             raise SystemError(f'Failure retrieving photo {photo_path}')
 
     def get_photos_in_folder(self, folder_name):
-        sql = f'select * from sst_photos where folder={folder_name}'
-        sql_res = self.db_session.execute(sql).all()
+        sql = f'select * from sst_photos where folder_name="{folder_name}/"'
+        sql_res = self.db_session.execute(sql).fetchall()
         res = []
         for row in sql_res:
             gv = self.get_photo_field_value(row)
-            photo = SSTPhoto(id=gv('id'), slug=gv('slug'), folder=gv('folder'),
+            photo = SSTPhoto(id=gv('id'), slug=gv('slug'), folder_name=gv('folder_name'),
                              file_name=gv('file_name'),
-                             image_date=gv('image_date'), meta_data=gv('metadata'))
+                             image_date=gv('image_date'), json_metadata=gv('json_metadata'))
             res.append(photo)
         return res
 
@@ -318,13 +318,13 @@ class SSTPhotoManager(BaseTableManager):
 
     def get_records_by_field_search(self, field, folder_search, search_string, nbr_to_get):
         search = make_db_search_string(search_string.lower())
-        find_folder = make_db_search_string(folder_search.lower())
         sql = f'select id from sst_photos where '
         if search_string:
             sql += f'{field} like lower("{search}") '
         if search_string and folder_search:
             sql += f'and '
         if folder_search:
+            find_folder = make_db_search_string(folder_search.lower())
             sql += f'folder_name like lower("{find_folder}") '
         if not (search_string or folder_search):
             return None

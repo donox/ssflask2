@@ -17,7 +17,7 @@
             {% if function == 'mpd_search' %}
                 <h3 class="h3">Recent Pages in "{{ search_field }}" Searched with "{{ search_string }}"</h3>
             {% endif %}
-            {% if function == 'mpd_recent' or function == 'mpd_search' %}
+            {% if function == 'mpd_page' or function == 'mpd_search' %}
                 <table id="dd_datatable" class="table table-bordered table-sm">
                     <thead class="thead-dark">
                     {% for field in fields %}
