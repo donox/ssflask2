@@ -90,16 +90,15 @@
             });
             $(document).ready(function () {
                 let opt_val = localStorage.getItem('get_database_data');
-                $('#js1').trigger('change');
                 if (opt_val) {
                     $('#js1 option:selected').val(opt_val);
                 } else {
-                    $('#js1 option:selected').val('mpd_page');
+                    $('#js1 option:selected').val('mpd_page_csv');
                 }
+                $('#js1').trigger('change');
+
             });
             //# sourceURL=json_make_template.js
-
-
         </script>
     </section>
 {% endblock %}

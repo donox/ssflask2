@@ -75,20 +75,21 @@ def upload_photo_file(db_exec, folder, file):
             image.save(filepath)
             image.close()
         except (AttributeError, KeyError, IndexError):
-            # cases: image don't have getexif
+            # cases: image doesn't have getexif
             pass
 
         image = Image.open(filepath)
-        for segment, content in image.applist:
-            marker, body = content.split(b'\x00', 1)
-            if segment == 'APP1' and marker == b'http://ns.adobe.com/xap/1.0/':
-                foo = 3
+        # for segment, content in image.applist:            # What was I looking at here???
+        #     marker, body = content.split(b'\x00', 1)
+        #     if segment == 'APP1' and marker == b'http://ns.adobe.com/xap/1.0/':
+        #         foo = 3
         metadata = photo_mgr.get_empty_json()
         metadata_str = json.dumps(metadata)
 
         photo = photo_mgr.get_photo_if_exists(folder, filename)
         slug = make_slug(folder, filename)
         if not photo:
+            # If photo exists, we use the existing DB entry
             photo = SSTPhoto(file_name=filename, folder_name=folder, json_metadata=metadata_str, slug=slug)
             photo.add_to_db(db_exec, commit=True)
         return True

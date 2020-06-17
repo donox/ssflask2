@@ -422,6 +422,16 @@ class SlideShow(object):
         for photo in self.show_desc['pictures']:
             photo['width'] = wt
             photo['height'] = ht
+            # If a caption was provided in the template, it was stored as the caption for the Slideshow since
+            # the photo was not itself available at the time for such storage.
+            # --- Is there a problem in the case of multiple pics in a slideshow - this presumes the slideshow
+            # caption is supposed to win.
+            if not 'caption' in self.show_desc or self.show_desc['caption'] is None:
+                if 'caption' in photo and photo['caption'] is not None:
+                    self.show_desc['caption'] = photo['caption']
+            else:
+                for pic in self.show_desc['pictures']:
+                    pic['caption'] = self.show_desc['caption']
         context = {'carousel': self.show_desc}
         if float_dir:
             context['float_dir'] = f'style="float:{float_dir}"'
