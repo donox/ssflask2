@@ -78,7 +78,7 @@ def upload_photo_file(db_exec, folder, file):
             # cases: image doesn't have getexif
             pass
 
-        image = Image.open(filepath)
+        # image = Image.open(filepath)
         # for segment, content in image.applist:            # What was I looking at here???
         #     marker, body = content.split(b'\x00', 1)
         #     if segment == 'APP1' and marker == b'http://ns.adobe.com/xap/1.0/':
