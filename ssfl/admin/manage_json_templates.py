@@ -6,6 +6,7 @@ from toml import TomlDecodeError
 from utilities.sst_exceptions import NoSuchTOMLItem
 from werkzeug.utils import secure_filename
 from flask import send_file
+from flask import render_template
 
 from db_mgt.json_tables import JSONStorageManager
 from ssfl.main.calendar_snippet import Calendar
@@ -16,6 +17,7 @@ from utilities.toml_support import toml_to_dict, elaborate_toml_dict, dict_to_to
 # supported_functions = [('jcreate', 'Create New JSON DB entry'),
 #                        ('jtomldn', 'Download as TOML'),
 #                        ('jtomlup', 'Upload TOML file'),
+#                        ('jdisplay', 'Display JSON Templates'),
 #                        ('jedit', 'Edit Story JSON'),
 #                        ('jcal', 'Edit Calendar JSON'),
 #                        ('jpage', 'Edit Page JSON'),
@@ -95,6 +97,9 @@ def manage_json_templates(db_exec, form):
     toml_overwrite = form.toml_overwrite.data
     toml_download_name = form.toml_download_name.data
 
+    json_fields = ['delete', 'id', 'name', 'last_update']
+    result_template = 'admin/db_display_json_data.jinja2'
+
     submit = form.submit.data
 
     try:
@@ -112,6 +117,30 @@ def manage_json_templates(db_exec, form):
             descriptor = jsm.make_json_descriptor(template_to_expand)
             json_table_mgr.add_json(json_name, descriptor)
             return True
+        # Display existing JSON DB Entries
+        elif work_function == 'jdisplay':
+            res = []
+            for template in json_table_mgr.get_all_templates():
+                # content = json.loads(template.content)
+                del_button = dict()
+                del_button['action'] = '/admin/delete_row'
+                del_button['table'] = 'json_store'
+                del_button['row_id'] = template.id
+                del_button['function'] = 'Delete'
+                del_button['method'] = 'POST'
+                field_values = {}
+                field_values['id'] = template.id
+                field_values['name'] = template.name
+                field_values['last_update'] = template.last_update
+                field_values['del_button'] = del_button
+                res.append(field_values)
+            context = dict()
+            context['function'] = 'jdisplay'
+            context['fields'] = json_fields
+            context['values'] = res
+            context['add_data_table'] = True  # cause layout to include CDN for DataTables
+            result = render_template(result_template, **context)
+            return result
 
         # Edit existing story entry so that it can be expanded
         elif work_function == 'jedit':
@@ -168,28 +197,28 @@ def manage_json_templates(db_exec, form):
                 form.errors['page_content_template'] = [f'Unrecognized element entry type: {entry_type}']
                 return False
             count = 0
-            for elem in json_table_mgr.find_instances(template, 'CELL'):
+            for field_values in json_table_mgr.find_instances(template, 'CELL'):
                 count += 1
                 if count == page_slot:
                     if entry_type == 'STORY' or entry_type == 'STORY_SNIPPET':
                         if entry_type == 'STORY':
-                            elem['element'] = insert_template['snippet']
+                            field_values['element'] = insert_template['snippet']
                         else:
-                            elem['element'] = insert_template
+                            field_values['element'] = insert_template
                         # These next 2 items should be corrected in the snippet
-                        elem['element']['author'] = insert_template['author']  # Fix as story builds structure to older spec
-                        elem['element']['name'] = insert_template['name']
-                        elem['element_type'] = 'STORY_SNIPPET'
+                        field_values['element']['author'] = insert_template['author']  # Fix as story builds structure to older spec
+                        field_values['element']['name'] = insert_template['name']
+                        field_values['element_type'] = 'STORY_SNIPPET'
                         json_table_mgr.add_json(page_template, template)
                         return True
                     elif entry_type == 'CALENDAR_SNIPPET':
-                        elem['element'] = insert_template
-                        elem['element_type'] = 'CALENDAR_SNIPPET'
+                        field_values['element'] = insert_template
+                        field_values['element_type'] = 'CALENDAR_SNIPPET'
                         json_table_mgr.add_json(page_template, template)
                         return True
                     elif entry_type == 'SLIDESHOW_SNIPPET':
-                        elem['element'] = insert_template
-                        elem['element_type'] = 'SLIDESHOW_SNIPPET'
+                        field_values['element'] = insert_template
+                        field_values['element_type'] = 'SLIDESHOW_SNIPPET'
                         json_table_mgr.add_json(page_template, template)
                         return True
 

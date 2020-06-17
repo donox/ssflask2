@@ -12,7 +12,7 @@ from ssfl import sst_admin_access_log
 from ssfl.admin.import_word_docx import import_docx_and_add_to_db
 from utilities.sst_exceptions import RequestInvalidMethodError
 from .edit_database_file import edit_database_file
-from .forms.db_json_manage_templates_form import DBJSONManageTemplatesForm
+from .forms.manage_json_templates import DBJSONManageTemplatesForm
 from .forms.edit_db_content_form import DBContentEditForm
 from import_data.forms.import_database_functions_form import ImportDatabaseFunctionsForm
 from .forms.import_word_doc_form import ImportMSWordDocForm
