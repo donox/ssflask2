@@ -97,7 +97,7 @@ def manage_json_templates(db_exec, form):
     toml_overwrite = form.toml_overwrite.data
     toml_download_name = form.toml_download_name.data
 
-    json_fields = ['delete', 'id', 'name', 'last_update']
+    json_fields = ['delete', 'id', 'name', 'is prototype', 'element kind', 'last update']
     result_template = 'admin/db_display_json_data.jinja2'
 
     submit = form.submit.data
@@ -121,18 +121,17 @@ def manage_json_templates(db_exec, form):
         elif work_function == 'jdisplay':
             res = []
             for template in json_table_mgr.get_all_templates():
-                # content = json.loads(template.content)
+                content = json.loads(template.content)
+                is_proto, el_kind = _analyze_json_content(template.name, content)
                 del_button = dict()
                 del_button['action'] = '/admin/delete_row'
                 del_button['table'] = 'json_store'
                 del_button['row_id'] = template.id
                 del_button['function'] = 'Delete'
                 del_button['method'] = 'POST'
-                field_values = {}
-                field_values['id'] = template.id
-                field_values['name'] = template.name
-                field_values['last_update'] = template.last_update
-                field_values['del_button'] = del_button
+                field_values = {'id': template.id, 'name': template.name, 'prototype': is_proto,
+                                'el_kind': el_kind,
+                                'last_update': template.last_update, 'del_button': del_button}
                 res.append(field_values)
             context = dict()
             context['function'] = 'jdisplay'
@@ -295,3 +294,19 @@ def manage_json_templates(db_exec, form):
         # TODO: handle error/log, and return useful message to user
         form.errors['Exception'] = 'Exception occurred processing page'
         return False
+
+
+def _analyze_json_content(name: str, content: dict):
+    el_type = ''
+    if 'descriptor' in content:
+        el_type = content['descriptor']
+    el_proto = 'False'
+    if name[0:2] == 'P_':
+        el_proto = 'True'
+    el_content_kind = ''
+    if el_proto == 'False' and el_type:
+        el_content_kind = el_type
+    elif el_proto == 'False' and len(list(content.keys())) == 1:
+        el_content_kind = list(content.keys())[0]
+    return el_proto, el_content_kind
+
