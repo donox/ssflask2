@@ -17,6 +17,7 @@ from ssfl.sysadmin.manage_users import manage_users_functions
 from ssfl.sysadmin.sst_login_commands import sst_login_commands
 from ssfl.sysadmin.manage_files_commands import manage_files_commands
 from ssfl.sysadmin.manage_graphs_commands import manage_graphs_commands
+from ssfl.sysadmin.forms.manage_cloud_storage_form import ManageCloudStorageForm
 from utilities.sst_exceptions import RequestInvalidMethodError
 from utilities.sst_exceptions import log_sst_error
 from .forms.manage_groups_form import ManageGroupsForm
@@ -25,6 +26,7 @@ from .forms.sst_login_form import SSTLoginForm
 from .forms.manage_files_form import ManageFilesForm
 from .forms.manage_graphs_form import ManageGraphsForm
 from import_data.db_process_imports import db_process_imports
+from ssfl.sysadmin.manage_cloud_storage import manage_cloud_storage
 
 # Set up a Blueprint
 sysadmin_bp = Blueprint('sysadmin_bp', __name__,
@@ -56,6 +58,19 @@ def manage_groups():
     """
     return build_route('sysadmin/manage_groups.jinja2', ManageGroupsForm(), manage_group_functions,
                        '/sysadmin/manage_groups')()
+
+
+@sysadmin_bp.route('/admin/cloud', methods=['GET', 'POST'])
+@roles_required(['SysAdmin',  'Admin'])
+def sst_cloud():
+    """Manage interaction with Google Drive."""
+    """
+     Route: '/sysadmin/cloud' => manage_cloud_storage
+     Template: cloud.jinja2
+     Form: manage_cloud_storage_form.py
+     Processor: manage_cloud_storage.py
+    """
+    return build_route('sysadmin/cloud.jinja2', ManageCloudStorageForm(), manage_cloud_storage, '/sysadmin/sst_cloud')()
 
 
 @sysadmin_bp.route('/sysadmin/manage_users', methods=['GET', 'POST'])

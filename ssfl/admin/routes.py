@@ -175,22 +175,6 @@ def _has_no_empty_params(rule):
     arguments = rule.arguments if rule.arguments is not None else ()
     return len(defaults) >= len(arguments)
 
-
-@admin_bp.route('/site-map')
-def site_map():
-    sst_admin_access_log.make_info_entry(f"Route: /admin/site-map")
-    links = []
-    for rule in app.url_map.iter_rules():
-        # Filter out rules we can't navigate to in a browser
-        # and rules that require parameters
-        if "GET" in rule.methods and _has_no_empty_params(rule):
-            url = url_for(rule.endpoint, **(rule.defaults or {}))
-            links.append((url, rule.endpoint, rule.methods, rule.arguments))
-    for x in links:
-        print(x)
-    foo = 3  # TODO: render links in template
-
-
 @admin_bp.route('/admin/edit', methods=['GET', 'POST'])
 @roles_required(['SysAdmin',  'Admin'])
 def sst_admin_edit():
