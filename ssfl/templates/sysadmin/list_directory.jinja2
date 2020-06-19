@@ -11,7 +11,7 @@
 {% block content %}
     <section class="container">
         <div class="XXX">
-            {% if function == 'cl_ls' %}
+            {% if function == 'cl_ls' or function == 'cl_mr' %}
                 <h3 class="h3">Files in Directory {{ directory }}</h3>
                 {% if fields %}
                     <table class="table table-bordered table-sm">

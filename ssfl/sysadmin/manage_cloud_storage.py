@@ -43,6 +43,19 @@ def manage_cloud_storage(db_exec: DBExec, form):
             res = drive_mgr.download_file(directory_path, filename, save_directory)
             return res
 
+        elif function_to_execute == 'cl_bk':  # Process Backup
+            res = drive_mgr.download_file(directory_path, filename, save_directory)
+            return res
+
+        elif function_to_execute == 'cl_mr':  # Process Backup
+            res = drive_mgr.identify_most_recent_backup_files()
+            context = {'function': function_to_execute,
+                       'directory': 'UpdraftPlus',
+                       'fields': ['Size', 'Directory Path'],
+                       'values': res}
+            result = render_template(result_template, **context)
+            return result
+
         elif function_to_execute == 'show_layout':
             try:
                 page = page_mgr.get_page_if_exists(None, page_name)

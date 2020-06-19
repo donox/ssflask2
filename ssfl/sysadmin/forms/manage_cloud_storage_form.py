@@ -19,7 +19,7 @@ class ManageCloudStorageForm(FlaskForm):
     """
     supported_functions = [('cl_ls', 'List Files in Directory'),
                            ('cl_df', 'Download File'),
-                           ('df', 'Delete File'),
+                           ('cl_mr', 'Find Most Recent Backup'),
                            ('show_layout', 'Make Layout Model')]
     work_function = SelectField(label='Select Function', choices=supported_functions,
                                 render_kw={"id": "js1", "class": "cl_ls cl_df df show_layout",
@@ -43,4 +43,6 @@ class ManageCloudStorageForm(FlaskForm):
         elif self.work_function.data == 'cl_df':
             if self.directory_path.data and self.save_directory.data and self.filename.data:
                 return True
+        elif self.work_function.data == 'cl_mr':
+            return True
         return False

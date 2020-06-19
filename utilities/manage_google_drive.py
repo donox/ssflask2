@@ -4,6 +4,7 @@ import shutil
 import syslog
 from db_mgt.db_exec import DBExec
 import os
+import datetime as dt
 # import pandas as pd
 
 # cmd_rclone = 'rclone -v copyto {} gdriveremote:/RClone/{}'
@@ -17,7 +18,7 @@ class ManageGoogleDrive(object):
     def __init__(self):
         self.db_exec = DBExec()
         self.cmd_list_files = r"rclone ls 'gdriveremote:/"
-        self.cmd_download_file = r"rclone -vv copy 'gdriveremote:/{}' {}"
+        self.cmd_download_file = r"rclone -v copy 'gdriveremote:/{}' {}"
         self.cmd_download_csv_file = "rclone -v --drive-formats csv copy \'gdriveremote:/\'{} {}"
         self.cmd_download_dir = "rclone -v {} copy \'gdriveremote:/{}\' {}"
 
@@ -43,20 +44,18 @@ class ManageGoogleDrive(object):
         Returns:
             boolean indicating success/failure
         """
-        self.download_csv_file(dir_path, filename)
         if not os.path.isdir(target_dir):
             self.db_exec.add_error_to_form('Google Drive', f'{target_dir} is not a directory.')
             return False
         if dir_path[-1] != '/':
             dir_path += '/'
         download_cmd = self.cmd_download_file.format(dir_path + filename, target_dir)
-        err = run_shell_command(download_cmd)
-        if not err:
-            return True
-        else:
-            err_string = f'List directory on Google Drive failed with error: {err}'
+        succeed = run_shell_command(download_cmd)
+        if not succeed:
+            err_string = f'List directory on Google Drive failed with error: {succeed}'
             self.db_exec.add_error_to_form('Google Drive', err_string)
             return False
+        return True
 
     def download_csv_file(self, file, download_dir, dummy_source=None):
         '''Download Google Spreadsheet as csv file.'''
@@ -70,31 +69,34 @@ class ManageGoogleDrive(object):
             syslog.make_error_entry('Error downloading spreadsheet {}'.format(file))
             raise e
 
-    # def download_directory(self, logger, dir_to_download, target_dir, as_type=None, dummy_source=None):
-    #     """Download contents of specified directory to local directory.
-    #     """
-    #     try:
-    #         if dummy_source:
-    #             copytree(dummy_source, target_dir)
-    #             convert_directory_to_csv(target_dir)
-    #         else:
-    #             parm = ''
-    #             if as_type:
-    #                 parm = '--drive-formats ' + as_type
-    #             download_files_cmd = self.cmd_download_dir.format(parm, dir_to_download, target_dir)
-    #             run_shell_command(download_files_cmd, logger)
-    #     except Exception as e:
-    #         logger.make_error_entry('Error downloading file directory {}'.format(dir_to_download))
-    #         raise e
+    def identify_most_recent_backup_files(self):
+        dir_path = self.cmd_list_files + 'UpdraftPlus/\''
+        res, err = run_shell_command(dir_path, return_result=True)
+        if err:
+            syslog.make_error_entry('Error Listing Backup Directory')
+            raise ValueError('Error listing backup directory')
+        res = res.decode("utf-8")
+        res = res.split('\n')
+        split_res = []
+        for path in res:
+            split_res.append(path.strip().split(' ', 1))
+        most_recent_date = dt.datetime(2000, 1, 1)
+        file_ndx = 0
+        for ndx, file in enumerate(split_res):
+            if len(file) > 1:
+                pieces = file[1].split('_')
+                dl = pieces[1].split('-')
+                backup_date = dt.datetime(int(dl[0]), int(dl[1]), int(dl[2]))
+                if backup_date > most_recent_date:
+                    most_recent_date = backup_date
+                    file_ndx = ndx
+        base_string = split_res[file_ndx][1][0:30]     # No magic in '30' just include date
+        most_recent_backups = []
+        for file in split_res:
+            if len(file) > 1:
+                if file[1][0:30] == base_string:
+                    most_recent_backups.append(file)
+        return most_recent_backups
 
 
-# def convert_directory_to_csv(src):
-#     '''Convert directory of spreadsheets to csv and delete originals'''
-#     for item in os.listdir(src):
-#         s = os.path.join(src, item)
-#         fn, tp = item.split('.')
-#         d = os.path.join(src, fn + '.csv')
-#         if tp == 'xls' or tp == 'xlsx' or tp == 'ods':
-#             data_xls = pd.read_excel(s, None, index_col=None)
-#             df = data_xls[list(data_xls)[0]]
-#             df.to_csv(d, encoding='utf-8', index=False)
+

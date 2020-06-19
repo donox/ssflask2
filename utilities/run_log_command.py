@@ -35,9 +35,6 @@ class OvernightLogger(object):
 def run_shell_command(command_line, return_result=False, outfile=False):
     command_line_args = shlex.split(command_line)
     cmd = command_line_args[0]
-    command_line_args[5] = 'gdriveremote:/Sunnyside Times/Web Users'
-    command_line_args[6] = '/home/don/Download/'
-    del command_line_args[7:]
     sst_syslog.make_info_entry('Subprocess: {}'.format(command_line))
 
     try:
@@ -63,8 +60,11 @@ def run_shell_command(command_line, return_result=False, outfile=False):
         return False
     else:
         # no exception was raised
-        sst_syslog.make_info_entry('Subprocess {} completed'.format(cmd))
-
-    return True
+        if process_error:
+            sst_syslog.make_error_entry(f'Error returned from rclone: {process_error}')
+            return False
+        else:
+            sst_syslog.make_info_entry('Subprocess {} completed'.format(cmd))
+            return True
 
 
