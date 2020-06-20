@@ -4,7 +4,7 @@ import os
 from utilities.sst_exceptions import DataEditingSystemError
 from flask_wtf import FlaskForm
 from config import Config
-from ssfl.admin.forms.form_docs.miscellaneous_functions_doc import docs
+from ssfl.sysadmin.forms.form_docs.manage_cloud_storage_doc import docs
 
 
 class ManageCloudStorageForm(FlaskForm):
@@ -18,18 +18,19 @@ class ManageCloudStorageForm(FlaskForm):
      Processor: manage_cloud_storage.py
     """
     supported_functions = [('cl_ls', 'List Files in Directory'),
-                           ('cl_df', 'Download File'),
                            ('cl_mr', 'Find Most Recent Backup'),
-                           ('show_layout', 'Make Layout Model')]
+                           ('cl_df', 'Download File'),
+                           ('cl_db', 'Download Entire Backup (SLOW)'),
+                           ('xxx', 'xxxxx')]
     work_function = SelectField(label='Select Function', choices=supported_functions,
-                                render_kw={"id": "js1", "class": "cl_ls cl_df df show_layout",
+                                render_kw={"id": "js1", "class": "cl_ls cl_df cl_mr show_layout",
                                            "docs": docs['all']['work_function']})
     directory_path = StringField(label='Google Drive Directory', validators=[Optional()],
-                           render_kw={"class": "cl_ls cl_df", "docs": docs['df']['filename']})
+                                 render_kw={"class": "cl_ls cl_df", "docs": docs['all']['directory_path']})
     save_directory = StringField(label='Directory to Save Result', validators=[Optional()],
-                                 render_kw={"class": "cl_ls cl_df", "docs": docs['df']['filename']})
+                                 render_kw={"class": "cl_df cl_db", "docs": docs['all']['save_directory']})
     filename = StringField(label='File Name', validators=[Optional()],
-                           render_kw={"class": "cl_df", "docs": docs['df']['filename']})
+                           render_kw={"class": "cl_df", "docs": docs['all']['filename']})
 
     def validate_on_submit(self, db_exec):
         res = super().validate_on_submit()
@@ -43,6 +44,10 @@ class ManageCloudStorageForm(FlaskForm):
         elif self.work_function.data == 'cl_df':
             if self.directory_path.data and self.save_directory.data and self.filename.data:
                 return True
+        elif self.work_function.data == 'cl_db':
+            if self.save_directory.data:
+                return True
         elif self.work_function.data == 'cl_mr':
             return True
+        self.errors['work_function'] = ['Unable to validate choices (validation failed to capture specific problem)']
         return False

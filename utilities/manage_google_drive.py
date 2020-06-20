@@ -98,5 +98,26 @@ class ManageGoogleDrive(object):
                     most_recent_backups.append(file)
         return most_recent_backups
 
+    def download_backup(self, save_directory):
+        """Download most recent backup."""
+        backup_to_use = self.identify_most_recent_backup_files()
+        if not os.path.isdir(save_directory):
+            self.db_exec.add_error_to_form('Save Directory', f'No such directory: {save_directory}')
+            return False
+        file_dir = 'backup_of_' + backup_to_use[0][1].split('_')[1] + '/'
+        if save_directory[-1] != '/':
+            file_dir = save_directory + '/' + file_dir
+        else:
+            file_dir = save_directory + file_dir
+        os.mkdir(file_dir)
+        for _, file in backup_to_use:
+            download_cmd = self.cmd_download_file.format('UpdraftPlus/' + file, file_dir)
+            succeed = run_shell_command(download_cmd)
+            if not succeed:
+                self.db_exec.add_error_to_form('Save Backup File', f'Failed on file: {file}')
+                return False
+        return True
+
+
 
 

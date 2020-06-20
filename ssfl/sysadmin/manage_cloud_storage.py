@@ -56,6 +56,11 @@ def manage_cloud_storage(db_exec: DBExec, form):
             result = render_template(result_template, **context)
             return result
 
+        elif function_to_execute == 'cl_db':  # Download Backup
+            res = drive_mgr.download_backup(save_directory)
+            return res
+
+
         elif function_to_execute == 'show_layout':
             try:
                 page = page_mgr.get_page_if_exists(None, page_name)

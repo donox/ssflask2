@@ -23,25 +23,24 @@ x = """Select the function to be performed.
 """
 entry['work_function'] = [x]
 
-# Fields requiring a page slug
-docs['dp'] = entry
-x = """The page_name (a.k.a. page_slug) of the page to be deleted or downloaded.  It is an error if the page does
-not exist in the database.
+# Fields requiring a Google Drive path
+# docs['all'] = entry
+x = """The path name to a directory on Google Drive.
 """
-entry['page_name'] = [x]
+entry['directory_path'] = [x]
 
 
 # Fields requiring a filename
-docs['df'] = entry = dict()
-x = """Filename.  ***BROKEN - Not used except by Delete File which is not needed at this time.
+# docs['all'] = entry = dict()
+x = """Name of the file to be used (including extension).  This is used in both the source and destination
+so no "renaming" of the file is done.
 """
 entry['filename'] = [x]
 
 
-# Fields supporting layout generation
-docs['show_layout'] = entry = dict()
-x = """If selected, document text is removed and replaced with the tag name and attributes from the underlying
-HTML element.  This is useful in making the layout clearer in many documents. 
+# Fields requiring a local directory
+# docs['all'] = entry = dict()
+x = """The full path name of a local directory for storing files. The path name should end with a '/'.
 """
-entry['remove_text'] = [x]
+entry['save_directory'] = [x]
 

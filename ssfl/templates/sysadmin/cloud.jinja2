@@ -70,16 +70,16 @@
             // BE CAREFUL to set a val in line '..option:selected..' below
             $ = jQuery;
             $('#js1').change(function () {
-                $('.usr_sr').parent().hide();
-                $('.usr_del').parent().hide();
-                $('.usr_add').parent().hide();
-                $('.usr_mod').parent().hide();
+                $('.cl_ls').parent().hide();
+                $('.cl_df').parent().hide();
+                $('.cl_mr').parent().hide();
+                $('.xxxx').parent().hide();
                 let opt = $('#js1 option:selected').val();
                 $('.' + opt).parent().show();
-                localStorage.setItem('manage_users', opt);
+                localStorage.setItem('manage_cloud', opt);
             });
             $(document).ready(function () {
-                let opt_val = localStorage.getItem('manage_users');
+                let opt_val = localStorage.getItem('manage_cloud');
                 $('#js1').trigger('change');
                 if (opt_val) {
                     $('#js1 option:selected').val(opt_val);
