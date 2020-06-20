@@ -98,7 +98,7 @@ class ManageGoogleDrive(object):
                     most_recent_backups.append(file)
         return most_recent_backups
 
-    def download_backup(self, save_directory):
+    def download_backup(self, save_directory, db_only):
         """Download most recent backup."""
         backup_to_use = self.identify_most_recent_backup_files()
         if not os.path.isdir(save_directory):
@@ -109,13 +109,16 @@ class ManageGoogleDrive(object):
             file_dir = save_directory + '/' + file_dir
         else:
             file_dir = save_directory + file_dir
-        os.mkdir(file_dir)
+        if not os.path.isdir(file_dir):
+            os.mkdir(file_dir)
         for _, file in backup_to_use:
-            download_cmd = self.cmd_download_file.format('UpdraftPlus/' + file, file_dir)
-            succeed = run_shell_command(download_cmd)
-            if not succeed:
-                self.db_exec.add_error_to_form('Save Backup File', f'Failed on file: {file}')
-                return False
+            if not db_only or file.split('-')[-1] == 'db.gz':
+                if not os.path.isfile(file_dir + file):
+                    download_cmd = self.cmd_download_file.format('UpdraftPlus/' + file, file_dir)
+                    succeed = run_shell_command(download_cmd)
+                    if not succeed:
+                        self.db_exec.add_error_to_form('Save Backup File', f'Failed on file: {file}')
+                        return False
         return True
 
 

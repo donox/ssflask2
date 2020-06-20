@@ -44,3 +44,9 @@ x = """The full path name of a local directory for storing files. The path name 
 """
 entry['save_directory'] = [x]
 
+# Download only the database file
+# docs['all'] = entry = dict()
+x = """Download only the database file from the current backup.
+"""
+entry['db_only'] = [x]
+

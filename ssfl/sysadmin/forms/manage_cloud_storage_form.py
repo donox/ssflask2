@@ -31,6 +31,8 @@ class ManageCloudStorageForm(FlaskForm):
                                  render_kw={"class": "cl_df cl_db", "docs": docs['all']['save_directory']})
     filename = StringField(label='File Name', validators=[Optional()],
                            render_kw={"class": "cl_df", "docs": docs['all']['filename']})
+    db_only = BooleanField(label='Download Database Only', default=False,
+                           render_kw={"class": "cl_db", "docs": docs['all']['db_only']})
 
     def validate_on_submit(self, db_exec):
         res = super().validate_on_submit()
