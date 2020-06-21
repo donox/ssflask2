@@ -32,6 +32,18 @@ class SSTPhotoManager(BaseTableManager):
         super().__init__(db_session)
         self.get_photo_field_value = self.get_table_value('sst_photos')
 
+    def get_photo_generator(self, folder=None):
+        try:
+            if folder:
+                sql = f'select id from sst_photos where folder_name = {folder};'
+            else:
+                sql = f'select id from sst_photos;'
+            all_ids = self.db_session.execute(sql).fetchall()
+            for pid in all_ids:
+                yield self.get_photo_from_id(pid[0])
+        except Exception as e:
+            raise e
+
     def ensure_folder_exists(self, directory: str) -> None:
         """Create a folder in the PHOTO directory if it does not already exist."""
         try:
@@ -86,12 +98,13 @@ class SSTPhotoManager(BaseTableManager):
             sys.stdout.flush()  # Remove ########################################
             raise e
 
-    def delete_photo(self, photo_id):
+    def delete_photo(self, photo_id, commit=True):
         photo = self.get_photo_by_id_if_exists(photo_id)
         if photo:
             sql = f'delete from sst_photos where id={photo_id}'
             self.db_session.execute(sql)
-            self.db_session.commit()
+            if commit:
+                self.db_session.commit()
 
     def get_photos_by_time_and_folder(self, folder, early_date, latest_date):
         ed = str(early_date)

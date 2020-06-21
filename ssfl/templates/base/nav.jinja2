@@ -75,9 +75,6 @@
                         Edit DB Page
                     </a>
                     <hr class="dropdown-divider">
-                    <a class="dropdown-item" href="{{ url_for('admin_bp.sst_import_database') }}">
-                        Manage Import from Existing SsT Wordpress Database
-                    </a>
                     <a class="dropdown-item" href="{{ url_for('admin_bp.sst_miscellaneous') }}">
                         Miscellaneous Functions
                     </a>
@@ -111,6 +108,9 @@
                     </a>
                     <a class="navbar-item" href="{{ url_for('sysadmin_bp.manage_graphs') }}">
                         Manage Graphs
+                    </a>
+                    <a class="dropdown-item" href="{{ url_for('sysadmin_bp.sst_import_database') }}">
+                        Manage Import from Existing SsT Wordpress Database
                     </a>
                 </div>
             </li>

@@ -17,11 +17,14 @@ class ImportPageData(object):
     wp = ['ID', 'guid', 'post_title', 'post_author', ('post_date','post_modified'), 'post_content' ]
 
 
-    def __init__(self, db_exec: DBExec):
+    def __init__(self, db_exec: DBExec, current_form):
+        self.db_exec = db_exec
         self.db_session = db_exec.get_db_session()
         self.wp_post_fields = self.get_table_fields('wp_posts')
         self.page_fields = self.get_table_fields('page')
         self.page_names = set()
+        self.db_exec.set_current_form(current_form)
+
 
     def import_useable_pages_from_wp_database(self):
         dummy_page_name = 'page-dummy-{}'

@@ -1,7 +1,7 @@
 import os
 import mimetypes
 import dateutil.parser
-from flask import Blueprint, render_template, url_for, request, abort, jsonify, flash, Response, send_from_directory
+from flask import Blueprint, render_template, request, abort, jsonify, flash, Response, send_from_directory
 from flask import current_app as app
 from flask_user import roles_required
 
@@ -14,7 +14,6 @@ from utilities.sst_exceptions import RequestInvalidMethodError
 from .edit_database_file import edit_database_file
 from .forms.manage_json_templates import DBJSONManageTemplatesForm
 from .forms.edit_db_content_form import DBContentEditForm
-from import_data.forms.import_database_functions_form import ImportDatabaseFunctionsForm
 from .forms.import_word_doc_form import ImportMSWordDocForm
 from .forms.manage_calendar_form import ManageCalendarForm
 from .forms.manage_index_pages_form import ManageIndexPagesForm
@@ -29,7 +28,6 @@ from .manage_index_pages import DBManageIndexPages
 from .manage_json_templates import manage_json_templates
 from .manage_photo_functions import manage_photo_functions
 from .miscellaneous_functions import miscellaneous_functions
-from import_data.db_process_imports import db_process_imports
 from .forms.manage_admin_reports_form import ManageAdminReportsForm
 from .manage_admin_reports import manage_admin_reports
 
@@ -288,20 +286,6 @@ def make_story_json_template():
                        '/admin/manageTemplate')()
 
 
-@admin_bp.route('/admin/sst_import_database', methods=['GET', 'POST'])
-@roles_required(['SysAdmin',  'Admin'])
-def sst_import_database():
-    """Functions to import data from wp db to flask db.."""
-    """
-     Route: '/admin/sst_import_database' => db_import_pages
-     Template: import_database_functions.jinja2
-     Form: import_database_functions_form.py
-     Processor: db_import_pages.py
-    """
-    return build_route('admin/import_database_functions.jinja2', ImportDatabaseFunctionsForm(), db_process_imports,
-                       'admin/sst_import_database')()
-
-
 @admin_bp.route('/manage_photos', methods=['GET', 'POST'])
 @roles_required(['SysAdmin',  'Admin'])
 def manage_photos():
@@ -376,6 +360,7 @@ def build_route(template, processing_form, processing_function, route_name):
                 flash('Failed - no message given', 'error')
                 result = render_template(result[2], **result[3])
             else:
+                flash_errors(processing_form)
                 flash('Successful', 'success')
                 result = render_template(result[2], **result[3])
             db_exec.terminate()

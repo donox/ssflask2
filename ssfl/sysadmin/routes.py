@@ -1,16 +1,8 @@
-import os
-import sys
-
-import dateutil.parser
-from flask import Blueprint, render_template, url_for, request, send_file, \
-    abort, jsonify, flash, Response
+from flask import Blueprint
 from flask import current_app as app
-from flask_user import login_required, roles_required
+from flask_user import roles_required
 
-from config import Config
-from db_mgt.db_exec import DBExec
-from ssfl.admin.routes import build_route, flash_errors
-from db_mgt.setup import get_engine, create_session, close_session
+from ssfl.admin.routes import build_route
 from ssfl import sst_admin_access_log
 from ssfl.sysadmin.manage_groups import manage_group_functions
 from ssfl.sysadmin.manage_users import manage_users_functions
@@ -18,15 +10,14 @@ from ssfl.sysadmin.sst_login_commands import sst_login_commands
 from ssfl.sysadmin.manage_files_commands import manage_files_commands
 from ssfl.sysadmin.manage_graphs_commands import manage_graphs_commands
 from ssfl.sysadmin.forms.manage_cloud_storage_form import ManageCloudStorageForm
-from utilities.sst_exceptions import RequestInvalidMethodError
-from utilities.sst_exceptions import log_sst_error
+from .forms.import_database_functions_form import ImportDatabaseFunctionsForm
 from .forms.manage_groups_form import ManageGroupsForm
 from .forms.manage_users_form import ManageUsersForm
 from .forms.sst_login_form import SSTLoginForm
 from .forms.manage_files_form import ManageFilesForm
 from .forms.manage_graphs_form import ManageGraphsForm
-from import_data.db_process_imports import db_process_imports
 from ssfl.sysadmin.manage_cloud_storage import manage_cloud_storage
+from ssfl.sysadmin.db_process_imports import db_process_imports
 
 # Set up a Blueprint
 sysadmin_bp = Blueprint('sysadmin_bp', __name__,
@@ -86,6 +77,19 @@ def manage_users():
     """
     return build_route('sysadmin/manage_users.jinja2', ManageUsersForm(), manage_users_functions,
                        '/sysadmin/manage_users')()
+
+@sysadmin_bp.route('/sysadmin/sst_import_database', methods=['GET', 'POST'])
+@roles_required(['SysAdmin',  'Admin'])
+def sst_import_database():
+    """Functions to import data from wp db to flask db.."""
+    """
+     Route: '/admin/sst_import_database' => db_import_pages
+     Template: import_database_functions.jinja2
+     Form: import_database_functions_form.py
+     Processor: db_import_pages.py
+    """
+    return build_route('sysadmin/import_database_functions.jinja2', ImportDatabaseFunctionsForm(), db_process_imports,
+                       'sysadmin/sst_import_database')()
 
 
 @sysadmin_bp.route('/sysadmin/manage_files', methods=['GET', 'POST'])
