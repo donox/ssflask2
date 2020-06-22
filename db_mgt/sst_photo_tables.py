@@ -18,7 +18,7 @@ from .base_table_manager import BaseTableManager
 from .json_tables import JSONStorageManager as jsm
 from db_mgt.pa_db_connect_problems import TestPADB
 from random import randint
-from utilities.sst_exceptions import sst_syslog
+from ssfl import sst_syslog
 
 json_metadata_descriptor = {"title": None, "photographer": None, "people": [],
                             "keywords": None, "xxx": None}
@@ -239,7 +239,7 @@ class SSTPhotoManager(BaseTableManager):
                     # This should not be necessary, but we may be inconsistent.
                     return photo.folder_name + '/' + photo.file_name
             else:
-                sst_syslog(f'Missing photo.  ID requested: {photo_id}')
+                sst_syslog.make_error_entry(f'Missing photo.  ID requested: {photo_id}')
                 photo_slug = 'img_8904'
                 photo = self.get_photo_by_slug_if_exists(photo_slug)
                 return self.get_photo_folder_and_name(photo.id)
