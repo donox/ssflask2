@@ -52,11 +52,11 @@ def db_manage_pages(db_exec: DBExec, form):
                 view_button['method'] = 'GET'
                 field_values['view_button'] = view_button
                 res.append(field_values)
-                context = dict()
-                context['function'] = 'mpd_page'
-                context['fields'] = page_fields
-                context['values'] = res
-                context['add_data_table'] = True  # cause layout to include CDN for DataTables
+            context = dict()
+            context['function'] = 'mpd_recent'
+            context['fields'] = page_fields
+            context['values'] = res
+            context['add_data_table'] = True  # cause layout to include CDN for DataTables
             result = render_template(result_template, **context)
             return result
 

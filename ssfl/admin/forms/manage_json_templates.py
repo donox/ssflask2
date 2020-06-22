@@ -3,7 +3,7 @@ from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, Le
 import os
 from utilities.sst_exceptions import DataEditingSystemError
 from flask_wtf import FlaskForm
-from .form_docs.json_manage_templates_doc import docs
+from .form_docs.manage_json_templates_doc import docs
 
 
 # id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -23,12 +23,13 @@ class DBJSONManageTemplatesForm(FlaskForm):
      Form: db_manage_templates_form.py
      Processor: manage_json_template.py
     """
-    supported_functions = [('jcreate', 'Create New JSON DB entry'),
-                           ('jtomldn', 'Download as TOML'),
+    supported_functions = [('jtomldn', 'Download as TOML'),
                            ('jtomlup', 'Upload TOML file'),
+                           ('jdisplay', 'Display JSON Templates'),
                            ('jedit', 'Edit Story JSON'),
                            ('jcal', 'Edit Calendar JSON'),
                            ('jpage', 'Edit Page JSON'),
+                           ('jcreate', 'Create New JSON DB entry'),
                            ('jdelete', 'Remove existing JSON entry'),
                            ('jreload', 'Reload DB Prototype Templates'),
                            ]
@@ -44,7 +45,7 @@ class DBJSONManageTemplatesForm(FlaskForm):
                             render_kw={"class": "jcreate jtomldn jtomlup jtoml jedit jcal jdelete",
                                        "docs": docs['all']['name']})
     template_content = StringField('Name of JSON Template to Expand as Content', validators=[Optional()],
-                                   render_kw={"class": "jcreate jedit", "docs": docs['jcreate']['template_content'] })
+                                   render_kw={"class": "jcreate jedit", "docs": docs['jcreate']['template_content']})
     is_prototype = BooleanField('Template is prototype', default=False,
                                 render_kw={"class": "jcreate", "docs": docs['jcreate']['prototype']})
     compress = BooleanField('Remove excess whitespace and newlines?', default=False,
@@ -83,11 +84,11 @@ class DBJSONManageTemplatesForm(FlaskForm):
     page_width = IntegerField('Width of snippet display (in pixels)', validators=[Optional()],
                               render_kw={"class": "jpage", "docs": docs['jpage']['page_width']})
     toml_file_name = FileField('File Name', validators=[Optional()],
-                                 render_kw={"class": "jtomlup", "docs": docs['jtomlup']['file_name']})
+                               render_kw={"class": "jtomlup", "docs": docs['jtomlup']['file_name']})
     toml_overwrite = BooleanField('Overwrite Existing Template', default=False,
-                             render_kw={"class": "jtomlup", "docs": docs['jtomlup']['overwrite']})
-    toml_download_name =StringField('File name for TOML Result', validators=[Optional()],
-                                render_kw={"class": "jpage jtomldn", "docs": docs['jtomldn']['out_file']})
+                                  render_kw={"class": "jtomlup", "docs": docs['jtomlup']['overwrite']})
+    toml_download_name = StringField('File name for TOML Result', validators=[Optional()],
+                                     render_kw={"class": "jpage jtomldn", "docs": docs['jtomldn']['out_file']})
 
     submit = SubmitField('Submit')
 

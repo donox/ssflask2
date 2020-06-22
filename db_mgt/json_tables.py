@@ -19,6 +19,7 @@ class JSONTableManager(BaseTableManager):
         self.db_session = db_session
         self.template_functions = dict()
         self.template_functions['ONECELLCOLUMN'] = self._f_onecellcolumn
+        self.get_json_field_value = self.get_table_value('json_store')
 
     def _f_onecellcolumn(self, **kwargs):
         # NEEDS REWRITING???
@@ -34,6 +35,17 @@ class JSONTableManager(BaseTableManager):
 
     def get_json_primary_templates(self):
         return JSONStorageManager.json_primary_templates
+
+    def get_all_templates(self):
+        sql = 'select * from json_store order by last_update desc;'
+        res = self.db_session.execute(sql).fetchall()
+        res_list = []
+        for template in res:
+            gv = self.get_json_field_value(template)
+            entry = JSONStore(id=gv('id'), name=gv('name'), last_update=gv('last_update'), active=gv('active'),
+                              status=gv('status'), content=gv('content'))
+            res_list.append(entry)
+        return res
 
     def expand_json_descriptor(self, child_dict: dict) -> dict:
         """Merge descriptor into its parent making fully specified descriptor."""

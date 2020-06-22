@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<!--
+     Route: '/admin/manage_page_data' => manage_page_data
+     Template: db_get_database_data.jinja2
+     Display:  db_display_database_data.jinja2
+     Form: get_database_data_form.py
+     Processor: db_get_database_data.py
+-->
+{% extends 'base/layout.jinja2' %}
+
+{% block content %}
+    <section class="container">
+        <div class="columns">
+            <h3 class="h3">Summary of JSON Templates</h3>
+            {% if function == 'jdisplay' %}
+                <table id="dd_datatable" class="table table-bordered table-sm">
+                    <thead class="thead-dark">
+                    {% for field in fields %}
+                        <th>{{ field }}</th>
+                    {% endfor %}
+                    </thead>
+                    <tbody>
+                    {% for field in values %}
+                        <tr>
+                            {% with %}
+                                {#                                {% set button=field.view_button %}#}
+                                {#                                <td>{% include 'base/button_form.jinja2' %}</td>#}
+                                {% set button=field.del_button %}
+                                <td>{% include 'base/button_form.jinja2' %}</td>
+                                <td>{{ field.id }}</td>
+                                <td>{{ field.name }}</td>
+                                <td>{{ field.prototype }}</td>
+                                <td>{{ field.el_kind }}</td>
+                                <td>{{ field.last_update }}</td>
+                            {% endwith %}
+                        </tr>
+                    {% endfor %}</tbody>
+                </table>
+            {% endif %}
+        </div>
+
+        <script>
+            $ = jQuery;
+            $('#dd_datatable').DataTable();
+            $('#js1').change(function () {
+                $('.dpdb').parent().hide();
+                $('.dp').parent().hide();
+                $('.df').parent().hide();
+                let opt = $('#js1 option:selected').val();
+                $('.' + opt).parent().show();
+            });
+            //# sourceURL=json_make_template.js
+
+
+        </script>
+    </section>
+{% endblock %}

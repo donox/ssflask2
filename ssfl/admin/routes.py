@@ -1,24 +1,18 @@
 import os
-import sys
 import mimetypes
 import dateutil.parser
-from flask import Blueprint, render_template, url_for, request, send_file, \
-    abort, jsonify, flash, Response, send_from_directory
+from flask import Blueprint, render_template, url_for, request, abort, jsonify, flash, Response, send_from_directory
 from flask import current_app as app
-from flask import session as flask_session
 from flask_user import roles_required
 
 from config import Config
 from db_mgt.db_exec import DBExec
 from db_mgt.setup import get_engine, create_session, close_session
-from import_data.db_import_pages import ImportPageData
-from import_data.db_import_photos import ImportPhotoData
 from ssfl import sst_admin_access_log
-from ssfl.admin.manage_events.import_word_docx import import_docx_and_add_to_db
+from ssfl.admin.import_word_docx import import_docx_and_add_to_db
 from utilities.sst_exceptions import RequestInvalidMethodError
-from utilities.sst_exceptions import log_sst_error
 from .edit_database_file import edit_database_file
-from .forms.db_json_manage_templates_form import DBJSONManageTemplatesForm
+from .forms.manage_json_templates import DBJSONManageTemplatesForm
 from .forms.edit_db_content_form import DBContentEditForm
 from import_data.forms.import_database_functions_form import ImportDatabaseFunctionsForm
 from .forms.import_word_doc_form import ImportMSWordDocForm
