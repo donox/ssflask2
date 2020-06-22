@@ -1,12 +1,6 @@
-from test_base import BaseTestCase, app
-from io import StringIO
-import csv
-from db_mgt.json_tables import JSONStorageManager
+from test_base import BaseTestCase
 from db_mgt.setup import create_session, get_engine
-from ssfl.main import multi_story_page as msp
-from import_data import db_import_photos as dip
-import datetime as dt
-from db_mgt.page_tables import Page
+from ssfl.sysadmin import db_import_photos as dip
 
 
 class TestImportPhotos(BaseTestCase):

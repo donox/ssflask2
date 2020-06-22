@@ -1,6 +1,7 @@
 import shlex
 import logging
 import subprocess
+from ssfl import sst_syslog
 
 
 class OvernightLogger(object):
@@ -31,11 +32,10 @@ class OvernightLogger(object):
         self.logger = None
 
 
-def run_shell_command(command_line, logger, outfile=False):
+def run_shell_command(command_line, return_result=False, outfile=False):
     command_line_args = shlex.split(command_line)
     cmd = command_line_args[0]
-
-    logger.make_info_entry('Subprocess: {}'.format(command_line))
+    sst_syslog.make_info_entry('Subprocess: {}'.format(command_line))
 
     try:
         command_line_process = subprocess.Popen(
@@ -50,16 +50,21 @@ def run_shell_command(command_line, logger, outfile=False):
             with open(outfile, 'wb') as fl:
                 fl.write(process_output)
 
-        logger.make_info_entry(process_output)
-        logger.make_info_entry(process_error)
+        sst_syslog.make_info_entry(process_output)
+        sst_syslog.make_info_entry(process_error)
+        if return_result:
+            return process_output, process_error
     except (OSError, subprocess.CalledProcessError) as exception:
-        logger.make_error_entry('Exception occurred in {}: {}'.format(cmd, exception))
-        logger.make_error_entry('Subprocess {} failed'.format(cmd))
+        sst_syslog.make_error_entry('Exception occurred in {}: {}'.format(cmd, exception))
+        sst_syslog.make_error_entry('Subprocess {} failed'.format(cmd))
         return False
     else:
         # no exception was raised
-        logger.make_info_entry('Subprocess {} completed'.format(cmd))
-
-    return True
+        if process_error:
+            sst_syslog.make_error_entry(f'Error returned from rclone: {process_error}')
+            return False
+        else:
+            sst_syslog.make_info_entry('Subprocess {} completed'.format(cmd))
+            return True
 
 

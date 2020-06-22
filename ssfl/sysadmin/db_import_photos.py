@@ -2,6 +2,8 @@ import unidecode
 from db_mgt.sst_photo_tables import SSTPhotoManager, SSTPhoto
 from db_mgt.db_exec import DBExec
 from config import Config
+import os
+from config import Config
 
 
 class ImportPhotoData(object):
@@ -12,7 +14,7 @@ class ImportPhotoData(object):
     Processor: db_import_pages.py
     """
 
-    def __init__(self, db_exec: DBExec):
+    def __init__(self, db_exec: DBExec, current_form):
         self.db_session = db_exec.get_db_session()
         self.db_exec = DBExec()
         self.wp_gallery_fields = self.get_table_fields('wp_ngg_gallery')
@@ -20,6 +22,7 @@ class ImportPhotoData(object):
         self.photo_fields = self.get_table_fields('photo')
         self.photo_gallery_fields = self.get_table_fields('photo_gallery')
         self.galleries = dict()
+        self.db_exec.set_current_form(current_form)
 
     def get_field_index(self, field, table):
         """Get index of field that will correspond to DB row value.
@@ -113,10 +116,15 @@ class ImportPhotoData(object):
                 rem_path = path.split('gallery/')[-1]  # take path after .../gallery/
                 if rem_path[-1] != '/':  # ensure this is a directory
                     rem_path += '/'
-                self.galleries[wp_id] = {'name': name,'slug': slug, 'path': path, 'rem_path': rem_path}
+                self.galleries[wp_id] = {'name': name, 'slug': slug, 'path': path, 'rem_path': rem_path}
 
     def import_all_photos(self):
-        max_photo = 0
+        """Update sst_photos in database and verify existence.
+
+        Scan all photos in wp_database (presume already imported as corresponding WP tables).  Any
+        entries that already exist are unchanged.  Any entries that are new are added.  Each photo path
+        is verified."""
+        photo_mgr = self.db_exec.create_sst_photo_manager()
         field_photo_filename = self.get_field_index('filename', 'wp_ngg_pictures')
         field_photo_id = self.get_field_index('pid', 'wp_ngg_pictures')
         field_photo_slug = self.get_field_index('image_slug', 'wp_ngg_pictures')
@@ -127,9 +135,8 @@ class ImportPhotoData(object):
         field_gallery_id = self.get_field_index('galleryid', 'wp_ngg_pictures')
         for photo_row in self.get_wp_picture_data():
             wp_id = photo_row[field_photo_id]
-            if wp_id == 1531:
-                foo = 3
-            if wp_id > max_photo:
+            new_id = photo_mgr.get_new_photo_id_from_old(wp_id)
+            if not new_id:
                 filename = photo_row[field_photo_filename]
                 slug = photo_row[field_photo_slug]
                 gal_id = photo_row[field_gallery_id]
@@ -141,9 +148,21 @@ class ImportPhotoData(object):
                     metadata = photo_row[field_photo_meta_data]
                     if len(metadata) > 2000:
                         metadata = ''
-                    pho = SSTPhoto(old_id=wp_id, slug=slug, folder_name=gallery_res['rem_path'], file_name=filename, caption=caption,
-                                alt_text=alt_text, image_date=imagedate, json_metadata=metadata, metadata_update=None)
+                    pho = SSTPhoto(old_id=wp_id, slug=slug, folder_name=gallery_res['rem_path'], file_name=filename,
+                                   caption=caption,
+                                   alt_text=alt_text, image_date=imagedate, json_metadata=metadata,
+                                   metadata_update=None)
                     pho.add_to_db(self.db_exec, commit=True)
                 else:
-                    print(f'Photo: {slug} with ID: {wp_id} has no gallery.')
-
+                    msg = f'Photo: {slug} with ID: {wp_id} has no gallery.'
+                    self.db_exec.add_error_to_form('Missing gallery', msg)
+                    print(msg)
+        # Verify that entries have an actual photo
+        for photo in photo_mgr.get_photo_generator():
+            path_name = Config.USER_DIRECTORY_IMAGES + photo.folder_name
+            file_name = path_name + photo.file_name
+            if not (photo.file_name and os.path.isdir(path_name) and os.path.isfile(file_name)):
+                print(f'Deleting {photo.slug} : id: {photo.id}')
+                self.db_exec.add_error_to_form('Missing photo', f'No photo: {photo.slug} - removed from sst_photos')
+                photo_mgr.delete_photo(photo.id, commit=False)
+        self.db_exec.db_session.commit()

@@ -12,16 +12,20 @@ class ImportPageData(object):
     Processor: db_import_pages.py
     """
     pages_to_include = 'select * from wp_posts where post_type="page";'
-    revised_pages = 'select id, post_modified from wp_posts where post_type="revision" and post_parent={}'
-    pl = ['id', 'page_name','page_title','page_author','page_date''page_content'];
-    wp = ['ID', 'guid', 'post_title', 'post_author', ('post_date','post_modified'), 'post_content' ]
+    revised_pages = 'select id, post_modified from wp_posts where post_type="revision" and post_parent={};'
+    # These appear to be unused
+    # pl = ['id', 'page_name','page_title', 'page_author', 'page_date''page_content']
+    # wp = ['ID', 'guid', 'post_title', 'post_author', ('post_date', 'post_modified'), 'post_content']
 
 
-    def __init__(self, db_exec: DBExec):
+    def __init__(self, db_exec: DBExec, current_form):
+        self.db_exec = db_exec
         self.db_session = db_exec.get_db_session()
         self.wp_post_fields = self.get_table_fields('wp_posts')
         self.page_fields = self.get_table_fields('page')
         self.page_names = set()
+        self.db_exec.set_current_form(current_form)
+
 
     def import_useable_pages_from_wp_database(self):
         dummy_page_name = 'page-dummy-{}'
@@ -147,12 +151,16 @@ class ImportPageData(object):
             ValueError(f'Unknown guid type: {guid}')
 
     def import_page(self, data_row: list):
-        """
+        """Import specific page from wp_posts if it does not already exist in database.
+
+        We are assuming that an existing import has not been superseded by additional modifications (which
+        is very possibly not the case). The objective is to minimize new pages in WP as soon as practical.
 
         Args:
-            data_row:
+            data_row: List of fields corresponding to record in wp_posts
 
         Returns:
+            None    (may side-effect the database)
 
         """
         post_id = data_row[self.get_field_index('id', 'wp_posts')]
@@ -161,7 +169,7 @@ class ImportPageData(object):
         # (1) Check if in v_page_post
         res = self.db_session.execute(sql).first()
         if res:
-            # (2) If exists - check if it is newer than current page
+            # (2) If exists - should check if it is newer than current page
             return None
 
         # (3) Make Page object and add to db

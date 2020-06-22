@@ -13,7 +13,8 @@ class ImportUserData(object):
     """
     all_users = 'select * from wp_users;'
 
-    def __init__(self, db_exec: DBExec):
+    def __init__(self, db_exec: DBExec, current_form):
+        self.db_exec = db_exec
         self.db_session = db_exec.get_db_session()
         self.min_user_id = 12  # User ids less than or equal to this have existing records to keep
         self.user_table_mgr = UserManager(self.db_session)
@@ -21,6 +22,7 @@ class ImportUserData(object):
         self.user_fields = self.user_table_mgr.get_table_fields('users')
         self.pass_mgr = PM(app)
         self.pswd = self.pass_mgr.hash_password('Sunny')
+        self.db_exec.set_current_form(current_form)
 
     def import_users(self):
         sql = f'select {", ".join(self.wp_user_fields)} from wp_users;'

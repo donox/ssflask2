@@ -1,6 +1,6 @@
 from config import Config
 import os
-import sys
+import shutil
 import re
 from jinja2 import Environment, PackageLoader, select_autoescape
 from typing import List
@@ -84,4 +84,13 @@ def factor_string(in_str: str, pos_list: List[int]) -> List[str]:
         return res
     except Exception as e:
         raise ValueError(f'Error factoring string beginning: {in_str[:20]}')
+
+def copytree(src, dst, symlinks=False, ignore=None):
+    for item in os.listdir(src):
+        s = os.path.join(src, item)
+        d = os.path.join(dst, item)
+        if os.path.isdir(s):
+            shutil.copytree(s, d, symlinks, ignore)
+        else:
+            shutil.copy2(s, d)
 
