@@ -18,6 +18,7 @@ from .base_table_manager import BaseTableManager
 from .json_tables import JSONStorageManager as jsm
 from db_mgt.pa_db_connect_problems import TestPADB
 from random import randint
+from utilities.sst_exceptions import sst_syslog
 
 json_metadata_descriptor = {"title": None, "photographer": None, "people": [],
                             "keywords": None, "xxx": None}
@@ -227,15 +228,21 @@ class SSTPhotoManager(BaseTableManager):
 
     def get_photo_folder_and_name(self, photo_id):
         try:
+            # We need to defend against missing photos.  In particular, a reimport of photos from Wordpress
+            # causes photo_ids to change, but photo_ids are already buried in JSON strings in the database.
+            # As a last ditch defense, we substitute a dummy photo to allow the system to continue.
             photo = self.get_photo_from_id(photo_id)
-            if photo:
+            if photo and photo.folder_name:
                 if photo.folder_name.endswith('/'):
                     return photo.folder_name + photo.file_name
                 else:
                     # This should not be necessary, but we may be inconsistent.
                     return photo.folder_name + '/' + photo.file_name
             else:
-                return None
+                sst_syslog(f'Missing photo.  ID requested: {photo_id}')
+                photo_slug = 'img_8904'
+                photo = self.get_photo_by_slug_if_exists(photo_slug)
+                return self.get_photo_folder_and_name(photo.id)
         except Exception as e:
             raise e
 
@@ -288,37 +295,13 @@ class SSTPhotoManager(BaseTableManager):
 
     def get_new_photo_id_from_old(self, old_id):
         """Get sstPhoto id from original WP photo ID
-        This requires mapping via something other than ID's, so we will get the file name of the original photo
-        and try to match that.  To do this properly, we need to get the folder name also which must be taken from
-        the gallery."""
+        """
         sql = f'select id from sst_photos where old_id={old_id};'
         new_id = self.db_session.execute(sql).first()
         if new_id:
             return new_id[0]
         else:
             return None
-        # sql = f'select photo_id from v_photo_picture where wp_picture_id={old_id};'
-        # new_id = self.db_session.execute(sql).first()
-        # if not new_id:
-        #     return None
-        # new_id = new_id[0]
-        # # Now find the photo in Photo (the imported table).
-        # sql = f'select image_slug, file_name, gallery_id from photo where id={new_id};'
-        # res = self.db_session.execute(sql).first()
-        # if not res:
-        #     return None
-        # slug, file_name, new_gal = res
-        # sql = f'select path_name from photo_gallery where id={new_gal};'
-        # folder = self.db_session.execute(sql).first()
-        # if not folder:
-        #     return None
-        # folder = folder[0]
-        # sql = f'select id from sst_photos where file_name="{file_name}" and folder_name="{folder}";'
-        # target_id = self.db_session.execute(sql).first()
-        # if not target_id:
-        #     return None
-        # else:
-        #     return target_id[0]
 
     def get_recent_photos(self, nbr_to_get):
         sql = f'select id from sst_photos order by image_date desc limit {nbr_to_get};'

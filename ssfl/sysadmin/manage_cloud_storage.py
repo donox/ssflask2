@@ -61,34 +61,6 @@ def manage_cloud_storage(db_exec: DBExec, form):
             res = drive_mgr.download_backup(save_directory, db_only)
             return res
 
-
-        elif function_to_execute == 'show_layout':
-            try:
-                page = page_mgr.get_page_if_exists(None, page_name)
-                html_txt = page.page_content
-                root = html.fromstring(html_txt)
-                for el in root.iter():
-                    tag = el.tag
-                    attr = ' '.join([x for x in el.classes])
-                    el.classes.add('devStyle')
-                    if remove_text:
-                        el.text = f'{tag} : {attr}'
-                        el.tail = ''
-                res = lxml.html.tostring(root)
-                new_page = Page()
-                new_page.page_title = page.page_title + '-layout'
-                new_page.page_name = page.page_name + ' layout'
-                new_page.page_author = page.page_author
-                new_page.page_date = page.page_date
-                new_page.page_status = 'publish'
-                new_page.page_guid = 'TBD'
-                new_page.page_content = res
-                page_mgr.add_page_to_database(new_page, True)
-                return True
-                # lxml.html.open_in_browser(root)
-            except Exception as e:
-                form.errors['work_function'] = [f'Unknown exception in miscellaneous_functions: {e.args}']
-                return False
         else:
             form.errors['work_function'] = ['Selected Work Function Not Yet Implemented']
             return False

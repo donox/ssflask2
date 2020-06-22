@@ -119,7 +119,12 @@ class ImportPhotoData(object):
                 self.galleries[wp_id] = {'name': name, 'slug': slug, 'path': path, 'rem_path': rem_path}
 
     def import_all_photos(self):
-        max_photo = 0
+        """Update sst_photos in database and verify existence.
+
+        Scan all photos in wp_database (presume already imported as corresponding WP tables).  Any
+        entries that already exist are unchanged.  Any entries that are new are added.  Each photo path
+        is verified."""
+        photo_mgr = self.db_exec.create_sst_photo_manager()
         field_photo_filename = self.get_field_index('filename', 'wp_ngg_pictures')
         field_photo_id = self.get_field_index('pid', 'wp_ngg_pictures')
         field_photo_slug = self.get_field_index('image_slug', 'wp_ngg_pictures')
@@ -130,7 +135,8 @@ class ImportPhotoData(object):
         field_gallery_id = self.get_field_index('galleryid', 'wp_ngg_pictures')
         for photo_row in self.get_wp_picture_data():
             wp_id = photo_row[field_photo_id]
-            if wp_id > max_photo:
+            new_id = photo_mgr.get_new_photo_id_from_old(wp_id)
+            if not new_id:
                 filename = photo_row[field_photo_filename]
                 slug = photo_row[field_photo_slug]
                 gal_id = photo_row[field_gallery_id]
@@ -152,7 +158,6 @@ class ImportPhotoData(object):
                     self.db_exec.add_error_to_form('Missing gallery', msg)
                     print(msg)
         # Verify that entries have an actual photo
-        photo_mgr = self.db_exec.create_sst_photo_manager()
         for photo in photo_mgr.get_photo_generator():
             path_name = Config.USER_DIRECTORY_IMAGES + photo.folder_name
             file_name = path_name + photo.file_name
