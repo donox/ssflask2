@@ -53,7 +53,7 @@ def db_manage_pages(db_exec: DBExec, form):
                 field_values['view_button'] = view_button
                 res.append(field_values)
             context = dict()
-            context['function'] = 'mpd_recent'
+            context['function'] = 'mpd_page'
             context['fields'] = page_fields
             context['values'] = res
             context['add_data_table'] = True  # cause layout to include CDN for DataTables

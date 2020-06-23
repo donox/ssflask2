@@ -240,6 +240,7 @@ class SSTPhotoManager(BaseTableManager):
                     return photo.folder_name + '/' + photo.file_name
             else:
                 sst_syslog.make_error_entry(f'Missing photo.  ID requested: {photo_id}')
+                # TODO:  Make dummy photo to use for missing photo
                 photo_slug = 'img_8904'
                 photo = self.get_photo_by_slug_if_exists(photo_slug)
                 return self.get_photo_folder_and_name(photo.id)
@@ -348,12 +349,13 @@ class SlideShow(object):
     """
 
     def __init__(self, name, db_exec):
-        # ['SLIDESHOW', 'title', 'title_class', 'position', 'width', 'height', 'rotation', 'frame_title', 'pictures']
+        # ['SLIDESHOW', 'name', 'title', 'title_class', 'position', 'width', 'height', 'rotation', 'frame_title', 'pictures']
         self.db_exec = db_exec
         self.json_store_manager = db_exec.create_json_manager()
         self.photo_manager = db_exec.create_sst_photo_manager()
         self.show_desc = self.json_store_manager.get_json_from_name('P_SLIDESHOW')
-        self.show_desc['title'] = name
+        self.show_desc['name'] = name
+        self.show_desc['title'] = ''
         self.show_desc['title_class'] = 'title_class'
         self.show_desc['position'] = 'center'
         self.show_desc['width'] = 300
