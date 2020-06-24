@@ -89,12 +89,12 @@
                 localStorage.setItem('get_database_data', opt);
             });
             $(document).ready(function () {
-                let opt_val = localStorage.getItem('get_database_data');
-                if (opt_val) {
-                    $('#js1 option:selected').val(opt_val);
-                } else {
-                    $('#js1 option:selected').val('mpd_page_csv');
-                }
+                {#let opt_val = localStorage.getItem('get_database_data');#}
+                {#if (opt_val) {#}
+                {#    $('#js1 option:selected').val(opt_val);#}
+                {#} else {#}
+                {#    $('#js1 option:selected').val('mpd_page_csv');#}
+                {#}#}
                 $('#js1').trigger('change');
 
             });
