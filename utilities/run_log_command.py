@@ -2,6 +2,7 @@ import shlex
 import logging
 import subprocess
 from ssfl import sst_syslog
+from pexpect import spawn
 
 
 class OvernightLogger(object):
@@ -66,5 +67,50 @@ def run_shell_command(command_line, return_result=False, outfile=False):
         else:
             sst_syslog.make_info_entry('Subprocess {} completed'.format(cmd))
             return True
+
+
+def run_interactive_shell_command(command_line_list, return_responses=False, outfile=False):
+    """Subprocess driver using Pexpect.
+
+    Args:
+        command_line_list: List of alternating commands and responses suitable for pexpect
+                            (note that list length is an odd number)
+        return_responses: List of accumulated responses
+        outfile:
+
+    Returns:
+
+    """
+    child = spawn(command_line_list[0], encoding='utf-8')
+    nxt_exchange = 1
+    while len(command_line_list) > nxt_exchange + 1:
+        child.expect(command_line_list[nxt_exchange])
+        print(child.before)
+        nxt_exchange += 1
+        child.sendline(command_line_list[nxt_exchange])
+        print(child.after)
+        nxt_exchange += 1
+
+    sst_syslog.make_info_entry(f'Pexpect spawn: {command_line_list[0]}')
+
+def pexpect_script_mysql_run_script():
+    """Create script to login to MySQL and run script.
+
+    THIS SCRIPT FAILS - CAN'T ACCEPT PASSWORD """
+    script = []
+    cmd = f"mysql --user=don --password=Luci2012 ssflask2 --default-character-set=utf8 < '/home/don/Downloads/foobat.sql';"
+    user = 'don'
+    cmd = f'mysql -u {user} -p ssflask2 --default-character-set=utf8'
+    script.append(cmd)
+    expect = '[Ee]nter [Pp]assword: '
+    script.append(expect)
+    pswd = 'Luci2012'
+    script.append(pswd)
+    expect = '.*mysql> '
+    script.append(expect)
+    source = '/home/don/Downloads/foobat.sql'
+    cmd = f"source '{source}';"
+    script.append(cmd)
+    return script
 
 

@@ -49,6 +49,13 @@
                     {% include 'base/form_entry.jinja2' %}
                 {% endwith %}
 
+                {% with %}
+                    {% set el_name=form.install_backup %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="Name of file to download" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
 
                 <div class="button">
                     <input id="submit" type="submit" value="Submit">
