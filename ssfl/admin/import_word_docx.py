@@ -21,16 +21,17 @@ def import_docx_and_add_to_db(db_exec: DBExec, form):
      Form: import_docx_form.py
      Processor: import_word_docx.py
     """
+
+    function_to_execute = form.work_function.data
     page_title = 'Default Title'
     page_name = form.page_name.data
     file = form.file_name.data
-    author = form.author.data
     overwrite = form.overwrite.data
     wordpress_file = form.wordpress_file.data
 
     page_mgr = db_exec.create_page_manager()
     try:
-        if wordpress_file:
+        if function_to_execute == 'docx_wp_page':
             build_wp = True
         else:
             build_wp = False

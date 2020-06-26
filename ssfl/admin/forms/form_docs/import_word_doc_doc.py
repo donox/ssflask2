@@ -1,10 +1,13 @@
 # Documentation fields for form manage_photo
 docs = dict()
 
-entry = dict()
-
+docs['all'] = entry = dict()
+x = """Select the function to be performed.
+"""
+entry['work_function'] = [x]
 # Fields used in all choices
-docs['import'] = entry
+
+docs['import'] = entry = dict()
 x = """The file to be imported.  Click the Browse button and navigate to the desired Word file.  Be sure it
 has the .docx extension
 """
