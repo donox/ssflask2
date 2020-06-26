@@ -34,6 +34,13 @@
                 {% endwith %}
 
                 {% with %}
+                    {% set el_name=form.wordpress_file %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="Optional Save File Name" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
+                {% with %}
                     {% set el_name=form.overwrite %}
                     {% set el_class="input" %}
                     {% set el_placeholder="" %}
@@ -61,19 +68,18 @@
             </form>
         </div>
         <script>
-{#        $ = jQuery;#}
-{#        $('#js1').change(function(){#}
-{#            $('.c_csv').parent().hide();#}
-{#            $('.c_json').parent().hide();#}
-{#            $('.c_pr').parent().hide();#}
-{#            $('.c_new').parent().hide();#}
-{#            $('.jdelete').parent().hide();#}
-{#            $('.jreload').parent().hide();#}
-{#            let opt = $('#js1 option:selected').val();#}
-{#            $('.' + opt).parent().show();#}
-{#        });#}
-        //# sourceURL=import_word.js
-
+            {#        $ = jQuery;#}
+            {#        $('#js1').change(function(){#}
+            {#            $('.c_csv').parent().hide();#}
+            {#            $('.c_json').parent().hide();#}
+            {#            $('.c_pr').parent().hide();#}
+            {#            $('.c_new').parent().hide();#}
+            {#            $('.jdelete').parent().hide();#}
+            {#            $('.jreload').parent().hide();#}
+            {#            let opt = $('#js1 option:selected').val();#}
+            {#            $('.' + opt).parent().show();#}
+            {#        });#}
+            //# sourceURL=import_word.js
 
 
         </script>

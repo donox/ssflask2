@@ -5,41 +5,26 @@ from linkages.keywords import KeywordEdge, KeywordNode
 import json
 
 
-def manage_graphs_commands(db_exec: DBExec, form):
-    """Functions that support the commands in the prototype form."""
+def manage_system_config_commands(db_exec: DBExec, form):
+    """Functions that support the commands to modify selected JSON values."""
     """
-     Route: '/sysadmin/manage_graphs' => manage_graph_commands
-     Template: manage_graphs.jinja2
-     Form: manage_graphs_form.py
-     Processor: graph_commands.py
+     Route: '/sysadmin/manage_system_configuration' => manage_system_config_commands
+     Template: manage_system_configuration.jinja2
+     Form: manage_system_configuration_form.py
+     Processor: manage_system_config_commands.py
     """
     function_to_execute = form.work_function.data
     template_name = form.template_name.data
+    new_main_page = form.new_main_page.data
     try:
-        if function_to_execute == 'gph_load':  # 'Load new graph'
+        if function_to_execute == 'sys_main':  # 'Load new graph'
             json_mgr = db_exec.create_json_manager()
-            graph_dict = json_mgr.get_json_from_name(template_name)
-            if not graph_dict:
+            main_config = json_mgr.get_json_from_name(template_name)
+            if not main_config:
                 form.errors['template_name'] = [f'Template named {template_name} was not recognized.']
                 return False
-            graph_dict = graph_dict['graph']
-            graph = Graph(db_exec)
-            graph.name = graph_dict['name']
-            graph.purpose = graph_dict['purpose']
-            nodes = graph_dict['nodes']
-            edges = graph_dict['edges']
-            for node in nodes:
-                node_type = node['node_name']
-                if node_type == 'KEYWORD_NODE':
-                    new_node = KeywordNode(None, None, shell=True)
-                # elif node_type == 'KEYWORD_FACET' or node_type == 'KEYWORD_facet':
-                #     new_node = KeywordFacetNode(None, None, None, shell=True)
-                else:
-                    raise ValueError(f'Unrecognized node_type: {node_type}')
-                new_node.deserialize(graph, json.dumps(node))
-            for edge in edges:
-                new_edge = Edge(None, None, None, shell=True)
-                new_edge.deserialize(graph, edge)
+            main_config['main'] = new_main_page
+            json_mgr.add_json(template_name, main_config)
             return True
 
 

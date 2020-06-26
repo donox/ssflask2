@@ -25,5 +25,10 @@ does not exist and vice versa.
 """
 entry['overwrite'] = [x]
 
+x = """Normally LEAVE BLANK.  To create an output file for loading into Wordpress, provide a file name.  It will be 
+saved to your current working directory with an 'html' extension.
+"""
+entry['wordpress_file'] = [x]
+
 
 entry['xx'] = ''

@@ -50,7 +50,7 @@ class ManageCloudStorageForm(FlaskForm):
                 return True
         elif self.work_function.data == 'cl_db':
             if self.save_directory.data:
-                if self.install_backup and self.db_only:
+                if self.install_backup.data and self.db_only.data:
                     self.errors['db_only'] = ['Specifying database_ONLY and install_backup is inconsistent']
                 return True
         elif self.work_function.data == 'cl_mr':

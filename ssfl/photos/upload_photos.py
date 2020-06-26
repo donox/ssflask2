@@ -7,6 +7,7 @@ from utilities.miscellaneous import get_temp_file_name
 import csv
 from config import Config
 from PIL import Image, ExifTags
+from iptcinfo3 import IPTCInfo
 from utilities.toml_support import toml_to_dict, elaborate_toml_dict, dict_to_toml_file
 
 exif_to_meta = dict()
@@ -58,8 +59,9 @@ def upload_photo_file(db_exec, folder, file):
         file.save(filepath)
         sst_syslog.make_info_entry(f'upload_photo_file: file saved - path: {filepath}')
 
-        #Check if we need to rotate photo
+        #Check if we need to rotate photo  - THis does not work - Assuming no need for now
         try:
+            # info = IPTCInfo(filepath)   # seems to be getting 'marker scan fail'
             image = Image.open(filepath)
             for orientation in ExifTags.TAGS.keys():
                 if ExifTags.TAGS[orientation] == 'Orientation':
@@ -80,8 +82,9 @@ def upload_photo_file(db_exec, folder, file):
 
         # image = Image.open(filepath)
         # for segment, content in image.applist:            # What was I looking at here???
+        #     print(segment)
         #     marker, body = content.split(b'\x00', 1)
-        #     if segment == 'APP1' and marker == b'http://ns.adobe.com/xap/1.0/':
+        #     if segment == 'APP13':
         #         foo = 3
         metadata = photo_mgr.get_empty_json()
         metadata_str = json.dumps(metadata)

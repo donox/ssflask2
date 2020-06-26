@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <!--
-     Route: '/sysadmin/manage_graphs' => manage_graph_commands
-     Template: manage_graphs.jinja2
-     Form: manage_graphs_form.py
-     Processor: graph_commands.py
+     Route: '/sysadmin/manage_system_config' => manage_system_config_commands
+     Template: manage_system_config.jinja2
+     Form: manage_system_configuration_form.py
+     Processor: manage_system_config_commands.py
 -->
 {% extends 'base/layout.jinja2' %}
 
@@ -11,17 +11,24 @@
     <section class="container">
         <div class="XXX">
             <h3 class="h3">Log In</h3>
-{#                                    Set route to handle this form immediately below here               #}
-            <form action="{{ url_for('sysadmin_bp.manage_graphs') }}" method="post">
+            {#                                    Set route to handle this form immediately below here               #}
+            <form action="{{ url_for('sysadmin_bp.manage_system_config') }}" method="post">
                 {% with %}
                     {% set el_name=form.work_function %}
                     {% set el_class="input" %}
                     {% set el_placeholder="0000" %}
                     {% include 'base/form_entry.jinja2' %}
                 {% endwith %}
-{#              Add field set for each field on the form.  Set name in the el_name variable #}
+
                 {% with %}
                     {% set el_name=form.template_name %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="template slug" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
+                {% with %}
+                    {% set el_name=form.new_main_page %}
                     {% set el_class="input" %}
                     {% set el_placeholder="template slug" %}
                     {% include 'base/form_entry.jinja2' %}
@@ -55,20 +62,23 @@
             // Make a file name for the sourceURL to enable browser to see this code at runtime
             $ = jQuery;
             $('#js1').change(function () {
-                $('.gph_load').parent().hide();
-                $('.usr_del').parent().hide();
-                $('.usr_add').parent().hide();
-                $('.usr_mod').parent().hide();
-                 let opt = $('#js1 option:selected').val();
-            $('.' + opt).parent().show();
-            localStorage.setItem('manage_graphs', opt);
-        });
-        $(document).ready(function(){
-        let opt_val = localStorage.getItem('manage_graphs');
-        $('#js1').trigger('change');
-        if (opt_val) {$('#js1 option:selected').val(opt_val);}
-        else {$('#js1 option:selected').val('gph_load');}
-        });
+                $('.sys_main').parent().hide();
+                $('.xxx').parent().hide();
+                $('.xxx').parent().hide();
+                $('.xxx').parent().hide();
+                let opt = $('#js1 option:selected').val();
+                $('.' + opt).parent().show();
+                localStorage.setItem('manage_sys_config', opt);
+            });
+            $(document).ready(function () {
+                let opt_val = localStorage.getItem('manage_sys_config');
+                $('#js1').trigger('change');
+                if (opt_val) {
+                    $('#js1 option:selected').val(opt_val);
+                } else {
+                    $('#js1 option:selected').val('sys_main');
+                }
+            });
             //# sourceURL=manage_graphs.js
         </script>
     </section>

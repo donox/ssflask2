@@ -26,6 +26,8 @@ class ImportMSWordDocForm(FlaskForm):
                              render_kw={"class": "edit", "docs": docs['import']['overwrite']})
     author = StringField(label='Author', default='Not Available', render_kw={"class": "edit", "docs": docs['import'][
         'author']})  # Extract from document if it exists
+    wordpress_file = StringField(label='File for Wordpress output', validators=[Optional()],
+                                 render_kw={"class": "edit", "docs": docs['import']['wordpress_file']})
     submit = SubmitField('Import Document')
 
     def validate_on_submit(self, db_exec: DBExec):

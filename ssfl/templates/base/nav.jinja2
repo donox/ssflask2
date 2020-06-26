@@ -94,6 +94,9 @@
                     System Admin
                 </a>
                 <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                    <a class="navbar-item" href="{{ url_for('sysadmin_bp.manage_system_config') }}">
+                        Manage System Configuration Items
+                    </a>
                     <a class="navbar-item" href="{{ url_for('sysadmin_bp.manage_groups') }}">
                         Manage Groups
                     </a>
