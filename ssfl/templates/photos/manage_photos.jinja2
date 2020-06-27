@@ -56,6 +56,27 @@
                             {% include 'base/form_entry.jinja2' %}
                         {% endwith %}
 
+                        {% with %}
+                            {% set el_name=form.wp_photo_id %}
+                            {% set el_class="input" %}
+                            {% set el_placeholder="ID in Wordpress" %}
+                            {% include 'base/form_entry.jinja2' %}
+                        {% endwith %}
+
+                        {% with %}
+                            {% set el_name=form.wp_url %}
+                            {% set el_class="input" %}
+                            {% set el_placeholder="Filename in Wordpress" %}
+                            {% include 'base/form_entry.jinja2' %}
+                        {% endwith %}
+
+                        {% with %}
+                            {% set el_name=form.sst_photo_slug %}
+                            {% set el_class="input" %}
+                            {% set el_placeholder="Slug in New System" %}
+                            {% include 'base/form_entry.jinja2' %}
+                        {% endwith %}
+
                         <div class="button">
                             <input id="submit" type="submit" value="Submit">
                         </div>
@@ -75,23 +96,19 @@
                         {{ form.csrf_token }}
                     </form>
                 </div>
-        </div>
+            </div>
 
         </div>
         <script>
-        $ = jQuery;
-        $('#js1').change(function(){
-            $('.ph_tml').parent().hide();
-            $('.ph_up').parent().hide();
-            $('.df').parent().hide();
-            let opt = $('#js1 option:selected').val();
-            $('.' + opt).parent().show();
-        });
-        //# sourceURL=manage_photos.js
-
-
-
-
+            $ = jQuery;
+            $('#js1').change(function () {
+                $('.ph_tml').parent().hide();
+                $('.ph_up').parent().hide();
+                $('.ph_ngg').parent().hide();
+                let opt = $('#js1 option:selected').val();
+                $('.' + opt).parent().show();
+            });
+            //# sourceURL=manage_photos.js
 
 
         </script>
