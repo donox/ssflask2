@@ -1,6 +1,6 @@
 from utilities.run_log_command import run_interactive_shell_command as run_shell_cmd
 from utilities.run_log_command import run_shell_command
-from utilities.run_log_command import pexpect_script_mysql_run_script as mysql_script
+from utilities.run_log_command import pexpect_script_mysql_run_sql_script as mysql_script
 from utilities.miscellaneous import copytree
 import shutil
 import gzip
@@ -10,7 +10,9 @@ import os
 import datetime as dt
 from zipfile import ZipFile
 from config import Config
-from utilities.miscellaneous import mergefolders
+from utilities.miscellaneous import mergefolders, get_temp_file_name
+from utilities.run_log_command import pexpect_script_mysql_run_sql_script
+from utilities.run_log_command import run_interactive_shell_command
 
 
 
@@ -184,17 +186,19 @@ class ManageGoogleDrive(object):
                                 db_sql = f.read().decode('latin1')
                                 # Updraft Fails to create a valid SQL import
                                 db_sql = db_sql.replace("DEFAULT '0000-00-00 00:00:00", "DEFAULT '2000-01-01 00:00:00")
-                                db_sql = db_sql.replace("\n", " ")
-                                # with open('/home/don/Downloads/foobat.sql', 'w') as fl:
-                                #     fl.write(db_sql)
-                                #     fl.close()
-                                # # This Command FAILS ----------------------------------------
-                                # cmd = mysql_script()
-                                # res = run_shell_cmd(cmd)
-                                # foo = 3
+                                # db_sql = db_sql.replace("\n", " ")
+                                tmp_sql = get_temp_file_name('wp_db_restore', 'sql')
+                                with open(tmp_sql, 'w') as fl:
+                                    fl.write(db_sql)
+                                    fl.close()
+                                cmd = mysql_script(tmp_sql)
+                                log = get_temp_file_name('db_restore', 'log')
+                                with open(log, 'w') as lg:
+                                    run_interactive_shell_command(cmd, logfile=lg)
                         else:
                             raise ValueError(f'Failed to download database file')
                     if file_kind.startswith('other'):
+                        print(f'OTHER: {file}')
                         if self._download_backup_file(file_dir, file):
                             with ZipFile(file_dir + file, 'r') as zf:
                                 zf.extractall(file_dir)

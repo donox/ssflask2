@@ -189,8 +189,8 @@ class MultiStoryPage(object):
                     photo = self.photo_manager.get_photo_from_id(int(pid))
                 else:
                     photo = self.photo_manager.get_photo_from_slug(pid)
+                photo_json = self.storage_manager.make_json_descriptor('PICTURE')
                 if photo:
-                    photo_json = self.storage_manager.make_json_descriptor('PICTURE')
                     photo_json['PICTURE']['id'] = photo.id
                     photo_json['PICTURE']['url'] = self.photo_manager.get_photo_url(photo.id)
                     photo_json['PICTURE']['caption'] = photo.caption
@@ -203,7 +203,7 @@ class MultiStoryPage(object):
         else:
             raise SystemError(f'Unrecognized descriptor {elem["descriptor"]} when expecting a slideshow element')
         foo = 3
-    
+
     def _fill_story_snippet(self, elem):
         """Fill story snippet descriptor."""
         # descriptor_story_snippet_fields = ["id", "title", "name", "author", "date", "snippet",

@@ -2,7 +2,8 @@ import shlex
 import logging
 import subprocess
 from ssfl import sst_syslog
-from pexpect import spawn
+from pexpect import spawn, EOF, TIMEOUT
+from config import Config
 
 
 class OvernightLogger(object):
@@ -69,48 +70,50 @@ def run_shell_command(command_line, return_result=False, outfile=False):
             return True
 
 
-def run_interactive_shell_command(command_line_list, return_responses=False, outfile=False):
+def run_interactive_shell_command(command_list, logfile=False):
     """Subprocess driver using Pexpect.
 
     Args:
-        command_line_list: List of alternating commands and responses suitable for pexpect
+        command_list: List of alternating commands and responses suitable for pexpect
                             (note that list length is an odd number)
-        return_responses: List of accumulated responses
-        outfile:
-
+        logfile: Open file-like object for writing
     Returns:
-
+        None
     """
-    child = spawn(command_line_list[0], encoding='utf-8')
+    child = spawn(command_list[0], encoding='utf-8', logfile=logfile, timeout=20)
     nxt_exchange = 1
-    while len(command_line_list) > nxt_exchange + 1:
-        child.expect(command_line_list[nxt_exchange])
-        print(child.before)
+    while len(command_list) > nxt_exchange + 1:
+        ndx = child.expect([command_list[nxt_exchange], EOF, TIMEOUT])
+        if ndx > 0:
+            logfile.write(child.before)
+            child.close()
+            return
         nxt_exchange += 1
-        child.sendline(command_line_list[nxt_exchange])
-        print(child.after)
+        child.sendline(command_list[nxt_exchange])
         nxt_exchange += 1
+    sst_syslog.make_info_entry(f'Pexpect spawn: {command_list[0]}')
+    child.close()
 
-    sst_syslog.make_info_entry(f'Pexpect spawn: {command_line_list[0]}')
-
-def pexpect_script_mysql_run_script():
-    """Create script to login to MySQL and run script.
-
-    THIS SCRIPT FAILS - CAN'T ACCEPT PASSWORD """
+def pexpect_script_mysql_run_sql_script(script_to_run):
+    """Create script to login to MySQL and run sql script.
+ """
     script = []
-    cmd = f"mysql --user=don --password=Luci2012 ssflask2 --default-character-set=utf8 < '/home/don/Downloads/foobat.sql';"
-    user = 'don'
-    cmd = f'mysql -u {user} -p ssflask2 --default-character-set=utf8'
+    user = Config.SQLALCHEMY_USERNAME
+    pswd = Config.SQLALCHEMY_PASSWORD
+    db = Config.SQLALCHEMY_DATABASE_NAME
+    cmd = f'mysql -u {user} -p {db} --default-character-set=utf8'
     script.append(cmd)
     expect = '[Ee]nter [Pp]assword: '
     script.append(expect)
-    pswd = 'Luci2012'
     script.append(pswd)
     expect = '.*mysql> '
     script.append(expect)
-    source = '/home/don/Downloads/foobat.sql'
-    cmd = f"source '{source}';"
+    cmd = f"source {script_to_run};"
     script.append(cmd)
+    script.append(expect)
+    cmd = 'quit;'
+    script.append(cmd)
+    script.append(expect)
     return script
 
 
