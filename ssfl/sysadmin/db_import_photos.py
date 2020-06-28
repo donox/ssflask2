@@ -159,7 +159,7 @@ class ImportPhotoData(object):
                     print(msg)
         # Verify that entries have an actual photo
         for photo in photo_mgr.get_photo_generator():
-            path_name = Config.USER_DIRECTORY_IMAGES + photo.folder_name
+            path_name = Config.USER_DIRECTORY_IMAGES + photo.folder_name + '/'
             file_name = path_name + photo.file_name
             if not (photo.file_name and os.path.isdir(path_name) and os.path.isfile(file_name)):
                 print(f'Deleting {photo.slug} : id: {photo.id}')

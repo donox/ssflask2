@@ -28,10 +28,19 @@ class ImportPageData(object):
 
 
     def import_useable_pages_from_wp_database(self):
+        # There are entries in wp_posts that have no post_name.  In those cases, we generate a dummy.
+        # It is possible that a page exists in table page (new systems) with that name from a prior run
+        # so we have to determine an initial value for dummy_count that does not generate a clash.
         dummy_page_name = 'page-dummy-{}'
         dummy_count = 0
+        sql = f'select page_name from page where page_name like "page-dummy%";'
+        res = self.db_session.execute(sql).fetchall()
+        for page in res:
+            nbr = int(page[0].split('-')[-1])
+            if nbr >= dummy_count:
+                dummy_count = nbr + 1
         field_post_name = self.get_field_index('post_name', 'wp_posts')
-        for page_row in self.get_wp_post_data():
+        for page_row in self.get_wp_post_data():            # most recent revision of each page in wp_posts
             pr = [x for x in page_row]
             if not pr[field_post_name]:
                 pr[field_post_name] = dummy_page_name.format(dummy_count)
@@ -91,7 +100,7 @@ class ImportPageData(object):
             None
 
     def get_wp_post_data(self):
-        """Generator for row of data from wp_posts table.
+        """Generator for rows of data from wp_posts table.
 
         Returns(list(tuple)):  List of tuples containing {field name: value}
 
@@ -163,35 +172,38 @@ class ImportPageData(object):
             None    (may side-effect the database)
 
         """
-        post_id = data_row[self.get_field_index('id', 'wp_posts')]
-        sql = f'select page_id from v_page_post where post_id={post_id};'
+        try:
+            post_id = data_row[self.get_field_index('id', 'wp_posts')]
+            sql = f'select page_id from v_page_post where post_id={post_id};'
 
-        # (1) Check if in v_page_post
-        res = self.db_session.execute(sql).first()
-        if res:
-            # (2) If exists - should check if it is newer than current page
-            return None
+            # (1) Check if in v_page_post
+            res = self.db_session.execute(sql).first()
+            if res:
+                # (2) If exists - should check if it is newer than current page
+                return None
 
-        # (3) Make Page object and add to db
-        title = unidecode.unidecode(data_row[self.get_field_index('post_title', 'wp_posts')])
-        # page_name = self.get_page_slug(data_row[self.get_field_index('guid', 'wp_posts')])
-        page_name = data_row[self.get_field_index('post_name', 'wp_posts')]
-        count = 0   # There are duplicate names to defend against
-        while page_name in self.page_names:
-            page_name += str(count)
-            count += 1
-        self.page_names.add(page_name)
-        author = self.get_author(data_row[self.get_field_index('post_author', 'wp_posts')])
-        if not author:
-            author = 'Author unknown'
-        page_date = max(data_row[self.get_field_index('post_date', 'wp_posts')],
-                        data_row[self.get_field_index('post_modified', 'wp_posts')])
-        content = unidecode.unidecode(data_row[self.get_field_index('post_content', 'wp_posts')])
-        new_page = Page(page_title=title, page_name=page_name, page_author=author, page_date=page_date,
-                        page_content=content, page_status='publish', page_guid='TBD')
-        new_page.add_to_db(self.db_session, commit=True)
+            # (3) Make Page object and add to db
+            title = unidecode.unidecode(data_row[self.get_field_index('post_title', 'wp_posts')])
+            # page_name = self.get_page_slug(data_row[self.get_field_index('guid', 'wp_posts')])
+            page_name = data_row[self.get_field_index('post_name', 'wp_posts')]
+            count = 0   # There are duplicate names to defend against
+            while page_name in self.page_names:
+                page_name += str(count)
+                count += 1
+            self.page_names.add(page_name)
+            author = self.get_author(data_row[self.get_field_index('post_author', 'wp_posts')])
+            if not author:
+                author = 'Author unknown'
+            page_date = max(data_row[self.get_field_index('post_date', 'wp_posts')],
+                            data_row[self.get_field_index('post_modified', 'wp_posts')])
+            content = unidecode.unidecode(data_row[self.get_field_index('post_content', 'wp_posts')])
+            new_page = Page(page_title=title, page_name=page_name, page_author=author, page_date=page_date,
+                            page_content=content, page_status='publish', page_guid='TBD')
+            new_page.add_to_db(self.db_session, commit=True)
 
-        # (4) Add entry to v_page_post
-        sql = f'insert into v_page_post (page_id, post_id ) values ({new_page.id},{post_id});'
-        self.db_session.execute(sql)
-        self.db_session.commit()
+            # (4) Add entry to v_page_post
+            sql = f'insert into v_page_post (page_id, post_id ) values ({new_page.id},{post_id});'
+            self.db_session.execute(sql)
+            self.db_session.commit()
+        except Exception as e:
+            foo = 3
