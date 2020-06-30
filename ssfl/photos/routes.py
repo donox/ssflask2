@@ -10,6 +10,7 @@ from .upload_photos import upload_photo_file
 from ssfl.admin.routes import build_route
 from ssfl import sst_syslog
 from config import Config
+import os
 
 # Set up a Blueprint
 photo_bp = Blueprint('photo_bp', __name__,
@@ -59,7 +60,10 @@ def upload_photos():
     try:
         if request.method == 'GET':
             context = dict()
-            context['form'] = ManagePhotosForm()
+            for _, dirs, _ in os.walk(Config.USER_DIRECTORY_IMAGES):
+                context['folders'] = sorted(dirs, key=lambda v: v.lower())
+                break
+            # context['form'] = ManagePhotosForm()
             context['host'] = Config.SYSTEM_HOST
             return render_template('photos/upload_photos.jinja2', **context)
         elif request.method == 'POST':

@@ -7,6 +7,7 @@ module.exports = {
         dir_path + '/js/index.js',
         dir_path + '/js/sst_javascript.js',
         dir_path + '/sass/sst_styles.scss',
+        dir_path + '/sass/mystyles.scss',
         dir_path + '/css/nav_mystyles.css',
         dir_path + '/css/calendar.css',
     ],
@@ -28,7 +29,7 @@ module.exports = {
     module: {
         rules: [
             {
-                test: /\.(scss|css)$/i,
+                test: /\.(scss|sass|css)$/i,
                 use: ['style-loader', 'css-loader', 'sass-loader'],
             },
             {

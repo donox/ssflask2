@@ -39,6 +39,13 @@
                     or a folder containing multiple photos into the upload pane.
                 </li>
             </ol>
+            <p style="color: red">NOTE: This is a list of all known folders.  At the moment, it is necessary to copy the value and insert
+                it in the Collection box till I can figure out the bug.</p>
+            <select id="folder_list">
+                {%  for folder in folders %}
+                    <option>{{ folder }}</option>
+                {% endfor %}
+            </select>
             <div class="customA-font-size-title container pt-3">
                 <label class="h5" for="dropzonecollection">Collection: </label>
                 <input type="text" id="dropzonecollection" style="min-width: 400px; min-height: 40px"/>
@@ -61,6 +68,11 @@
         var $SCRIPT_ROOT = "{{ host }}" + "{{ url_for('photo_bp.upload_photos') }}";
         $ = jQuery;
         $(document).ready(function(){
+            $("#folder_list").change(function() {
+                alert("hello");
+                folder_val = $("#folder_list option:selected").text();
+                $('#dropzoncollection').val(folder_val);
+            };
             Dropzone.options.ourdropzone = {
 
               // Prevents Dropzone from uploading dropped files immediately

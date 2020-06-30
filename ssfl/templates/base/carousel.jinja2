@@ -12,12 +12,14 @@
                     {% if carousel.title and carousel.title != 'NO NAME' %}
                         <figcaption class="title {{ carousel.title_class }}">{{ carousel.title }}</figcaption>
                     {% endif %}
-                    <ol class="carousel-indicators">
-                        {% for photo in carousel.pictures %}
-                            <li data-target="#{{ carousel_id }}" data-slide-to="{{ loop.index }}"
-                                {% if loop.index == 0 %}class="active"{% endif %}></li>
-                        {% endfor %}
-                    </ol>
+                    {% if (carousel.pictures | length) > 1 %}
+                        <ol class="carousel-indicators">
+                            {% for photo in carousel.pictures %}
+                                <li data-target="#{{ carousel_id }}" data-slide-to="{{ loop.index }}"
+                                    {% if loop.index == 0 %}class="active"{% endif %}></li>
+                            {% endfor %}
+                        </ol>
+                    {% endif %}
                     <div class="CAROUSEL3 carousel-inner" role="listbox" data-interval="{{ carousel.rotation }}"
                          data-wrap="True"
                          style="alignment: center; max-height:{{ carousel.height }}px; max-width:{{ carousel.width }}px;">
@@ -30,14 +32,16 @@
                             {% include 'base/carousel_pic.jinja2' %}
                         {% endfor %}
                     </div>
-                    <a class="carousel-control-prev" href="#{{ carousel_id }}" role="button" data-slide="prev">
-                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                        <span class="sr-only">Previous</span>
-                    </a>
-                    <a class="carousel-control-next" href="#{{ carousel_id }}" role="button" data-slide="next">
-                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                        <span class="sr-only">Next</span>
-                    </a>
+                    {% if (carousel.pictures | length) > 1 %}
+                        <a class="carousel-control-prev" href="#{{ carousel_id }}" role="button" data-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="sr-only">Previous</span>
+                        </a>
+                        <a class="carousel-control-next" href="#{{ carousel_id }}" role="button" data-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="sr-only">Next</span>
+                        </a>
+                    {% endif %}
                 </div>
             </div>
         </div>
