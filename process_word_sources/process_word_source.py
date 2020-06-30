@@ -164,8 +164,9 @@ class ParsedElement(object):
 
 
 class TopElement(ParsedElement):
-    def __init__(self, source_list, db_exec: DBExec):
+    def __init__(self, source_list, db_exec: DBExec, build_for_wordpress=False):
         self.db_exec = db_exec
+        self.build_for_wordpress = build_for_wordpress
         self.environments = dict()
         self.environments_by_name = dict()  # Environments must have unique names, independent of type.
         self.environment_stack = list()  # Environments that control interpretation set/cleared by latex expressions
@@ -292,7 +293,7 @@ class TopElement(ParsedElement):
 
     def place_figure(self, name):
         frame = self.get_photo_frame(name)
-        return frame.get_html()
+        return frame.get_html(build_for_wordpress=self.build_for_wordpress)
 
     # Content features are intended to provide a mechanism for accumulating information
     # while processing a document that may be useful at a higher level such as placing the
@@ -1045,7 +1046,7 @@ class LatexElement(ParsedElement):
                 env['figures'] = [frame]
             return ''
         else:
-            return verify(frame.get_html())
+            return verify(frame.get_html(build_for_wordpress=top_element.build_for_wordpress))
 
     def _latex_newform(self):
         top_element = super().get_top()
@@ -1113,9 +1114,10 @@ class WordSourceDocument(object):
 
     """
 
-    def __init__(self, db_exec: DBExec, logger):
+    def __init__(self, db_exec: DBExec, logger, build_for_wordpress=False):
         self.logger = logger
         self.db_exec = db_exec
+        self.build_for_wordpress = build_for_wordpress
         self.docx_source = None
         self.content_features = dict()
         self.text_as_substrings = []
@@ -1239,7 +1241,7 @@ class WordSourceDocument(object):
     def _parse_whole_text(self, txt):
         try:
             txt_strings = self._create_delimited_strings(txt)
-            te = TopElement(txt_strings, self.db_exec)
+            te = TopElement(txt_strings, self.db_exec, build_for_wordpress=self.build_for_wordpress)
             te.parse()
             te.render()
             te.post_process()

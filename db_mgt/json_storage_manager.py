@@ -77,8 +77,9 @@ class JSONStorageManager(object):
                                           "title": None, "text": None, "slides": "S_CAROUSEL",
                                           "classes": ["carousel", "carousel-indicators", "carousel-caption"],
                                           "descriptor": "CAROUSEL_SNIPPET"}
+    # 'name' is name of the descriptor used for frame or references and is different from the title
     descriptor_slideshow_snippet_fields = {"SLIDESHOW_SNIPPET": None, "node_name": "SLIDESHOW_SNIPPET", "id": None,
-                                           "title": None, "text": None,
+                                           "name": None, "title": None, "text": None,
                                            "slides": "S_SLIDESHOW", "descriptor": "SLIDESHOW_SNIPPET"}
 
     # Complex/predefined types

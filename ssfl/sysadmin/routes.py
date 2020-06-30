@@ -16,8 +16,10 @@ from .forms.manage_users_form import ManageUsersForm
 from .forms.sst_login_form import SSTLoginForm
 from .forms.manage_files_form import ManageFilesForm
 from .forms.manage_graphs_form import ManageGraphsForm
+from .forms.manage_systerm_config_form import ManageSystemConfigurationForm
 from ssfl.sysadmin.manage_cloud_storage import manage_cloud_storage
 from ssfl.sysadmin.db_process_imports import db_process_imports
+from ssfl.sysadmin.manage_system_config import manage_system_config_commands
 
 # Set up a Blueprint
 sysadmin_bp = Blueprint('sysadmin_bp', __name__,
@@ -37,6 +39,20 @@ def test():
     return app.send_static_file('dist/index.html')
 
 
+@sysadmin_bp.route('/sysadmin/manage_system_config', methods=['GET', 'POST'])
+@roles_required('SysAdmin')
+def manage_system_config():
+    """Functions that support the commands to modify selected JSON values"""
+    """
+     Route: '/sysadmin/manage_groups' => manage_groups
+     Template: manage_groups.jinja2
+     Form: manage_groups_form.py
+     Processor: manage_groups.py
+    """
+    return build_route('sysadmin/manage_system_config.jinja2', ManageSystemConfigurationForm(),
+                       manage_system_config_commands, '/sysadmin/manage_system_config')()
+
+
 @sysadmin_bp.route('/sysadmin/manage_groups', methods=['GET', 'POST'])
 @roles_required('SysAdmin')
 def manage_groups():
@@ -52,7 +68,7 @@ def manage_groups():
 
 
 @sysadmin_bp.route('/admin/cloud', methods=['GET', 'POST'])
-@roles_required(['SysAdmin',  'Admin'])
+@roles_required(['SysAdmin', 'Admin'])
 def sst_cloud():
     """Manage interaction with Google Drive."""
     """
@@ -78,8 +94,9 @@ def manage_users():
     return build_route('sysadmin/manage_users.jinja2', ManageUsersForm(), manage_users_functions,
                        '/sysadmin/manage_users')()
 
+
 @sysadmin_bp.route('/sysadmin/sst_import_database', methods=['GET', 'POST'])
-@roles_required(['SysAdmin',  'Admin'])
+@roles_required(['SysAdmin', 'Admin'])
 def sst_import_database():
     """Functions to import data from wp db to flask db.."""
     """

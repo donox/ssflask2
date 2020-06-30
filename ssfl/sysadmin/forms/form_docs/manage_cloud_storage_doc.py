@@ -46,7 +46,14 @@ entry['save_directory'] = [x]
 
 # Download only the database file
 # docs['all'] = entry = dict()
-x = """Download only the database file from the current backup.
+x = """For existing Wordpress backup, download only the database file from the current backup.
 """
 entry['db_only'] = [x]
+
+# Install Backup
+# docs['all'] = entry = dict()
+x = """Install results of download of a Wordpress backup.  This includes updating the database 
+and downloading and updating the photo gallery
+"""
+entry['install_backup'] = [x]
 

@@ -97,7 +97,7 @@ def manage_json_templates(db_exec, form):
     toml_overwrite = form.toml_overwrite.data
     toml_download_name = form.toml_download_name.data
 
-    json_fields = ['delete', 'id', 'name', 'is prototype', 'element kind', 'last update']
+    json_fields = ['download', 'delete', 'id', 'name', 'is prototype', 'element kind', 'last update']
     result_template = 'admin/db_display_json_data.jinja2'
 
     submit = form.submit.data
@@ -129,9 +129,16 @@ def manage_json_templates(db_exec, form):
                 del_button['row_id'] = template.id
                 del_button['function'] = 'Delete'
                 del_button['method'] = 'POST'
+                download_button = dict()
+                download_button['action'] = '/admin/delete_row'
+                download_button['table'] = 'json_store'
+                download_button['row_id'] = template.id
+                download_button['function'] = 'Download'
+                download_button['method'] = 'POST'
                 field_values = {'id': template.id, 'name': template.name, 'prototype': is_proto,
                                 'el_kind': el_kind,
-                                'last_update': template.last_update, 'del_button': del_button}
+                                'last_update': template.last_update, 'del_button': del_button,
+                                'download_button': download_button}
                 res.append(field_values)
             context = dict()
             context['function'] = 'jdisplay'
@@ -275,19 +282,12 @@ def manage_json_templates(db_exec, form):
         log_sst_error(sys.exc_info(), 'TOML Decode Error')
         form.errors['Exception'] = [f'Template Error: {e.args[0]}']
         return False
-    except InvalidDateOrNumberTomlError as e:
-        foo = 3
-        ctx.fail((
-            'Duplicate key: "{}" '
-            'One frequent cause of this is using the same account name twice.'
-        )).format(e.field)
-    except DuplicateKeyTomlError as e:
-        foo = 3
-        ctx.fail((
-            'Invalid date or number on field "{}" '
-            'One frequent cause of this is forgetting to put quotes '
-            'around secret keys. Check the file.'
-        )).format(e.field)
+    except Exception as e:
+        log_sst_error(sys.exc_info(), f'Unknown TOML Error: {e.args}')
+        form.errors['Exception'] = [f'Unknown TOML Error: {e.args[0]}']
+        return False
+
+
 
     except Exception as e:
         log_sst_error(sys.exc_info(), 'Unexpected Error in edit_json_file')

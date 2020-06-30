@@ -20,6 +20,7 @@ def manage_cloud_storage(db_exec: DBExec, form):
     save_directory = form.save_directory.data
     filename = form.filename.data
     db_only = form.db_only.data
+    install_backup = form.install_backup.data
 
     result_template = 'sysadmin/list_directory.jinja2'
 
@@ -58,7 +59,7 @@ def manage_cloud_storage(db_exec: DBExec, form):
             return result
 
         elif function_to_execute == 'cl_db':  # Download Backup
-            res = drive_mgr.download_backup(save_directory, db_only)
+            res = drive_mgr.download_backup(save_directory, db_only=db_only, install_backup=install_backup)
             return res
 
         else:

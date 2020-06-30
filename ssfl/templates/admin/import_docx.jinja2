@@ -13,6 +13,12 @@
             <form action="{{ url_for('admin_bp.sst_import_page') }}" method="post"
                   enctype="multipart/form-data">
                 {% with %}
+                    {% set el_name=form.work_function %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="0000" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+                {% with %}
                     {% set el_name=form.page_name %}
                     {% set el_class="input" %}
                     {% set el_placeholder="Page name (e.g., foo-bar-xx)" %}
@@ -20,16 +26,16 @@
                 {% endwith %}
 
                 {% with %}
-                    {% set el_name=form.author %}
-                    {% set el_class="input" %}
-                    {% set el_placeholder="Author (to override doc)" %}
+                    {% set el_name=form.file_name %}
+                    {% set el_class="file" %}
+                    {% set el_placeholder="" %}
                     {% include 'base/form_entry.jinja2' %}
                 {% endwith %}
 
                 {% with %}
-                    {% set el_name=form.file_name %}
-                    {% set el_class="file" %}
-                    {% set el_placeholder="" %}
+                    {% set el_name=form.wordpress_file %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="Optional Save File Name" %}
                     {% include 'base/form_entry.jinja2' %}
                 {% endwith %}
 
@@ -61,21 +67,14 @@
             </form>
         </div>
         <script>
-{#        $ = jQuery;#}
-{#        $('#js1').change(function(){#}
-{#            $('.c_csv').parent().hide();#}
-{#            $('.c_json').parent().hide();#}
-{#            $('.c_pr').parent().hide();#}
-{#            $('.c_new').parent().hide();#}
-{#            $('.jdelete').parent().hide();#}
-{#            $('.jreload').parent().hide();#}
-{#            let opt = $('#js1 option:selected').val();#}
-{#            $('.' + opt).parent().show();#}
-{#        });#}
-        //# sourceURL=import_word.js
-
-
-
+            $ = jQuery;
+            $('#js1').change(function () {
+                $('.docx_new_page').parent().hide();
+                $('.docx_wp_page').parent().hide();
+                let opt = $('#js1 option:selected').val();
+                $('.' + opt).parent().show();
+            });
+            //# sourceURL=import_word.js
         </script>
     </section>
 {% endblock %}

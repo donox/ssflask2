@@ -35,5 +35,20 @@ that the photos being updated are identified by the id which is specified in the
 """
 entry['upload_filename'] = [x]
 
+x = """Name of the file in table wp_ngg_pictures (file name uploaded to WP) which is used to create
+the URL for loading the photo.  Name should include '.jpg' extension.
+"""
+entry['wp_url'] = [x]
+
+x = """ID of photo as given in Wordpress
+"""
+entry['wp_photo_id'] = [x]
+
+x = """Slug for photo on Sunnyside-Times.org (new system)
+"""
+entry['sst_photo_slug'] = [x]
+
+
+
 
 

@@ -19,6 +19,12 @@
             </li>
             <li class="nav-item">
                 <a class="navbar-item {{ nb_color }}"
+                   href="{{ url_for('main.sst_get_menu_page', page='cool-stories-index') }}">
+                    Cool Stories
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="navbar-item {{ nb_color }}"
                    href="{{ url_for('main.sst_get_menu_page', page='activities-index') }}">
                     Activities
                 </a>
@@ -88,6 +94,9 @@
                     System Admin
                 </a>
                 <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                    <a class="navbar-item" href="{{ url_for('sysadmin_bp.manage_system_config') }}">
+                        Manage System Configuration Items
+                    </a>
                     <a class="navbar-item" href="{{ url_for('sysadmin_bp.manage_groups') }}">
                         Manage Groups
                     </a>

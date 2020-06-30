@@ -1,4 +1,4 @@
-from wtforms import Form, StringField, SubmitField, BooleanField
+from wtforms import Form, StringField, SubmitField, BooleanField, SelectField
 from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, Length, Optional
 from flask_wtf.file import FileField, FileRequired, FileStorage
 
@@ -19,13 +19,20 @@ class ImportMSWordDocForm(FlaskForm):
      Form: import_docx_form.py
      Processor: import_word_docx.py
     """
-    file_name = FileField('Word Document', render_kw={"class": "edit", "docs": docs['import']['file_name']})
+    supported_functions = [('docx_new_page', 'Make New SsT.org Page'),
+                           ('docx_wp_page', 'Make Wordpress Page'),
+                           ('xx', 'YYY')]
+    work_function = SelectField(label='Select Function', choices=supported_functions,
+                                render_kw={"id": "js1", "class": "docx_new_page docx_wp_page xx",
+                                           "docs": docs['all']['work_function']})
+    file_name = FileField('Word Document', render_kw={"class": "docx_new_page docx_wp_page",
+                                                      "docs": docs['import']['file_name']})
     page_name = StringField('Page Name', validators=[Optional()],
-                            render_kw={"class": "edit", "docs": docs['import']['page_name']})
+                            render_kw={"class": "docx_new_page", "docs": docs['import']['page_name']})
     overwrite = BooleanField('Overwrite Existing Page', default=True,
-                             render_kw={"class": "edit", "docs": docs['import']['overwrite']})
-    author = StringField(label='Author', default='Not Available', render_kw={"class": "edit", "docs": docs['import'][
-        'author']})  # Extract from document if it exists
+                             render_kw={"class": "docx_new_page", "docs": docs['import']['overwrite']})
+    wordpress_file = StringField(label='File for Wordpress output', validators=[Optional()],
+                                 render_kw={"class": "docx_wp_page", "docs": docs['import']['wordpress_file']})
     submit = SubmitField('Import Document')
 
     def validate_on_submit(self, db_exec: DBExec):

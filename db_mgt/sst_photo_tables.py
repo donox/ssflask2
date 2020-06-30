@@ -18,7 +18,7 @@ from .base_table_manager import BaseTableManager
 from .json_tables import JSONStorageManager as jsm
 from db_mgt.pa_db_connect_problems import TestPADB
 from random import randint
-from utilities.sst_exceptions import sst_syslog
+from ssfl import sst_syslog
 
 json_metadata_descriptor = {"title": None, "photographer": None, "people": [],
                             "keywords": None, "xxx": None}
@@ -165,9 +165,9 @@ class SSTPhotoManager(BaseTableManager):
             res = self.db_session.execute(sql).first()
             if res:
                 gv = self.get_photo_field_value(res)
-                photo = SSTPhoto(id=gv('id'), slug=gv('slug'), folder_name=gv('folder_name'), caption=gv('caption'),
-                                 alt_text=gv('alt_text'), file_name=gv('file_name'), image_date=gv('image_date'),
-                                 json_metadata=gv('json_metadata'))
+                photo = SSTPhoto(id=gv('id'), old_id=gv('old_id'), slug=gv('slug'), folder_name=gv('folder_name'),
+                                 caption=gv('caption'), alt_text=gv('alt_text'), file_name=gv('file_name'),
+                                 image_date=gv('image_date'),  json_metadata=gv('json_metadata'))
                 return photo
             else:
                 raise
@@ -203,7 +203,7 @@ class SSTPhotoManager(BaseTableManager):
         res = []
         for row in sql_res:
             gv = self.get_photo_field_value(row)
-            photo = SSTPhoto(id=gv('id'), slug=gv('slug'), folder_name=gv('folder_name'),
+            photo = SSTPhoto(id=gv('id'), old_id=gv('old_id'), slug=gv('slug'), folder_name=gv('folder_name'),
                              file_name=gv('file_name'),
                              image_date=gv('image_date'), json_metadata=gv('json_metadata'))
             res.append(photo)
@@ -239,7 +239,8 @@ class SSTPhotoManager(BaseTableManager):
                     # This should not be necessary, but we may be inconsistent.
                     return photo.folder_name + '/' + photo.file_name
             else:
-                sst_syslog(f'Missing photo.  ID requested: {photo_id}')
+                sst_syslog.make_error_entry(f'Missing photo.  ID requested: {photo_id}')
+                # TODO:  Make dummy photo to use for missing photo
                 photo_slug = 'img_8904'
                 photo = self.get_photo_by_slug_if_exists(photo_slug)
                 return self.get_photo_folder_and_name(photo.id)
@@ -348,12 +349,13 @@ class SlideShow(object):
     """
 
     def __init__(self, name, db_exec):
-        # ['SLIDESHOW', 'title', 'title_class', 'position', 'width', 'height', 'rotation', 'frame_title', 'pictures']
+        # ['SLIDESHOW', 'name', 'title', 'title_class', 'position', 'width', 'height', 'rotation', 'frame_title', 'pictures']
         self.db_exec = db_exec
         self.json_store_manager = db_exec.create_json_manager()
         self.photo_manager = db_exec.create_sst_photo_manager()
         self.show_desc = self.json_store_manager.get_json_from_name('P_SLIDESHOW')
-        self.show_desc['title'] = name
+        self.show_desc['name'] = name
+        self.show_desc['title'] = ''
         self.show_desc['title_class'] = 'title_class'
         self.show_desc['position'] = 'center'
         self.show_desc['width'] = 300
@@ -408,7 +410,7 @@ class SlideShow(object):
         else:
             self.show_desc['height'] = size
 
-    def get_html(self, float_dir=None):
+    def get_html(self, float_dir=None, build_for_wordpress=False):
         wt = self.show_desc['width']
         ht = self.show_desc['height']
         if type(ht) is str:
@@ -418,6 +420,7 @@ class SlideShow(object):
         for photo in self.show_desc['pictures']:
             photo['width'] = wt
             photo['height'] = ht
+            photo['wordpress'] = build_for_wordpress
             # If a caption was provided in the template, it was stored as the caption for the Slideshow since
             # the photo was not itself available at the time for such storage.
             # --- Is there a problem in the case of multiple pics in a slideshow - this presumes the slideshow
@@ -433,7 +436,8 @@ class SlideShow(object):
             context['float_dir'] = f'style="float:{float_dir}"'
         else:
             context['float_dir'] = ''
-        context['unique_id_base'] = 'X' + str(randint(1, 10000))   # This must be unique for slideshows in a single page
+        context['unique_id_base'] = 'X' + str(randint(1, 10000))    # This must be unique for slideshows in a single page
+                                                                    #  - this supports bootstraps carousel when needs a unique id
         try:
             self.html = render_template('base/carousel.jinja2', **context)
         except Exception as e:
@@ -461,6 +465,12 @@ class Picture(object):
             db_photo = res
             folder = db_photo.folder_name
             file_name = db_photo.file_name
+            wp_url = self._add_wp_url(photo_id, db_photo.old_id,  db_photo.folder_name)          # REMOVE WHEN WP SITE NO LONGER NEEDED
+            if wp_url:
+                self.picture_desc['wp_url'] = wp_url
+                self.picture_desc['wp_exists'] = True
+            else:
+                self.picture_desc['wp_exists'] = False
             self.picture_desc['alt_text'] = db_photo.alt_text
             self.picture_desc['caption'] = db_photo.caption
             if folder.endswith('/'):
@@ -471,6 +481,18 @@ class Picture(object):
         else:
             self.db_exec.add_error_to_form('Missing Photo', f'Photo {photo_id} does not exist.')
             return None
+
+    def _add_wp_url(self, photo_id, old_id, gallery):
+        """Add url for use on WP site - remove this function when site not needed."""
+        if old_id:
+            sql = f'select filename from wp_ngg_pictures where pid={old_id};'
+            res = self.db_exec.db_session.execute(sql).first()
+            if res:
+                filename = res[0]
+                url = f'https://sunnyside-times.com/wp-content/gallery/{gallery}/{filename}'
+                return url
+        return None
+
 
     def get_picture_location(self):
         return self.picture_desc['url']

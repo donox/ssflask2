@@ -26,6 +26,9 @@ def manage_photo_metadata(db_exec, form):
     latest_date = form.latest_date.data
     download_filename = form.download_filename.data
     upload_filename = form.upload_filename.data
+    wp_url = form.wp_url.data
+    wp_photo_id = form.wp_photo_id.data
+    sst_photo_slug = form.sst_photo_slug.data
 
     photo_mgr = db_exec.create_sst_photo_manager()
     try:
@@ -72,6 +75,31 @@ def manage_photo_metadata(db_exec, form):
                         form.errors['work_function'] = [f'Failure updating metadata for photo {photo_id}']
                         all_res = False
                 return all_res
+        elif work_function == 'ph_ngg':
+            try:
+                sess = db_exec.db_session
+                sql = f'select exists(select * from sst_photos where slug="{sst_photo_slug}");'
+                res = sess.execute(sql).first()[0]
+                if not res:
+                    db_exec.add_error_to_form("No such Photo", f'Slug: {sst_photo_slug} does not exist.')
+                    return False
+                sql = f'select exists(select * from wp_ngg_pictures where pid={wp_photo_id});'
+                res = sess.execute(sql).first()[0]
+                if res:
+                    sql = f'update wp_ngg_pictures set filename="{wp_url}" where pid={wp_photo_id};'
+                    sess.execute(sql)
+                else:
+                    slug = f'dummy-slug-{wp_photo_id}'
+                    sql = f'insert into wp_ngg_pictures (pid, filename, image_slug) values ({wp_photo_id}, "{wp_url}", '
+                    sql += f'"{slug}");'
+                    sess.execute(sql)
+                sql = f'update sst_photos set old_id={wp_photo_id} where slug="{sst_photo_slug}";'
+                res = sess.execute(sql)
+                sess.commit()
+                return True
+            except Exception as e:
+                db_exec.add_error_to_form("Exception", f'Exception: {e.args}.')
+                return False
         else:
             form.errors['work_function'] = ['Selected Work Function Not Yet Implemented']
             return False

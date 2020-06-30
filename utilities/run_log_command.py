@@ -2,6 +2,8 @@ import shlex
 import logging
 import subprocess
 from ssfl import sst_syslog
+from pexpect import spawn, EOF, TIMEOUT
+from config import Config
 
 
 class OvernightLogger(object):
@@ -66,5 +68,52 @@ def run_shell_command(command_line, return_result=False, outfile=False):
         else:
             sst_syslog.make_info_entry('Subprocess {} completed'.format(cmd))
             return True
+
+
+def run_interactive_shell_command(command_list, logfile=False):
+    """Subprocess driver using Pexpect.
+
+    Args:
+        command_list: List of alternating commands and responses suitable for pexpect
+                            (note that list length is an odd number)
+        logfile: Open file-like object for writing
+    Returns:
+        None
+    """
+    child = spawn(command_list[0], encoding='utf-8', logfile=logfile, timeout=20)
+    nxt_exchange = 1
+    while len(command_list) > nxt_exchange + 1:
+        ndx = child.expect([command_list[nxt_exchange], EOF, TIMEOUT])
+        if ndx > 0:
+            logfile.write(child.before)
+            child.close()
+            return
+        nxt_exchange += 1
+        child.sendline(command_list[nxt_exchange])
+        nxt_exchange += 1
+    sst_syslog.make_info_entry(f'Pexpect spawn: {command_list[0]}')
+    child.close()
+
+def pexpect_script_mysql_run_sql_script(script_to_run):
+    """Create script to login to MySQL and run sql script.
+ """
+    script = []
+    user = Config.SQLALCHEMY_USERNAME
+    pswd = Config.SQLALCHEMY_PASSWORD
+    db = Config.SQLALCHEMY_DATABASE_NAME
+    cmd = f'mysql -u {user} -p {db} --default-character-set=utf8'
+    script.append(cmd)
+    expect = '[Ee]nter [Pp]assword: '
+    script.append(expect)
+    script.append(pswd)
+    expect = '.*mysql> '
+    script.append(expect)
+    cmd = f"source {script_to_run};"
+    script.append(cmd)
+    script.append(expect)
+    cmd = 'quit;'
+    script.append(cmd)
+    script.append(expect)
+    return script
 
 

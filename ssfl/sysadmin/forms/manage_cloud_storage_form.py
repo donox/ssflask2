@@ -33,6 +33,8 @@ class ManageCloudStorageForm(FlaskForm):
                            render_kw={"class": "cl_df", "docs": docs['all']['filename']})
     db_only = BooleanField(label='Download Database Only', default=False,
                            render_kw={"class": "cl_db", "docs": docs['all']['db_only']})
+    install_backup = BooleanField(label='Install backup', default=False,
+                           render_kw={"class": "cl_db", "docs": docs['all']['install_backup']})
 
     def validate_on_submit(self, db_exec):
         res = super().validate_on_submit()
@@ -48,6 +50,8 @@ class ManageCloudStorageForm(FlaskForm):
                 return True
         elif self.work_function.data == 'cl_db':
             if self.save_directory.data:
+                if self.install_backup.data and self.db_only.data:
+                    self.errors['db_only'] = ['Specifying database_ONLY and install_backup is inconsistent']
                 return True
         elif self.work_function.data == 'cl_mr':
             return True

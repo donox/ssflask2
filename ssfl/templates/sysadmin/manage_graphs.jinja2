@@ -61,7 +61,7 @@
                 $('.usr_mod').parent().hide();
                  let opt = $('#js1 option:selected').val();
             $('.' + opt).parent().show();
-            localStorage.setItem('manage_users', opt);
+            localStorage.setItem('manage_graphs', opt);
         });
         $(document).ready(function(){
         let opt_val = localStorage.getItem('manage_graphs');

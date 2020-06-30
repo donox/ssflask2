@@ -1,10 +1,13 @@
 # Documentation fields for form manage_photo
 docs = dict()
 
-entry = dict()
-
+docs['all'] = entry = dict()
+x = """Select the function to be performed.
+"""
+entry['work_function'] = [x]
 # Fields used in all choices
-docs['import'] = entry
+
+docs['import'] = entry = dict()
 x = """The file to be imported.  Click the Browse button and navigate to the desired Word file.  Be sure it
 has the .docx extension
 """
@@ -24,6 +27,11 @@ x = """This indicates whether the page is replacing an existing page.  It is an 
 does not exist and vice versa.
 """
 entry['overwrite'] = [x]
+
+x = """Normally LEAVE BLANK.  To create an output file for loading into Wordpress, provide a file name.  It will be 
+saved to your current working directory with an 'html' extension.
+"""
+entry['wordpress_file'] = [x]
 
 
 entry['xx'] = ''

@@ -1,6 +1,7 @@
 from config import Config
 import os
 import shutil
+import tarfile
 import re
 from jinja2 import Environment, PackageLoader, select_autoescape
 from typing import List
@@ -93,4 +94,41 @@ def copytree(src, dst, symlinks=False, ignore=None):
             shutil.copytree(s, d, symlinks, ignore)
         else:
             shutil.copy2(s, d)
+
+def decompress(tar_file, path, members=None):
+    """
+    Extracts `tar_file` and puts the `members` to `path`.
+    If members is None, all members on `tar_file` will be extracted.
+    """
+    tar = tarfile.open(tar_file, mode="r:gz")
+    if members is None:
+        members = tar.getmembers()
+    # with progress bar
+    # set the progress bar
+    # progress = tqdm(members)          # To use progress bar - need to install tqdm
+    # for member in progress:
+    #     tar.extract(member, path=path)
+    #     # set the progress description of the progress bar
+    #     progress.set_description(f"Extracting {member.name}")
+    # or use this
+    tar.extractall(members=members, path=path)
+    # close the file
+    tar.close()
+
+
+def mergefolders(root_src_dir, root_dst_dir, replace=False):
+    """Recursively merge two folders"""
+    for src_dir, dirs, files in os.walk(root_src_dir):
+        dst_dir = src_dir.replace(root_src_dir, root_dst_dir, 1)
+        if not os.path.exists(dst_dir):
+            os.makedirs(dst_dir)
+        for file_ in files:
+            src_file = os.path.join(src_dir, file_)
+            dst_file = os.path.join(dst_dir, file_)
+            if os.path.exists(dst_file) and replace:
+                os.remove(dst_file)
+                shutil.copy(src_file, dst_dir)
+            else:
+                if not os.path.exists(dst_file):
+                    shutil.copy(src_file, dst_dir)
 
