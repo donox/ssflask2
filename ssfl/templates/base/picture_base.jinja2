@@ -1,15 +1,15 @@
-<div class="BASE figure {{ photo.css_class }} {{ photo.alignment }} {{ do_rotation }}">
+<div class="BASE  {{ photo.css_class }} {{ photo.alignment }} {{ do_rotation }}">
     {% if photo.title %}
         <figcaption class="figure-caption has-text-black {{ photo.photo_title_class }}">{{ photo.title }}</figcaption>
     {% endif %}
-    <img class="{{ photo.image_class }} figure-img img-fluid rounded image-wrapper"
-            {% if photo.wordpress %}
-                src="{{ photo.wp_url }}"
-            {% else %}
-                src="{{ photo.url }}"
-            {% endif %}
-         style="height:auto; width:auto;
-         object-fit: cover; overflow:hidden; object-position: 50% 50%; "
-         alt=" {{ photo.alt_text }}"/>
-    <figcaption class="figure-caption has-text-black {{ photo.caption_class }}">{{ photo.caption }}</figcaption>
+        <div class="figure">
+            <img class="{{ photo.image_class }} figure-img img-fluid rounded"
+                    {% if photo.wordpress %}
+                        src="{{ photo.wp_url }}"
+                    {% else %}
+                        src="{{ photo.url }}"
+                    {% endif %}
+                    />
+            <div class="figure-caption ">{{ photo.caption }}</div>
+        </div>
 </div>

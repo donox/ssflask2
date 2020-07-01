@@ -20,9 +20,10 @@
                             {% endfor %}
                         </ol>
                     {% endif %}
+                {# Used to have max-height setting which did not override such in lower level templates.??? #}
                     <div class="CAROUSEL3 carousel-inner" role="listbox" data-interval="{{ carousel.rotation }}"
                          data-wrap="True"
-                         style="alignment: center; max-height:{{ carousel.height }}px; max-width:{{ carousel.width }}px;">
+                         style="alignment: center; ">
                         {% for photo in carousel.pictures %}
                             {% if loop.index == 1 %}
                                 {% set slide_active = 'active' %}
