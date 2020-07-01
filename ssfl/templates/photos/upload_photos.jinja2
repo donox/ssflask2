@@ -17,9 +17,9 @@
                     before adding any photos to the upload box. If the gallery/collection name exists, then the photos
                     will be added to that collection.
                     <br>
-                    New photo folders will be forced to lower case.  Because there are many existing folders that used
+                    New photo folders will be forced to lower case. Because there are many existing folders that used
                     upper case names and the system is case sensitive, it is possible to create two different folders
-                    with the same name but different capitalization.  Unfortunately, this can lead to two photos with
+                    with the same name but different capitalization. Unfortunately, this can lead to two photos with
                     the same slug and/or cause the system to be unable to find a photo.
                     <br>
                     Ideally we will be able to convert all folders to the lower case convention, but till that is done,
@@ -39,10 +39,10 @@
                     or a folder containing multiple photos into the upload pane.
                 </li>
             </ol>
-            <p style="color: red">NOTE: This is a list of all known folders.  At the moment, it is necessary to copy the value and insert
-                it in the Collection box till I can figure out the bug.</p>
-            <select id="folder_list">
-                {%  for folder in folders %}
+            <p> You may select an existing folder in the select box or type the name for a new folder in the Collection
+            field.</p>
+                <select id="folder_list">
+                {% for folder in folders %}
                     <option>{{ folder }}</option>
                 {% endfor %}
             </select>
@@ -51,10 +51,11 @@
                 <input type="text" id="dropzonecollection" style="min-width: 400px; min-height: 40px"/>
             </div>
         </div>
+
         <div class="row container mx-auto w-75 pt-3">
             <div class="col">
                 <h4 class="h4">Drag Photos to Upload Here</h4>
-                <div id="ourdropzone"  class=".mh100 overflow-auto"
+                <div id="ourdropzone" class=".mh100 overflow-auto"
                      style="min-width: 100px; max-width:250px; min-height: 100px; max-height: 600px; border: #0f0fff solid 2px;"></div>
             </div>
             <div class="col">
@@ -65,57 +66,55 @@
         </div>
         </div>
         <script type="text/javascript">
-        var $SCRIPT_ROOT = "{{ host }}" + "{{ url_for('photo_bp.upload_photos') }}";
-        $ = jQuery;
-        $(document).ready(function(){
-            $("#folder_list").change(function() {
-                alert("hello");
-                folder_val = $("#folder_list option:selected").text();
-                $('#dropzoncollection').val(folder_val);
-            };
-            Dropzone.options.ourdropzone = {
-
-              // Prevents Dropzone from uploading dropped files immediately
-
-              autoProcessQueue: true,
-              uploadMultiple: false,
-              acceptedFiles: '.jpg, .jpeg, .toml',
-              params: {gallery: $('#dropzonecollection').val()},
-
-              init: function() {
-                var submitButton = document.querySelector("#imgsubbut")
-                    myDropzone = this; // closure
-
-{#                submitButton.addEventListener("click", function() {#}
-{#                        myDropzone.processQueue(); // Tell Dropzone to process all queued files.#}
-{#                    });#}
-
-                // You might want to show the submit button only when
-                // files are dropped here:
-                this.on("addedfile", function() {
-                    let gal = $('#dropzonecollection').val();
-                    Dropzone.options.ourdropzone.params['gallery'] = gal;
-                  // Show submit button here and/or inform user to click it.
+            var $SCRIPT_ROOT = "{{ host }}" + "{{ url_for('photo_bp.upload_photos') }}";
+            $ = jQuery;
+            $(document).ready(function () {
+                $("#folder_list").change(function () {
+                    folder_val = $("#folder_list option:selected").text();
+                    $('#dropzonecollection').val(folder_val);
                 });
-                this.on("error", function(file, response){
-                    $('#resultdropzone').each(function(){
-                        ourdropzone.dropzone.removeFile(file);
-                        $(this).append('<p style="font-color:red">Failure: ' + file.name + "</p>")
-                    });
-                });
-                this.on("success", function(file, response){
-                    $('#resultdropzone').each(function(){
-                        ourdropzone.dropzone.removeFile(file);
-                        $(this).append("<p>Success: " + file.name + "</p>")
-                    });
-                });
-            }};
-            $("#ourdropzone").dropzone({url: $SCRIPT_ROOT  });
+                Dropzone.options.ourdropzone = {
 
-        });
-        //# sourceURL=upload_photos.js
+                    // Prevents Dropzone from uploading dropped files immediately
 
+                    autoProcessQueue: true,
+                    uploadMultiple: false,
+                    acceptedFiles: '.jpg, .jpeg, .toml',
+                    params: {gallery: $('#dropzonecollection').val()},
 
+                    init: function () {
+                        var submitButton = document.querySelector("#imgsubbut")
+                        myDropzone = this; // closure
+
+                        {#                submitButton.addEventListener("click", function() {#}
+                        {#                        myDropzone.processQueue(); // Tell Dropzone to process all queued files.#}
+                        {#                    });#}
+
+                        // You might want to show the submit button only when
+                        // files are dropped here:
+                        this.on("addedfile", function () {
+                            let gal = $('#dropzonecollection').val();
+                            Dropzone.options.ourdropzone.params['gallery'] = gal;
+                            // Show submit button here and/or inform user to click it.
+                        });
+                        this.on("error", function (file, response) {
+                            $('#resultdropzone').each(function () {
+                                ourdropzone.dropzone.removeFile(file);
+                                $(this).append('<p style="font-color:red">Failure: ' + file.name + "</p>")
+                            });
+                        });
+                        this.on("success", function (file, response) {
+                            $('#resultdropzone').each(function () {
+                                ourdropzone.dropzone.removeFile(file);
+                                $(this).append("<p>Success: " + file.name + "</p>")
+                            });
+                        });
+                    }
+                };
+                $("#ourdropzone").dropzone({url: $SCRIPT_ROOT});
+
+            });
+            //# sourceURL=upload_photos.js
 
 
         </script>
