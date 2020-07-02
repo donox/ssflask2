@@ -1,0 +1,65 @@
+.wrapper {
+  display: grid;
+  grid-gap: 10px;
+  border: red 2px solid;
+  grid-template-areas:
+    "header"
+    "nav"
+    "content"
+    "notice"
+    "calendar"
+    "footer";
+}
+.main-head {
+  grid-area: header;
+  border: rosybrown 2px solid;
+}
+.content {
+  grid-area: content;
+  border: blue 2px solid;
+}
+.main-nav {
+  grid-area: nav;
+  border: chocolate 2px solid;
+}
+.side {
+  grid-area: calendar;
+  border: green 2px solid;
+}
+.notice {
+  grid-area: notice;
+  border: purple 2px solid;
+}
+.main-footer {
+  grid-area: footer;
+  border: yellow 2px solid;
+}
+
+@media (min-width: 500px) {
+  .wrapper {
+    grid-template-columns: 1fr 3fr;
+    grid-template-areas:
+      "header  nav"
+      "notice content"
+      "calendar content"
+      "footer   footer";
+  }
+  nav ul {
+    display: flex;
+    justify-content: space-between;
+  }
+}
+
+@media (min-width: 700px) {
+  .wrapper {
+    grid-template-columns: 1fr 4fr 1fr;
+    grid-template-areas:
+      "header nav  nav"
+      "content    content notice"
+      "content    content calendar"
+      "footer footer  footer"
+   }
+   nav ul {
+     flex-direction: column;
+   }
+}

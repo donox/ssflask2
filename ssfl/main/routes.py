@@ -31,6 +31,18 @@ def log_request(file, tag, context):
     context['tag'] = tag
     dict_to_toml_file(context, Config.TEMP_FILE_LOC + 'cmd_logs/' + file)
 
+@main_bp.route('/main/test_grid', methods=['GET'])
+@roles_required('User')
+def sst_test_grid():
+    db_exec = DBExec()
+    try:
+        context = {'APP_ROOT': request.base_url
+                   }
+        # log_request(f'Download page: {filename} from  {directory}', 'download', context)
+        return render_template('grid/grid_layout.jinja2', **context)
+    finally:
+        db_exec.terminate()
+
 
 @main_bp.route('/main/download_file', methods=['GET'])
 @roles_required('User')

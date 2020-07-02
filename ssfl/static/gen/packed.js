@@ -124,6 +124,24 @@ module.exports = exports;
 
 /***/ }),
 
+/***/ "./node_modules/css-loader/dist/cjs.js!./node_modules/sass-loader/dist/cjs.js!./ssfl/static/sass/grid_styles.scss":
+/*!************************************************************************************************************************!*\
+  !*** ./node_modules/css-loader/dist/cjs.js!./node_modules/sass-loader/dist/cjs.js!./ssfl/static/sass/grid_styles.scss ***!
+  \************************************************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+// Imports
+var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(/*! ../../../node_modules/css-loader/dist/runtime/api.js */ "./node_modules/css-loader/dist/runtime/api.js");
+exports = ___CSS_LOADER_API_IMPORT___(false);
+// Module
+exports.push([module.i, ".wrapper {\n  display: grid;\n  grid-gap: 10px;\n  border: red 2px solid;\n  grid-template-areas: \"header\" \"nav\" \"content\" \"notice\" \"calendar\" \"footer\"; }\n\n.main-head {\n  grid-area: header;\n  border: rosybrown 2px solid; }\n\n.content {\n  grid-area: content;\n  border: blue 2px solid; }\n\n.main-nav {\n  grid-area: nav;\n  border: chocolate 2px solid; }\n\n.side {\n  grid-area: calendar;\n  border: green 2px solid; }\n\n.notice {\n  grid-area: notice;\n  border: purple 2px solid; }\n\n.main-footer {\n  grid-area: footer;\n  border: yellow 2px solid; }\n\n@media (min-width: 500px) {\n  .wrapper {\n    grid-template-columns: 1fr 3fr;\n    grid-template-areas: \"header  nav\" \"notice content\" \"calendar content\" \"footer   footer\"; }\n  nav ul {\n    display: flex;\n    justify-content: space-between; } }\n\n@media (min-width: 700px) {\n  .wrapper {\n    grid-template-columns: 1fr 4fr 1fr;\n    grid-template-areas: \"header nav  nav\" \"content    content notice\" \"content    content calendar\" \"footer footer  footer\"; }\n  nav ul {\n    flex-direction: column; } }\n", ""]);
+// Exports
+module.exports = exports;
+
+
+/***/ }),
+
 /***/ "./node_modules/css-loader/dist/cjs.js!./node_modules/sass-loader/dist/cjs.js!./ssfl/static/sass/mystyles.scss":
 /*!*********************************************************************************************************************!*\
   !*** ./node_modules/css-loader/dist/cjs.js!./node_modules/sass-loader/dist/cjs.js!./ssfl/static/sass/mystyles.scss ***!
@@ -618,6 +636,8 @@ __webpack_require__(/*! ../sass/sst_styles.scss */ "./ssfl/static/sass/sst_style
 
 __webpack_require__(/*! ../sass/mystyles.scss */ "./ssfl/static/sass/mystyles.scss");
 
+__webpack_require__(/*! ../sass/grid_styles.scss */ "./ssfl/static/sass/grid_styles.scss");
+
 /***/ }),
 
 /***/ "./ssfl/static/js/sst_javascript.js":
@@ -737,6 +757,35 @@ var button_state = function () {
     }
   };
 }(); //# sourceURL=sst_javascript.js
+
+/***/ }),
+
+/***/ "./ssfl/static/sass/grid_styles.scss":
+/*!*******************************************!*\
+  !*** ./ssfl/static/sass/grid_styles.scss ***!
+  \*******************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var api = __webpack_require__(/*! ../../../node_modules/style-loader/dist/runtime/injectStylesIntoStyleTag.js */ "./node_modules/style-loader/dist/runtime/injectStylesIntoStyleTag.js");
+            var content = __webpack_require__(/*! !../../../node_modules/css-loader/dist/cjs.js!../../../node_modules/sass-loader/dist/cjs.js!./grid_styles.scss */ "./node_modules/css-loader/dist/cjs.js!./node_modules/sass-loader/dist/cjs.js!./ssfl/static/sass/grid_styles.scss");
+
+            content = content.__esModule ? content.default : content;
+
+            if (typeof content === 'string') {
+              content = [[module.i, content, '']];
+            }
+
+var options = {};
+
+options.insert = "head";
+options.singleton = false;
+
+var update = api(content, options);
+
+
+
+module.exports = content.locals || {};
 
 /***/ }),
 

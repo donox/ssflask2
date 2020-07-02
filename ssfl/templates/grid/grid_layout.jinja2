@@ -1,0 +1,55 @@
+<!-- XXXlayout.html -->
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1 shrink-to-fit=no">
+    <title>{{ tab_title }}</title>
+
+    {#    {% assets "css_bundle" %}#}
+    {#        <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}"></link>#}
+    {#    {% endassets %}#}
+    {#    <link rel="stylesheet" type="text/css" href="/static/css/mystyles.css">#}
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+          integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
+          crossorigin="anonymous">
+
+    <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"
+            integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+            crossorigin="anonymous"></script>
+
+    {#    {% assets "js_bundle" %}#}
+    {#        <script type="text/javascript" src="{{ ASSET_URL }}"></script>#}
+    {#    {% endassets %}#}
+    <script type="text/javascript" src="/static/gen/packed.js"></script>
+
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.7.0/dropzone.min.js"></script>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    {% if add_data_table %}
+        <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.css">
+        <script type="text/javascript" charset="utf8"
+                src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.js"></script>
+    {% endif %}
+</head>
+<body>
+
+<div class="wrapper">
+    <header class="main-head">The header</header>
+    <nav class="main-nav">
+        {% include 'base/nav.jinja2' %}
+    </nav>
+    <article class="content">
+        {% set flash_message_type = 'error' %}
+        {% include 'base/flashed_messages.jinja2' %}
+        {% block content %}{% endblock %}
+        {% set flash_message_type = 'success' %}
+        {% include 'base/flashed_messages.jinja2' %}
+
+    </article>
+    <div class="notice">Notices</div>
+    <aside class="side">Calendar</aside>
+    <footer class="main-footer">{% include 'base/footer.jinja2' %}</footer>
+</div>
+</body>
+</html>

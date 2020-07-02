@@ -49,6 +49,14 @@ class Descriptors(object):
         descriptor = {'PAGE': {'rows': [partial_descriptor]}}
         return descriptor
 
+    def make_single_cell_descriptor(self, element_type: str) -> Dict[AnyStr, Any]:
+        """Create a cell descriptor for specific type of element"""
+        cell_descriptor = self.desc_mgr.load_descriptor_from_database(element_type)
+        cell_subtype = self.json_mgr.load_descriptor_from_database('P_CELL')
+        cell_subtype['element'] = cell_descriptor
+        cell_subtype['element_type'] = element_type
+        return cell_descriptor
+
     def build_bootstrap_carousel_snippet(self):
         """Create a snippet using bootstrap carousel to display a set of photos.
         """
