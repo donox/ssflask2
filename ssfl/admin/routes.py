@@ -20,6 +20,7 @@ from .forms.manage_index_pages_form import ManageIndexPagesForm
 from .forms.manage_photo_functions_form import DBPhotoManageForm
 from .forms.miscellaneous_functions_form import MiscellaneousFunctionsForm
 from .forms.get_database_data_form import DBGetDatabaseData
+from .forms.make_page_cells_form import MakePageCells
 from ssfl.sysadmin.forms.manage_files_form import ManageFilesForm
 from .manage_events.event_retrieval_support import SelectedEvents
 from .get_database_data import db_manage_pages
@@ -30,6 +31,7 @@ from .manage_photo_functions import manage_photo_functions
 from .miscellaneous_functions import miscellaneous_functions
 from .forms.manage_admin_reports_form import ManageAdminReportsForm
 from .manage_admin_reports import manage_admin_reports
+from .make_page_cells import make_page_cells
 
 # Set up a Blueprint
 admin_bp = Blueprint('admin_bp', __name__,
@@ -172,6 +174,18 @@ def _has_no_empty_params(rule):
     defaults = rule.defaults if rule.defaults is not None else ()
     arguments = rule.arguments if rule.arguments is not None else ()
     return len(defaults) >= len(arguments)
+
+@admin_bp.route('/admin/make_page_cells', methods=['GET', 'POST'])
+@roles_required(['SysAdmin',  'Admin'])
+def sst_make_page_cells():
+    """Transfer content to-from DB for local editing."""
+    """
+     Route: '/admin/make_page_cells' => sst_make_page_cells
+     Template: make_page_cells.jinja2
+     Form: make_page_cells_form.py
+     Processor: make_page_cells.py
+    """
+    return build_route('admin/make_page_cells.jinja2', MakePageCells(), make_page_cells, '/admin/make_page_cells')()
 
 @admin_bp.route('/admin/edit', methods=['GET', 'POST'])
 @roles_required(['SysAdmin',  'Admin'])

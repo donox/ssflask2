@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<!--
+     Route: '/admin/make_page_cells' => make_page_cells
+     Template: make_page_cells.jinja2
+     Form: make_page_cells_form.py
+     Processor: make_page_cells.py
+-->
+{% extends 'base/layout.jinja2' %}
+
+{% block content %}
+    <section class="container">
+        <div class="XXX">
+            <h3 class="h3 text-center">Create Cell Instances</h3>
+            <form action="{{ url_for('admin_bp.sst_make_page_cells') }}" method="post">
+
+                {#  Work Function          #}
+                {% with %}
+                    {% set el_name=form.work_function %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="0000" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
+                {#  all         #}
+                {% with %}
+                    {% set el_name=form.slug %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="Entry Type" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
+                {% with %}
+                    {% set el_name=form.story_slug %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="Entry Type" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
+                {% with %}
+                    {% set el_name=form.notice_type %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="Entry Type" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
+                {% with %}
+                    {% set el_name=form.notice_text %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="Entry Type" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
+
+                <div class="button">
+                    <input id="submit" type="submit" value="Submit">
+                </div>
+                {% if form.errors %}
+                    <ul class="errors">
+                        {% for error, val in form.errors.items() %}
+                            {% if val is iterable and val is string %}
+                                <li>{{ error }} : {{ val }}</li>
+                            {% else %}
+                                {% for val_el in val %}
+                                    <li>{{ error }} : {{ val_el }}</li>
+                                {% endfor %}
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                {{ form.csrf_token }}
+            </form>
+
+        </div>
+        <script>
+            $ = jQuery;
+            $('#js1').change(function () {
+                $('.pl_cal').parent().hide();
+                $('.pl_not').parent().hide();
+                $('.pl_sty').parent().hide();
+                $('.show_layout').parent().hide();
+                let opt = $('#js1 option:selected').val();
+                $('.' + opt).parent().show();
+            });
+            //# sourceURL=json_make_template.js
+
+
+        </script>
+    </section>
+{% endblock %}

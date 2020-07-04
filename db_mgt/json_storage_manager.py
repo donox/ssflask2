@@ -22,6 +22,18 @@ class JSONStorageManager(object):
     descriptor_cell_layout = {"CELL": None, "node_name": "CELL", "element_type": None, "element": None,
                               "is_snippet": None, "is_container": True,
                               "width": None, "height": None, "styles": None, "classes": None}
+    # A grid_page is a page layout using CSS Grid specifications and is intended to replace PAGE, ROW, COLUMN above.
+    # Rather than embedding the rows and columns in the structure, the layout is embedded in the CSS and a GRID_PAGE
+    # contains a list of cells (GRID_CELL) in the page where each cell is identified by a name that corresponds to the
+    # item name in the CSS.  Note that cells is a list rather than a dictionary to allow for the fact that the same
+    # cell might occur more than once.  The name associated with the cell is in the JSON for the cell itself.
+    descriptor_grid_page_layout = {"GRID_PAGE": None, "node_name": "GRID_PAGE", "name": None, "cells": []}
+    # A grid_cell has a name (cell_name) that corresponds to the name used to place the cell in the CSS.  The cell_type
+    # associates the cell with the appropriate database table (usually "JSON") where the slug can be found.  The slug
+    # is the unique identifier in the table.
+    descriptor_grid_cell_fields = {"GRID_CELL": None, "node_name": "GRID_CELL", "cell_name": None, "cell_type": None,
+                                   "cell_slug": None, "cell_content": None}
+
     descriptor_graph_fields = {"GRAPH": None, "name": "GRAPH", "id": None, "name": None, "purpose": None, "nodes": [],
                                "edges": []}
     descriptor_graph_node_fields = {"NODE": None, "node_name": "NODE", "id": None, "facet": {}}
@@ -130,6 +142,9 @@ class JSONStorageManager(object):
     json_field_dictionary['NODE'] = descriptor_graph_node_fields
     json_field_dictionary['EDGE'] = descriptor_graph_edge_fields
 
+    json_field_dictionary['GRID_PAGE'] = descriptor_grid_page_layout
+    json_field_dictionary['GRID_CELL'] = descriptor_grid_cell_fields
+
     json_field_dictionary['PICTURE'] = descriptor_picture_fields
     json_field_dictionary['SLIDESHOW'] = descriptor_slideshow_fields
     json_field_dictionary['CAROUSEL'] = descriptor_carousel_fields
@@ -152,7 +167,8 @@ class JSONStorageManager(object):
     json_field_dictionary['CAROUSEL_SNIPPET'] = descriptor_carousel_snippet_fields
 
     # json_field_dictionary[''] = cls.
-    json_primary_templates = ['PAGE', 'ROW', 'COLUMN', 'CELL', 'BUTTON', 'PICTURE', 'SLIDESHOW', 'STORY',
+    json_primary_templates = ['PAGE', 'ROW', 'COLUMN', 'CELL', 'GRID_PAGE', 'GRID_CELL',
+                              'BUTTON', 'PICTURE', 'SLIDESHOW', 'STORY',
                               'STORY_SNIPPET', 'CALENDAR_SNIPPET', 'EVENT_SNIPPET', 'SIGN_SNIPPET',
                               'SLIDESHOW_SNIPPET', 'INDEX_LINKS', 'GRAPH', 'EDGE', 'NODE', 'CAROUSEL',
                               'CAROUSEL_SNIPPET']

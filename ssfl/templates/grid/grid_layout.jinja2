@@ -33,22 +33,16 @@
     {% endif %}
 </head>
 <body>
-
 <div class="wrapper">
     <header class="main-head">The header</header>
     <nav class="main-nav">
         {% include 'base/nav.jinja2' %}
     </nav>
-    <article class="content">
-        {% set flash_message_type = 'error' %}
-        {% include 'base/flashed_messages.jinja2' %}
-        {% block content %}{% endblock %}
-        {% set flash_message_type = 'success' %}
-        {% include 'base/flashed_messages.jinja2' %}
-
-    </article>
-    <div class="notice">Notices</div>
-    <aside class="side">Calendar</aside>
+    {% set flash_message_type = 'error' %}
+    {% include 'base/flashed_messages.jinja2' %}
+    {% block content %}{% endblock %}
+    {% set flash_message_type = 'success' %}
+    {% include 'base/flashed_messages.jinja2' %}
     <footer class="main-footer">{% include 'base/footer.jinja2' %}</footer>
 </div>
 </body>

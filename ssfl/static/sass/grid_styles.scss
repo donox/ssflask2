@@ -5,7 +5,7 @@
   grid-template-areas:
     "header"
     "nav"
-    "content"
+    "main-content"
     "notice"
     "calendar"
     "footer";
@@ -14,15 +14,15 @@
   grid-area: header;
   border: rosybrown 2px solid;
 }
-.content {
-  grid-area: content;
+.main-content {
+  grid-area: main-content;
   border: blue 2px solid;
 }
 .main-nav {
   grid-area: nav;
   border: chocolate 2px solid;
 }
-.side {
+.calendar {
   grid-area: calendar;
   border: green 2px solid;
 }
@@ -40,8 +40,8 @@
     grid-template-columns: 1fr 3fr;
     grid-template-areas:
       "header  nav"
-      "notice content"
-      "calendar content"
+      "notice main-content"
+      "calendar main-content"
       "footer   footer";
   }
   nav ul {
@@ -55,8 +55,8 @@
     grid-template-columns: 1fr 4fr 1fr;
     grid-template-areas:
       "header nav  nav"
-      "content    content notice"
-      "content    content calendar"
+      "main-content    main-content notice"
+      "main-content    main-content calendar"
       "footer footer  footer"
    }
    nav ul {

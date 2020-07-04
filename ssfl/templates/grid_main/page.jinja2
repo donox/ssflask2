@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<!--
+     Route: '/main/main' => multi_story_page
+     Template: main.jinja2
+     Form:
+     Processor: make_page_cells.py
+-->
+
+{% extends 'grid/grid_layout.jinja2' %}
+
+{% block content %}
+
+    {% for cell in cells %}
+        {% set id_base_index = loop.index |string %}
+        {% for gridClass, val in cell.items() %}
+            {% set story = val.cell_content %}
+{# This div breaks the grid layout.  Are these classes and styles needed? #}
+{# <div class="{{ val.classes }} overflow-auto" style="{{ val.styles }}">#}
+            {% set unique_id_base =  'C' + id_base_index %}
+            {% if val.cell_type == 'CALENDAR_SNIPPET' %}
+                {% set events = story.events %}      {# Set right component #}
+                <calendar class="calendar overflow-auto">
+                    {% include 'grid_main/snippet_calendar.jinja2' %}
+                </calendar>
+            {% endif %}
+            {% if val.cell_type == 'STORY' %}
+                <article class="main-content overflow-auto">
+                    {% include 'main/full_story.jinja2' %}
+                </article>
+            {% endif %}
+            {% if val.cell_type == 'STORY_SNIPPET' %}
+                {% include 'main/snippet_story.jinja2' %}
+            {% endif %}
+            {% if val.cell_type == 'FULL_STORY' %}
+                <main-content class="main-content">
+                    {% include 'main/full_story.jinja2' %}
+                </main-content>
+            {% endif %}
+            {% if val.cell_type == 'SLIDESHOW_SNIPPET' %}
+                {% include 'main/snippet_slideshow.jinja2' %}
+            {% endif %}
+            {% if val.cell_type == 'SLIDESHOW' %}
+                {% include 'main/snippet_slideshow.jinja2' %}
+            {% endif %}
+            {% if val.cell_type == 'CAROUSEL_SNIPPET' %}
+                {% include 'main/snippet_carousel.jinja2' %}
+            {% endif %}
+            {% if val.cell_type == 'CAROUSEL' %}
+                {% include 'main/snippet_carousel.jinja2' %}
+            {% endif %}
+            {% if val.cell_type == 'SIGN_SNIPPET' %}
+                <notice class="notice overflow-auto">
+                    {% include 'base/snippet_sign.jinja2' %}
+                </notice>
+            {% endif %}
+            {#            </div>#}
+        {% endfor %}
+    {% endfor %}
+{% endblock %}

@@ -33,6 +33,10 @@ class JSONTableManager(BaseTableManager):
         current_result['columns'].append(col['columns'][0])
         return
 
+    def check_slug_existence(self, slug):
+        sql = f'select exists(select * from json_store where name="{slug}");'
+        return self.db_session.execute(sql).first()[0]
+
     def get_json_primary_templates(self):
         return JSONStorageManager.json_primary_templates
 

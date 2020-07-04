@@ -16,6 +16,7 @@ from config import Config
 from ssfl.admin.routes import build_route
 from .forms.work_with_groups_form import WorkWithGroupsForm
 from .work_with_groups import work_with_groups_processor
+from ssfl.main.grid_based_page import GridBasedPage
 
 # Set up a Blueprint
 main_bp = Blueprint('main', __name__,
@@ -36,10 +37,15 @@ def log_request(file, tag, context):
 def sst_test_grid():
     db_exec = DBExec()
     try:
-        context = {'APP_ROOT': request.base_url
+        json_mgr = db_exec.create_json_manager()
+        gbp = GridBasedPage(db_exec)
+        cell_list = gbp.make_multi_element_grid_page_context('tst-grid-page')
+        context = {'APP_ROOT': request.base_url,
+                   'cells': cell_list,
                    }
-        # log_request(f'Download page: {filename} from  {directory}', 'download', context)
-        return render_template('grid/grid_layout.jinja2', **context)
+        log_request('main', 'main', context)
+        res_template = render_template('grid_main/page.jinja2', **context)
+        return res_template
     finally:
         db_exec.terminate()
 
