@@ -1,0 +1,10 @@
+{% if story.title %}
+    <div class="title text-center text-wrap">{{ story.title | safe }}</div>
+{% endif %}
+
+{{story.photo}}
+
+<div class="message-body text-wrap">{{ story.content| safe }}</div>
+{% with button=story.read_more %}
+    {% include 'base/button.jinja2' %}
+{% endwith %}

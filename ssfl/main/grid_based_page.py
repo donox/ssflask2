@@ -10,6 +10,7 @@ from utilities.sst_exceptions import PhotoOrGalleryMissing
 from ssfl import sst_syslog
 from db_mgt.db_exec import DBExec
 from desc_mgt.build_descriptors import Descriptors
+from ssfl.admin.make_page_cells import make_slideshow_cell, make_story_cell
 
 
 class GridBasedPage(object):
@@ -26,10 +27,21 @@ class GridBasedPage(object):
         self.context = dict()
         self.storage_manager = db_exec.create_json_manager()
         self.photo_manager = db_exec.create_sst_photo_manager()
+        self.page_manager = db_exec.create_page_manager()
         self.desc_mgr = Descriptors()
+
+    def _convert_to_grid_cell(self, cell, slug):
+        if 'SLIDESHOW' in cell:
+            grid_cell = make_slideshow_cell(self.db_exec, '', slug)
+            return grid_cell.cell_descriptor
+        raise SystemError(f'Conversion of cells such as {slug} not implemented')
 
     def make_multi_element_grid_page_context(self,  descriptor_slug=None):
         """Create context for a page based on current descriptor.
+
+        We support exactly one grid-cell for each element on the page.  To
+        place multiple items in a cell, create a separate cell using either
+        a flex box or a cell of type grid that is its own grid page.
 
         Args:
             descriptor_slug:  Slug to PAGE_GRID entry in JSON_tables
@@ -40,9 +52,32 @@ class GridBasedPage(object):
         page_grid = self.desc_mgr.load_descriptor_from_database(descriptor_slug)
         cells = page_grid['cells']
         res_list = []
-        for cell_id in cells:
-            el_name, el_slug = cell_id.popitem()        # Cell is single entry dictionary of name/slug
+        for el_name, el_slug in cells[0].items():
+            # We have to determine if el_slug is a slug in the json_table or in the page_table.  We assume
+            # that all slugs that correspond to pages in the page table start with 'J$-' or 'S$-' if they have been
+            # processed to be a grid cell.  We also assume that any slug in the json_table not starting with
+            # 'J$-' or 'S$-' is not a story (no duplicated names). If we encounter a story slug without the 'J$-' prefix
+            # or with an 'S$-' that does not exist,
+            # we create the grid cell at that point for both 'J$-' and 'S$-', though is this case, it must be the
+            # the 'J$-' case that is desired. Note that the 'S$-' case must have been specified by the user.
+            if el_slug.startswith('S$-'):
+                if not self.storage_manager.check_slug_existence(el_slug):
+                    make_story_cell(self.db_exec, 'J$-' + el_slug[3:], el_slug[3:])  # create S$ version as side effect
+            if not el_slug.startswith('J$-'):
+                if self.storage_manager.check_slug_existence('J$-'+el_slug):
+                    el_slug = 'J$-' + el_slug
+                if not self.storage_manager.check_slug_existence(el_slug):
+                    if not self.page_manager.check_slug_existence(el_slug):
+                        raise ValueError(f'Element with slug: {el_slug} not found')
+                    # found page that has not been processed
+                    make_story_cell(self.db_exec, 'J$-'+el_slug, el_slug)
+                    el_slug = 'J$-' + el_slug
             cell = self.desc_mgr.load_descriptor_from_database(el_slug)
+            if not cell:
+                raise ValueError(f'{el_slug} is not in the database as a valid descriptor.')
+            # We allow descriptors that are not already Grid cells to be converted, if possible,
+            if 'GRID_CELL' not in cell:
+                cell = self._convert_to_grid_cell(cell, el_slug)
             res_list.append({el_name: cell})
             styles = ""
             # # Width is properly a column attribute since there may be multiple cells.  However, the normal
@@ -78,7 +113,8 @@ class GridBasedPage(object):
                 # self._fill_full_story(elem)
                 pass
             elif 'STORY_SNIPPET' in elem:
-                self._fill_story_snippet(elem)
+                # self._fill_story_snippet(elem)
+                pass
             elif 'CALENDAR_SNIPPET' in elem:
                 self._fill_calendar_snippet(elem)
             elif 'SLIDESHOW_SNIPPET' in elem:
@@ -245,7 +281,7 @@ class GridBasedPage(object):
                 else:
                     elem_show[item] = None
             # Rotation is in tenths of seconds - needs to be ms
-            if 'rotation' in elem_show:
+            if 'rotation' in elem_show and elem_show['rotation']:
                 elem_show['rotation'] *= 100
             res = list()
             if type(existing['pictures']) is int:

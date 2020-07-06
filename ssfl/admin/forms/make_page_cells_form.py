@@ -27,14 +27,16 @@ class MakePageCells(FlaskForm):
                                 render_kw={"id": "js1", "class": "pl_cal pl_not pl_sty show_layout",
                                            "docs": docs['all']['work_function']})
     slug = StringField(label='Descriptor Slug', validators=[Optional()],
-                       render_kw={"class": "pl_cal pl_sty", "docs": docs['all']['slug']})
+                       render_kw={"class": "pl_cal pl_not", "docs": docs['all']['slug']})
     notice_text = StringField(label='Notice Text', validators=[Optional()],
                               render_kw={"class": "pl_not", "docs": docs['all']['notice_text']})
     notice_type = SelectField(label='Select Notice Type', choices=notice_types,
                               render_kw={"class": "pl_not pl_xxx",
                                          "docs": docs['all']['notice_type']})
-    story_slug = StringField(label='Story Slug', validators=[Optional()],
-                       render_kw={"class": "pl_sty", "docs": docs['all']['story_slug']})
+    story_slug = StringField(label='Story Slug ', validators=[Optional()],
+                                render_kw={"class": "pl_sty", "docs": docs['all']['snippet_photo']})
+    snippet_photo = StringField(label='Snippet Photo', validators=[Optional()],
+                       render_kw={"class": "pl_sty", "docs": docs['all']['snippet_photo']})
     xxx = BooleanField(label='Remove Text for Layout', default=False,
                        render_kw={"class": "show_layout", "docs": docs['show_layout']['remove_text']})
 

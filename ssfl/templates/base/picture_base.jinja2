@@ -1,4 +1,4 @@
-<div class="BASE  {{ photo.css_class }} {{ photo.alignment }} {{ do_rotation }}">
+<div class="{{ photo.css_class }} {{ photo.alignment }} {{ do_rotation }}">
     {% if photo.title %}
         <figcaption class="figure-caption has-text-black {{ photo.photo_title_class }}">{{ photo.title }}</figcaption>
     {% endif %}

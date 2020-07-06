@@ -11,6 +11,9 @@ class PageManager(BaseTableManager):
     def __init__(self, db_session):
         super().__init__(db_session)
 
+    def check_slug_existence(self, slug):
+        sql = f'select exists(select * from page where page_name="{slug}");'
+        return self.db_session.execute(sql).first()[0]
 
     def get_page_if_exists(self, page_id, page_name):
         if page_id:

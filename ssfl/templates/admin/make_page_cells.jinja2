@@ -37,6 +37,13 @@
                 {% endwith %}
 
                 {% with %}
+                    {% set el_name=form.snippet_photo %}
+                    {% set el_class="input" %}
+                    {% set el_placeholder="Entry Type" %}
+                    {% include 'base/form_entry.jinja2' %}
+                {% endwith %}
+
+                {% with %}
                     {% set el_name=form.notice_type %}
                     {% set el_class="input" %}
                     {% set el_placeholder="Entry Type" %}

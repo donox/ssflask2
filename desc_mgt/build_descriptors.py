@@ -19,13 +19,20 @@ class Descriptors(object):
     def load_descriptor_from_database(self, name: str) -> Dict[AnyStr, Any]:
         """Get descriptor of specific name from database
 
+        This is often a descriptor that contains substitutions ('S_xxx') internally.
+        We call make_json_descriptor on that base to expand to a full descriptor without specified substitutions.
+
         Args:
             name: str - descriptor name
 
         Returns:    JSON descriptor
 
         """
-        return self.json_mgr.make_json_descriptor(self.json_mgr.get_json_from_name(name))
+        base_descriptor = self.json_mgr.get_json_from_name(name)
+        if base_descriptor:
+            return self.json_mgr.make_json_descriptor(base_descriptor)
+        else:
+            return None
 
     def get_descriptor_as_string(self, desc) -> str:
         """Returns current descriptor (in this object) as a string suitable for storing in DB.

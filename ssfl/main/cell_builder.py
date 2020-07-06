@@ -10,13 +10,15 @@ from utilities.sst_exceptions import PhotoOrGalleryMissing
 from ssfl import sst_syslog
 from db_mgt.db_exec import DBExec
 from desc_mgt.build_descriptors import Descriptors
+from db_mgt.sst_photo_tables import SlideShow
 
 
 class CellBuilder(object):
     """Manage creation, retrieval, caching of cells."""
 
-    def __init__(self, db_exec: DBExec, cell_type: str):
+    def __init__(self, db_exec: DBExec, cell_type: str, is_temp: bool = False):
         self.db_exec = db_exec
+        self.is_temp = is_temp
         self.cell_type = cell_type
         self.descriptor = None
         self.context = dict()
@@ -58,12 +60,13 @@ class CellBuilder(object):
         Returns:
             Boolean - success/failure (including because it exists but overwrite is False)
         """
-        if overwrite:
+        if overwrite and not self.is_temp:
             self.storage_manager.delete_descriptor(slug)
         self.cell_descriptor['cell_content'] = self.cell_content_descriptor
         self.cell_descriptor['cell_slug'] = slug
         self.cell_descriptor['cell_type'] = self.cell_content_descriptor['node_name']
-        self.storage_manager.add_json(slug, self.cell_descriptor)
+        if not self.is_temp:
+            self.storage_manager.add_json(slug, self.cell_descriptor)
 
     def _populate_calendar_cell(self, event_count, categories=None, audiences=None):
         """Create calender cell.
@@ -118,13 +121,49 @@ class CellBuilder(object):
         self.cell_content_descriptor['content'] = sign_text
         self._save_cell_descriptor(slug, overwrite=True)
 
-    def manage_story_cell(self, slug='', update=False, story=None, story_slug=None):
+    def manage_story_cell(self, slug='', update=False, story=None, story_slug=None, snippet_photo=None):
         # {"STORY": null, "node_name": "STORY", "id": null, "title": null, "name": null, "author": null, "date": null,
         #  "content": null,  "descriptor": "STORY"}
         # We create the story here to allow for the possibility that it is already in the cell cache and we
         # can avoid creating it again.
+        # The slug has a 'J$-' prefix.  We actually create two cells - the second with an 'S$-' prefix representing
+        # a story snippet.
+        if not slug.startswith('J$-'):
+            raise SystemError(f'Slug: {slug} encountered building a story cell - missing "J$-" prefix')
         story.create_story_from_db(None, story_slug)
         self.cell_content_descriptor['content'] = story.get_body()
         self.cell_content_descriptor['title'] = story.get_title()
-        self._save_cell_descriptor(slug, overwrite=True)
+        self._save_cell_descriptor(slug)
+        if not self.is_temp:            # can this test be removed - no such thing anymore.
+            snip_slug = 'S$-' + slug[3:]
+            self.cell_content_descriptor = self.storage_manager.make_json_descriptor('P_STORY_SNIPPET')
+            self.cell_content_descriptor['content'] = story.create_snippet()
+            self.cell_content_descriptor['read_more'] = story.get_read_more()
+            if snippet_photo.isdigit():
+                photo_id = int(snippet_photo)
+            else:
+                photo_mgr = self.db_exec.create_sst_photo_manager()
+                photo = photo_mgr.get_photo_from_slug(snippet_photo)
+                photo_id = photo.id
+            ss = SlideShow(None, self.db_exec)
+            ss.add_photo(photo_id)
+            html = ss.get_html()
+            self.cell_content_descriptor['photo'] = html
+            self._save_cell_descriptor(snip_slug)
+
+
+
+    def manage_slideshow_cell(self, slug='', update=False, slideshow=None, slideshow_slug=None):
+        if not slideshow:
+            json_mgr = self.db_exec.create_json_manager()
+            slides = json_mgr.get_json_from_name(slideshow_slug)
+            if not slides:
+                return None
+        else:
+            slides = slideshow
+        # We already have a valid slideshow descriptor, so we dont need the one created when CellBuilder was created.
+        # Could there be a problem if slug is not ''?  We would be updating an existing slug, but apparently with
+        # an exact copy
+        self.cell_content_descriptor = slides
+        self._save_cell_descriptor(slug)
 

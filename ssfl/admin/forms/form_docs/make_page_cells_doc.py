@@ -25,7 +25,11 @@ x = """Enter the slug by which the descriptor will be identified.
 """
 entry['slug'] = [x]
 
-x = """Enter the slug for the page_table/story entry.
+x = """Enter the slug or id for photo to be used for the story snippet.
+"""
+entry['snippet_photo'] = [x]
+
+x = """Enter the slug in the database by which the story is known.
 """
 entry['story_slug'] = [x]
 

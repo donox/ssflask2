@@ -11,6 +11,8 @@ class Story(object):
         The empty story object is initially instantiated.  Content can be loaded externally
         and saved to disk, loaded from disk, or created at random.
 
+        See 'other files/Processing of Stories.odt' for a fuller explanation of how stories are handled.
+
         Args:
             arg (str): The arg is used for...
             *args: The variable arguments are used for...
