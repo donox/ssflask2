@@ -10,26 +10,47 @@
     "calendar"
     "footer";
 }
+
 .main-head {
   grid-area: header;
   border: rosybrown 2px solid;
 }
+
 .main-content {
   grid-area: main-content;
   border: blue 2px solid;
+  max-height: 600px;
+  overflow-y: auto;
+
 }
+
+.main-content p {
+  padding-bottom: 0.5em;
+  font-weight: bolder;
+}
+
 .main-nav {
   grid-area: nav;
   border: chocolate 2px solid;
 }
+
 .calendar {
   grid-area: calendar;
   border: green 2px solid;
+  max-height: 350px;
+  overflow-y: auto;
 }
+
 .notice {
   grid-area: notice;
   border: purple 2px solid;
+  max-height: 250px;
+  overflow-y: auto;
 }
+.notice .title {
+  font-size: medium;
+}
+
 .main-footer {
   grid-area: footer;
   border: yellow 2px solid;
@@ -58,8 +79,8 @@
       "main-content    main-content notice"
       "main-content    main-content calendar"
       "footer footer  footer"
-   }
-   nav ul {
-     flex-direction: column;
-   }
+  }
+  nav ul {
+    flex-direction: column;
+  }
 }
