@@ -75,7 +75,7 @@ pipreqs==0.4.9
 pluggy==0.13.1
 protobuf==3.0.0
 psycopg2==2.8.4
-py==1.8.1
+py==1.10.0
 pycairo==1.16.2
 pycparser==2.19
 pycrypto==2.6.1
