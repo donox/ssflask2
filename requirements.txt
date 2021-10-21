@@ -4,7 +4,7 @@ apturl==0.5.2
 argcomplete==1.10.0
 asn1crypto==0.24.0
 attrs==19.3.0
-Babel==2.8.0
+Babel==2.9.1
 bcrypt==3.1.7
 beautifulsoup4==4.8.1
 blinker==1.4
